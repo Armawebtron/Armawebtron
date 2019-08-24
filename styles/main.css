@@ -1,0 +1,202 @@
+@font-face
+{
+	font-family: Armagetronad;
+	src: url("./fonts/Armagetronad.woff");
+}
+
+@font-face
+{
+	font-family: Flynn;
+	src: url("./fonts/Flynn.otf");
+}
+/*
+@font-face
+{
+	font-family: Minecraft;
+	src: url(styles/fonts/minecraft.ttf);
+}
+*/
+@font-face
+{
+	font-family: nicefont;
+	src: url(styles/fonts/nicefont.woff);
+}
+
+html, body { margin: 0; padding: 0; background:#000; overflow:hidden; font-family: Armagetronad, monospace;}
+
+a { color: inherit; text-decoration: none; }
+    
+.noselect
+{
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+#menu
+{
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	color: #fff;
+	font-size: 32px;
+	text-align: center;
+	letter-spacing: 2px;
+	z-index: 10; /*Make sure we're on top of the game elements*/
+	overflow:auto;
+}
+
+#menu-tooltip
+{
+	z-index: 15; /*We need to be on top of the menu*/
+	opacity: 0; display:none;
+}
+
+.menu-about
+{
+	/*about text font size*/
+	font-size: 20px;
+	display: inline-block;
+	width:100%;
+}
+
+.menu-about div
+{
+	/*about text font size*/
+	font-size: 20px;
+	display: inline-block;
+}
+
+#menu h1
+{
+	font-size: 42px;
+	font-weight: normal;
+}
+
+#menuList
+{
+	list-style: none;
+	list-style-type: none;
+	display: inline-block;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+}
+
+#menuleft
+{
+	display:inline-block;
+	width:50%;
+	text-align:right;
+	float:left;
+}
+
+#menuright
+{
+	display:inline-block;
+	width:50%;
+	text-align:left;
+}
+
+
+#gui_stats
+{
+	position: fixed;
+	top: 25px;
+	right: 25px;
+	color: #fff;
+	font-weight: bold;
+	font-size: 10px;
+	width: 69px;
+	overflow: visible;
+}
+
+#gui_stats div
+{
+	width: 200px;
+}
+
+#centerMessage
+{
+	position:absolute;
+	left:0; right:0;
+	bottom:20%;
+	text-align: center; color:white;
+	font-size: 64px;
+}
+
+#console
+{
+	position:fixed;
+	background:rgba(0,0,0,0.5);
+	color:white;
+	/*max-height:30%;*/width:100%;
+	word-wrap: break-word;
+	overflow:hidden;
+	font-family: inherit;
+	font-size:12pt;
+	/*text-shadow: 0px 0px 10px #000;*/
+}
+
+#input
+{
+	position:fixed;
+	bottom: 64px;
+	left: 32px; right:32px;
+	display:none;
+	z-index: 20; /*We need to be on top of everything!*/
+}
+
+#input *
+{
+	color:white; background:none;
+	font-family: inherit;
+	font-size: 22px;
+}
+#input input
+{
+	width:100%; border:none;
+}
+
+#scoreboard
+{
+	 margin:auto; color:white;
+	 display:block; position:absolute;
+	 top:25%;left:50%;
+	 width:500px;
+	 margin-left:-250px;
+	 text-shadow: 0px 0px 10px #000;
+}
+
+#scoreboard table tr
+{
+	text-align:left;
+}
+
+.darktext
+{
+	text-shadow: 0px 0px 10px #FFF;
+}
+.lighttext
+{
+	text-shadow: 0px 0px 10px #000;
+}
+
+.progressbar, .notprogressbar
+{
+	width:150px; height: 16px;
+	display:inline-block;
+}
+.progressbar
+{
+	background:rgba(255,255,255,0.25);
+}
+.progressbar .progress
+{
+	background:#00FF00;
+	height:100%;width:0%;
+	position:relative;
+}

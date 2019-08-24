@@ -1,0 +1,16 @@
+libs: stuff that's used and probably required
+
+ai.js: AI class: Garbage AI junk
+buildObjects.js: Basically everything needed to actually load in maps and cycles.
+config.js: Game configuration including the default settings
+player.js: Player class: data and movement
+functions-head.js: Functions needed before anything else happens
+functions-body.js: Functions that are still required but probably only needed in-game. (Collision detection)
+game.js: Rounds handling, the main game loop, death blame handler
+init.js: Initialization stuff for graphics
+input.js: Input handling (outside of what the browser handles) of input devices
+menu.js: Menu loading & event handling
+network.js: Terrible incomplete crappy network code
+render.js: Render loop of 3D and minimap views, as well as console scrolling
+sound.js: Sound functions used elsewhere
+zone.js: Zone class

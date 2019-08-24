@@ -1,0 +1,127 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+
+	<title id="progtitle">3DCycles</title>
+	<link rel="icon" type="image/x-icon" href="favicon.ico"/>
+
+	<link rel="stylesheet" type="text/css" href="styles/main.css"/>
+	<link rel="stylesheet" type="text/css" href="styles/arma.css"/>
+
+	<script  type="text/javascript" src="test.js"></script>
+
+	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport'/>
+
+	<script type="text/javascript" src="scripts/lib/Three.js"></script><!-- webgl framework -->
+	<script type="text/javascript" src="scripts/lib/legacy/Projector.js"></script><!-- needed for softwarerenderer -->
+	<script type="text/javascript" src="scripts/lib/legacy/SoftwareRenderer.js"></script><!-- canvas renderer for older browsers -->
+	<script type="text/javascript" src="scripts/lib/Detector.js"></script><!--//detects webgl renderer -->
+	<script type="text/javascript" src="scripts/lib/OBJExporter.js"></script>
+	<script type="text/javascript" src="scripts/lib/OBJLoader.js"></script><!-- webgl framework addon for obj loading -->
+	<script type="text/javascript" src="scripts/lib/rAF.js"></script><!-- requestAnimationFrame shim/polyfill -->
+	<script type="text/javascript" src="scripts/lib/OrbitControls.js"></script><!-- camera orbit -->
+	<script type="text/javascript" src="scripts/lib/SceneUtils.js"></script>
+	<script type="text/javascript" src="scripts/lib/xmllint.js"></script><!-- XML verification -->
+	
+	<script type="text/javascript" src="scripts/functions-head.js"></script><!-- predefined functions that can be in head -->
+
+	<script type="text/javascript" src="scripts/lib/buffer-loader.js"></script><!-- buffer loader for sound -->
+	<script type="text/javascript" src="scripts/sound.js"></script><!-- loading sound files -->	
+
+</head>
+
+<body>
+	<div id="input">
+	<span>Say:</span>&nbsp;<input type="text" class="fakemenu-active" onblur="if(engine.inputState.substr(0,5)=='input')keyboardKeyDown({keyCode:27})"/>
+	</div>
+	
+	<div id="menu-tooltip"></div>
+	<div id="menu" class="noselect mainbg_img"><h1>3DCycles is loading...</div>
+
+	<pre id="console"><span><br></span></pre>
+
+	<span id="HUD" style="opacity:0">
+
+		<div id="gui_stats" class="noselect">
+		FPS : <span name="current_framerate" precision="0"></span><br>
+		(<span name="current_pos_x_adj" precision="2"></span>,<span name="current_pos_y_adj" precision="2"></span>)<br>
+		<!--(<span name="current_angle_x" precision="2"></span>,<span name="current_angle_y" precision="2"></span>)<br>-->
+		<!--Vel: <span name="player_speed" precision="1"></span><br>-->
+		<!--Time: <span name="current_time" precision="1"></span><br>-->
+		F:<span name="dist_to_impact_front" precision="2"></span><br>
+		F:<span name="time_to_impact_front" precision="2"></span>s<br>
+		L:<span name="dist_to_impact_left" precision="2"></span><br>
+		L:<span name="time_to_impact_left" precision="2"></span>s<br>
+		R:<span name="dist_to_impact_right" precision="2"></span><br>
+		R:<span name="time_to_impact_right" precision="2"></span>s<br>
+		<canvas id="canvas" style="position:absolute;right:0;width:200px;" ></canvas>
+		</div>
+
+		<div style="color:white;position:fixed;bottom:4px;left:0;right:0">
+			<div style="text-align:center">
+				0
+				<div class="notprogressbar" style="text-align:center;position:absolute">
+					<span name="player_speed" toprecision=2></span>
+				</div>
+				<div class="progressbar">
+					<div name="player_speed" class="progress" style="background:white"></div>
+				</div> 
+				<span name="max_speed" precision=2></span>
+				<div style="text-align:center">Speed</div>
+			</div>
+		</div>
+
+		<div style="color:white;position:fixed;bottom:4px;left:1%">
+			0
+			<div class="progressbar" style="text-align:center">
+				<div name="player_rubber" class="progress" bgcolorgrad="0,15,0;15,0,0"></div>
+			</div>
+			<span name="cycle_rubber" toprecision=1></span>
+			<div style="text-align:center"><span name="player_rubber" precision=1 toprecision=2></span></div>
+		</div>
+
+		<div style="color:white;position:fixed;bottom:4px;right:1%">
+			0
+			<div class="progressbar" style="text-align:center">
+				<div name="player_brake" class="progress" bgcolorgrad="15,0,0;0,15,0"></div>
+			</div>
+			1
+			<div style="text-align:center">Brake</span></div>
+		</div>
+	</span>
+
+	<div id="scoreboard">
+		<table style="width:100%">
+			<thead>
+				<tr><th>&nbsp;<span style="color:#f80">Name:</span></th><th>Alive:</th><th>Score:</th><th>Ping:</th></tr>
+			</thead>
+			<tbody>
+				<!--<tr><td>&nbsp;Test</td><td>huh</td><td>0</td><td>0</td><tr>-->
+			</tbody>
+		</table>
+	</div>
+
+
+	<div id="centerMessage">&nbsp;</div>
+
+
+
+	<script type="text/javascript" src="scripts/input.js"></script>
+	<script type="text/javascript" src="scripts/menu.js"></script>
+
+	<script type="text/javascript" src="scripts/config.js"></script><!-- configuration + local storage -->
+	<script type="text/javascript" src="scripts/zone.js"></script>
+	<script type="text/javascript" src="scripts/player.js"></script>
+	<script type="text/javascript" src="scripts/ai.js"></script>
+	<script type="text/javascript" src="scripts/functions-body.js"></script><!-- body functions -->
+
+	<script type="text/javascript" src="scripts/buildObjects.js"></script><!-- builds usable scene objects -->
+
+	<script type="text/javascript" src="scripts/init.js"></script><!-- initializes render -->
+	<script type="text/javascript" src="scripts/game.js"></script><!-- game -->
+	<script type="text/javascript" src="scripts/render.js"></script><!-- render loop functions -->
+
+	<script type="text/javascript" src="scripts/network.js"></script><!-- network test -->
+
+</body>
+</html>

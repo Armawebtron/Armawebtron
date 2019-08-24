@@ -1,0 +1,8 @@
+These files were retrieved from the ArmagetronAd wiki from the following locations:
+http://wiki.armagetronad.org/Advanced_Racing
+http://wiki.armagetronad.org/AI_Challenge
+http://wiki.armagetronad.org/Original_Arcade
+http://wiki.armagetronad.org/TRON_Experience
+
+They were modified to use my resource as it allows cross-origin retrieving of files. (and in case webtron is repeatedly downloading maps, it will be spamming my own webserver instead of somebody else's)
+Some other settings may have also been altered.

@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Menus>
+	<Menu id="firsttime" title="Welcome to @progtitle@!
+			&lt;div style='font-size:17pt'>Please choose some initial settings:&lt;/div>">
+		<Item type="list" call="init_key" text="Keyset">
+			<Option value="-1" text="Don't Touch!" />
+			<Option value="0" text="Home row" /> <!--(ASDF for left and JKL; for right)-->
+			<Option value="1" text="WASD/Arrows" />
+		</Item>
+		<Item type="list" call="init_color" text="Initial Color">
+			<Option value="0" text="0xff0000Red" />
+			<Option value="1" text="0xff8800Orange" />
+			<Option value="2" text="0xffff00Yellow" />
+			<Option value="3" text="0x00ff00Green" />
+			<Option value="4" text="0x00ffffCyan" />
+			<Option value="5" text="0x0000ffBlue" />
+			<Option value="6" text="0xff00ffViolet" />
+		</Item>
+		<Item type="str" var="player.name" text="Name"/>
+		<Item type="exitmenu" text="Let's go!"/>
+	</Menu>
+	<Menu id="main" title="@progtitle@ Alpha">
+		<Item type="submenu" onenter="game" text="Play"/>
+		<Item type="submenu" onenter="player" text="Customize Player"/>
+		<Item type="submenu" onenter="input" text="Configure Input"/>
+		<Item type="submenu" onenter="system" text="Configure 3DCycles"/>
+		<Item type="submenu" onenter="about" text="About"/>
+		<!-- <Item type="submenu" onenter="egg" text="&lt;- Go Back"/> -->
+		<!-- alt: <Item type="text" text="" /> <!- - no exit game function, escape will do nothing -->
+		<Item type="js" onenter="window.open('','_self').close();window.location.href = 'about:blank'" text="Quit"/>
+	</Menu>
+	<!-- General game configuration -->
+	<Menu id="game" title="Play Game">
+		<Item type="js" onenter="playGame()" style="display:inline-block;" text="Locally"/>
+		<Item type="submenu" onenter="game_setup" style="font-size:16pt;" text="(config)"/>
+		<Item type="submenu" onenter="network" text="Network"/>
+		<Item type="exitmenu" text="&lt;- Go Back"/>
+	</Menu>
+		<Menu id="network" title="Network Game">
+			<Item type="str" var="CONNECT_HOST" text="Host" />
+			<Item type="num" range="1024,49151" var="CONNECT_PORT" text="Port" />
+			<Item type="list" var="CONNECT_SSL" text="SSL">
+				<Option value="false" text="No" /> <Option value="true" text="Yes" />
+			</Item>
+			<Item type="js" onenter="connectToGame()" text="Connect"/>
+			<Item type="exitmenu" text="&lt;- Go Back"/>
+		</Menu>
+			<Menu id="game_setup" title="Local Game Config" if="not engine.network">
+				<Item type="submenu" onenter="presets" text="Load Preset..."/>
+				<Item type="num" range="0,Infinity" var="TEAMS_MIN" text="Min Teams (# of Humans+AIs)" />
+				<Item type="list" var="GAME_TYPE" text="When the round finishes">
+					<Option value="0" text="Keep the round going" />
+					<Option value="1" text="End the round" />
+				</Item>
+				<Item type="list" var="FINISH_TYPE" text="When only AIs remain">
+					<Option value="1" text="Have AIs win" />
+					<Option value="2" text="Fast finish" />
+					<Option value="3" text="Find winner (alpha)" />
+				</Item>
+				<Item type="num" range="-20,15" var="SIZE_FACTOR" text="Arena Size" />
+				<Item type="num" range="0,Infinity" var="CYCLE_SPEED" text="Cycle Speed" />
+				<Item type="num" range="0,Infinity" var="CYCLE_RUBBER" text="Cycle Rubber" />
+				<Item type="exitmenu" text="&lt;- Go Back"/>
+			</Menu>
+				<!--<Menu id="presets" title="Load Preset">
+					<Item type="js" onenter="preset('classic');menu('exitmenu');menu('exitmenu')" text="Classic"/>
+					<Item type="js" onenter="preset('df');menu('menu:loading')" text="Dogfight"/>
+					<Item type="js" onenter="preset('hr');menu('menu:loading')" text="High Rubber"/>
+					<Item type="js" onenter="preset('ft');menu('menu:loading')" text="Fast Track"/>
+					<Item type="js" onenter="preset('fort');menu('menu:loading')" text="Fortress"/>
+					<Item type="js" onenter="preset('racing');menu('menu:loading')" text="Racing"/>
+					<Item type="js" onenter="preset('zonetest');menu('exitmenu');menu('exitmenu')" text="Zone test"/>
+					<Item type="exitmenu" text="Cancel"/>
+				</Menu>-->
+				<Menu id="presets" title="Load Preset">
+					<Item type="js" style="font-size:14pt" onenter="preset('classic');menu('exitmenu');menu('exitmenu')" 
+						text="Classic" title="Default low rubber settings in Armagetron"/>
+					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('df')" 
+						text="Loose Dogfight" title="Obey loose dogfight rules or go elsewhere!"/>
+					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('hr')" 
+						text="0x0000ff-=}0xffffffID0x0000ff&lt; 0xffff00T0x00ff00I0xffff00L0x00ff00T 0x0000ffHigh Rubber0x00ff00" title="No camping!"/>
+					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('ft')" 
+						text="0xc0c000&gt;&gt;&gt; 0xff0000F0xff1c1cA0xff3838S0xff5555T0xff7171T0xff8d8dR0xffaaaaA0xffc6c6C0xffe2e2K 0xc0c000&lt;&lt;&lt;" title="Gotta go fast! Very fast!"/>
+					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('fort')" 
+						text="Fortress" title="Take the enemy's base, try not to let them take yours."/>
+					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('styball')" 
+						text="Styball (Soccer / Hockey)" title="Push the ball into the enemy's base, but don't let them push it into yours!"/>
+					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('racing')" 
+						text="0x66cc66Adventures of 0x00cc00TRON 0xffffff>> Advanced Racing &lt;&lt;" title="First to the finish line wins!"/>
+					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('snake')" 
+						text="0x66ccffSnake Survival" title="How long can you get your trail?"/>
+					<Item type="js" style="font-size:14pt" onenter="preset('zonetest');menu('exitmenu');menu('exitmenu')" 
+						text="Zone test" title="Zones! Zones! Zones! Zones everywhere!"/>
+					<Item type="exitmenu" text="Cancel" title="Never mind, none of these look interesting..."/>
+				</Menu>
+	<Menu id="loading" title="Loading...">
+		<Item type="text" text="" from="con:last" style="font-size:14pt;text-align:left;padding:10px;color:grey" />
+	</Menu>
+	
+	<!-- Player configuration -->
+	<Menu id="player" title="Player Setup">
+		<Item type="str" var="player.name" text="Name"/>
+		<Item type="submenu" onenter="macro" text="Instant Chats"/>
+		<Item type="color" var="player.cycleColor" text="Cycle Color" />
+		<Item type="color" var="player.tailColor" text="Tail Color" />
+		<!--<Item type="num" range="0,5" var="player.engineType" text="Engine Type" />-->
+		<Item type="list" var="player.spectating" text="Spectator Mode">
+			<Option value="false" text="Off" /> <Option value="true" text="On" />
+		</Item>
+		<Item type="js" onenter="" text="Export player settings" />
+		<Item type="js" onenter="" text="Import settings" />
+		<Item type="exitmenu" text="&lt;- Go Back"/>
+	</Menu>
+		<Menu id="macro" title="Instant Chats">
+			<!--<Foreach var="instantchats" as="n">
+				<Item type="str" var="instantchats.$(n).text" text="Chat"/>
+				<Item type="keys" var="instantchats.$(n).input" text="Input" />
+				<Item type="text" text="&amp;nbsp;" />
+			</Foreach>-->
+			<Item type="str" var="instantchats.0.text" text="Chat"/>
+			<Item type="keys" var="instantchats.0.input" text="Input" />
+			<Item type="text" text="&amp;nbsp;" />
+			
+			<Item type="str" var="instantchats.1.text" text="Chat"/>
+			<Item type="keys" var="instantchats.1.input" text="Input" />
+			<Item type="text" text="&amp;nbsp;" />
+			
+			<Item type="str" var="instantchats.2.text" text="Chat"/>
+			<Item type="keys" var="instantchats.2.input" text="Input" />
+			<Item type="text" text="&amp;nbsp;" />
+			
+			<Item type="str" var="instantchats.3.text" text="Chat"/>
+			<Item type="keys" var="instantchats.3.input" text="Input" />
+			<Item type="text" text="&amp;nbsp;" />
+			
+			<Item type="js" onenter="" text="Add instant chat (future)" />
+			<Item type="exitmenu" text="&lt;- Go Back"/>
+		</Menu>
+	<Menu id="input" title="Configure Input">
+		<Item type="submenu" onenter="input_conf" text="Player Control"/>
+		<Item type="submenu" onenter="global_input_conf" text="Global Input"/>
+		<Item type="exitmenu" text="&lt;- Go Back"/>
+	</Menu>
+		<Menu id="input_conf" title="Player Input">
+			<Item type="keys" var="left" text="Turn left" />
+			<Item type="keys" var="right" text="Turn right" />
+			<!--<Item type="keys" var="north" text="Turn North" />
+			<Item type="keys" var="south" text="Turn South" />
+			<Item type="keys" var="east" text="Turn East" />
+			<Item type="keys" var="west" text="Turn West" />-->
+			<Item type="keys" var="boost" text="Boost" />
+			<Item type="keys" var="toggleboost" text="Toggle Boost" />
+			<Item type="keys" var="brake" text="Brake" />
+			<Item type="keys" var="togglebrake" text="Toggle Brake" />
+			<Item type="keys" var="jump" text="Jump" />
+			<Item type="keys" var="chat" text="Chat" />
+			<Item type="keys" var="camera" text="Switch View" />
+			<Item type="keys" var="look_left" text="Look Left" />
+			<Item type="keys" var="look_right" text="Look Right" />
+			<Item type="keys" var="look_forward" text="Look Forward" />
+			<Item type="keys" var="look_back" text="Look Back" />
+			<Item type="exitmenu" text="&lt;- Go Back"/>
+		</Menu>
+	
+	<!-- Configuration -->
+	<Menu id="system" title="System Setup">
+		<Item type="submenu" onenter="screen" text="Configure Display"/>
+		<Item type="submenu" onenter="display" text="Configure Visuals"/>
+		<Item type="submenu" onenter="sound" text="Configure the Sound"/>
+		<Item type="submenu" onenter="other" text="Misc Settings"/>
+		<Item type="exitmenu" text="&lt;- Go Back"/>
+	</Menu>
+		<Menu id="screen" title="Screen Mode">
+			<Item type="list" call="settings.FULLSCREEN" text="Fullscreen (F11)" title="It's recommended that you use F11 instead of this fullscreen option. It is, however, left in for mobile touchscreen devices.">
+				<Option value="false" text="Off" /> <Option value="true" text="On" />
+			</Item>
+			<Item type="list" var="REDRAW_MODE" text="VSync" title="Synchronize framerate with vertical refresh rate\nThe vertical refresh rate is basically the frames per second your monitor displays. Turning this on would make it depend on browser redraw calls, effectively capping your FPS at the refresh rate. Turning it off would continously draw the frames but throws away additional frames that your monitor doesn't display. Depending on game loop configuration, this can provide minimal advantage.">
+				<Option value="1" text="Off" /> <Option value="0" text="On" />
+			</Item>
+			<Item type="num" range="1,Infinity" var="MAX_TARGET_FPS" text="Max Target FPS" />
+			<Item type="exitmenu" text="&lt;- Go Back"/>
+		</Menu>
+		<Menu id="display" title="Visual Settings">
+			<Item type="submenu" onenter="detail" text="Detail Settings"/>
+			<Item type="submenu" onenter="visual_prefs" text="Other Preferences"/>
+			<Item type="exitmenu" text="&lt;- Go Back"/>
+		</Menu>
+			<Menu id="detail" title="Detail Settings">
+				<Item type="list" call="aamenurender" text="Menu Background Rendering" title="How the background is rendered. Default: Image">
+					<Option value="img" text="Image" />
+					<Option value="css" text="CSS" />
+					<Option value="css_rot" text="CSS+Rotation" />
+				</Item>
+				<Item type="exitmenu" text="&lt;- Go Back"/>
+			</Menu>
+			<Menu id="visual_prefs" title="Preferences">
+				<Item type="list" var="HIGH_RIM" text="High Rims">
+					<Option value="false" text="Off" /> <Option value="true" text="On" />
+				</Item>
+				<Item type="list" var="EXPLOSION" text="Explosions">
+					<Option value="false" text="Off" /> <Option value="true" text="On" />
+				</Item>
+				<Item type="list" var="engine.view" from="engine.views" text="Current Camera" />
+				<Item type="exitmenu" text="&lt;- Go Back"/>
+			</Menu>
+		<Menu id="sound" title="Sound Configuration">
+			<Item type="list" var="player.engineType" text="Sound set">
+				<Option value="5" text="ArmagetronAd" />
+				<Option value="3" text="Tr2n Origins" />
+				<Option value="4" text="glTron" />
+			</Item>
+			<Item type="exitmenu" text="&lt;- Go Back"/>
+		</Menu>
+		<Menu id="other" title="Misc Configuration">
+			<Item type="submenu" onenter="display_tweaks" text="Tweaks"/>
+			<Item type="submenu" onenter="global_input_conf" text="Global Keys"/>
+			<Item type="exitmenu" text="&lt;- Go Back"/>
+		</Menu>
+			<Menu id="display_tweaks" title="Game Tweaks">
+				<Item type="list" var="GAME_LOOP" text="Run game loop">
+					<Option value="0" text="Outside render cycle" />
+					<Option value="2" text="Outside+during render cycle" title="possibily reduces fps?" />
+					<Option value="0.5" text="Outside render cycle + cycle movement in render" title="may reduce visible jumps, the default" />
+					<Option value="1" text="During render cycle" title="may reduce jumps but increase lag"/>
+				</Item>
+				<Item type="exitmenu" text="&lt;- Go Back"/>
+			</Menu>
+			<Menu id="global_input_conf" title="Input Configuration">
+				<Item type="keys" var="scroll_up" text="Scroll Up" />
+				<Item type="keys" var="scroll_down" text="Scroll Down" />
+				<Item type="keys" var="scroll_end" text="Scroll to End" />
+				<Item type="keys" var="score" text="Toggle Scoreboard" />
+				<Item type="exitmenu" text="&lt;- Go Back"/>
+			</Menu>
+	
+	
+	<Menu id="about" title="About">
+		<Item type="text" style="font-size:15pt" text="0xff8800Title: 0xRESETT@progtitle@" />
+		<Item type="text" style="font-size:15pt" text="Draws heavy inspiration from the excellent lightcycle game Armagetron Advanced." />
+		<Item type="text" style="font-size:15pt" text="0xff8800Version: 0xRESETTv1.0-beta6" />
+		<Item type="text" style="font-size:15pt" text="This is a development version. It's a heavy work in progress. Anything could change at any time, and there may be a lot of bugs." />
+		<Item type="submenu" onenter="about_dev" text="Credits"/>
+		<Item type="submenu" onenter="license" text="Legal Stuff"/>
+		<!--<Item type="text" text="0xff7f00Official Website: 0xRESETTN/A" />-->
+		<Item type="exitmenu" text="&lt;- Go Back"/>
+	</Menu>
+		<Menu id="about_dev" title="Credits">
+			<Item type="text" style="font-size:15pt" text="0xff8800Project Admin: 0xRESETTNelg" />
+			<Item type="text" style="font-size:15pt" text="0xff8800Developers: 0xRESETTNelg, Durf" />
+			<Item type="text" style="font-size:15pt" text="0xff8800Collision Detection: 0xRESETTDurf, softSurfer" />
+			<Item type="text" style="font-size:15pt" text="0xff8800ArmagetronAd Font: 0xRESETTLucifer, Fabrice Holbe" />
+			<Item type="text" style="font-size:15pt" text="0xff8800Textures: 0xRESETTSinewav, the Armagetron Advanced development team" />
+			<Item type="text" style="font-size:15pt" text="0xff8800ArmagetronAd Cycles: 0xRESETTZ-Man(?)" />
+			<!--<Item type="text" style="font-size:15pt" text="0xff8800Testing: 0xRESETTdukevin, light, jericho, zoom" />-->
+			<Item type="exitmenu" text="&lt;- Go Back"/>
+		</Menu>
+		<Menu id="license" title="Legal Stuff">
+			<Item type="text" style="font-size:15pt" text="3DCycles - A lightcycle game. &lt;br>
+Copyright (C) 2019 Glen Harpring &lt;br> &lt;br>
+This program is free software; you can redistribute it and/or &lt;br>
+modify it under the terms of the GNU General Public License &lt;br>
+as published by the Free Software Foundation; either version 2 &lt;br>
+of the License, or (at your option) any later version. &lt;br>
+ &lt;br>
+This program is distributed in the hope that it will be useful, &lt;br>
+but WITHOUT ANY WARRANTY; without even the implied warranty of &lt;br>
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the &lt;br>
+GNU General Public License for more details. &lt;br>
+ &lt;br>
+You should have received a copy of the GNU General Public License &lt;br>
+along with this program; if not, write to the Free Software &lt;br>
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA." />
+			<Item type="exitmenu" text="&lt;- Go Back"/>
+		</Menu>
+	
+	<Menu id="pause" title="Paused" exitmenu="pauseMenuToggle()">
+		<Item type="submenu" onenter="game_setup" text="Local Game Setup"/>
+		<Item type="submenu" onenter="team" text="Change Teams"/>
+		<Item type="submenu" onenter="player" text="Customize Player"/>
+		<Item type="submenu" onenter="input" text="Configure Input"/>
+		<Item type="submenu" onenter="system" text="Configure 3DCycles"/>
+		<Item type="submenu" onenter="about" text="About"/>
+		<Item type="leave" text="Leave Grid"/>
+		<Item type="exitmenu" text="Return to Game"/>
+	</Menu>
+		<Menu id="team" title="Change Teams">
+			<!-- script to dynamically generate items-->
+			<Item type="list" var="player.spectating" text="Spectator Mode" onenter="KILL_ALL">
+				<Option value="false" text="Off" /> <Option value="true" text="On" />
+			</Item>
+			<Item type="exitmenu" text="&lt;- Go Back"/>
+		</Menu>
+	<Menu id="vote" title="Vote" exitmenu="menu('exitmenu');vote(voteopt)"> <!--Future implementation?-->
+		<Item type="list" call="function(in){voteopt = in; return '';}" text="Vote">
+			<Option value="no"     text="    No   &gt;" />
+			<Option value=""    text="&lt; Ignore &gt;" />
+			<Option value="yes" text="&lt; Yes     " />
+		</Item>
+		<Item type="exitmenu" text="Submit"/>
+	</Menu>
+	<Menu id="highscores" title="0x000000Highscores">
+		<Item type="text" text="0xff0000»0x808080Swag´0xRESETT: INF points" />
+		<Item type="text" text="0x0088ff|0xRESETTNelg0xRESETT:  10 points" />
+		<Item type="text" text="0x00ff00Z-Man0xRESETT:  1 points" />
+		<Item type="exitmenu" text="&lt;- Go Back"/>
+	</Menu>
+	<Menu id="preset_loaded" title="Preset Loaded">
+		<Item type="js" onenter="playGame()" text="Play"/>
+		<Item type="submenu" onenter="input_conf" text="Set Controls"/>
+		<Item type="exitmenu" text="Back to main menu"/>
+	</Menu>
+</Menus>

@@ -1,0 +1,84 @@
+/*menu-red and menu-info are not used anymore*/
+.menu-red
+{
+	color: #ff4444;
+}
+.menu-info 
+{
+	font-style: italic;
+	font-size: 14px;
+}
+
+
+@keyframes activeMenu { from {opacity:0.5} to {opacity:1} }
+@-moz-keyframes activeMenu { from {opacity:0.5} to {opacity:1} }
+@-webkit-keyframes activeMenu { from {opacity:0.5} to {opacity:1} }
+@-o-keyframes activeMenu { from {opacity:0.5} to {opacity:1} }
+@-ms-keyframes activeMenu { from {filter:Alpha(opacity=50)} to {filter:Alpha(opacity=100)} }
+
+.fakemenu-active, .menu-active :focus
+{
+	color: #ff4444;
+	animation: activeMenu 0.315s linear infinite alternate;
+	-o-animation: activeMenu 0.315s linear infinite alternate;
+	-ms-animation: activeMenu 0.315s linear infinite alternate;
+	-moz-animation: activeMenu 0.315s linear infinite alternate;
+	-webkit-animation: activeMenu 0.315s linear infinite alternate;
+	outline: none;
+}
+
+
+@keyframes animatedBackground { from { background-position: 0px 0px; } to { background-position: -78px -78px; } }
+@-moz-keyframes animatedBackground { from { background-position: 0px 0px; } to { background-position: -78px -78px; } }
+@-webkit-keyframes animatedBackground { from { background-position: 0px 0px; } to { background-position: -78px -78px; } }
+@-o-keyframes animatedBackground { from { background-position: 0px 0px; } to { background-position: -78px -78px; } }
+@-ms-keyframes animatedBackground { from { background-position: 0px 0px; } to { background-position: -78px -78px; } }
+
+.mainbg_css, .mainbg_css_rot
+{
+	position: relative;
+	background-color:rgb(127,127,179);
+	background-image:url('../images/textures/floor.png');
+}
+
+.mainbg_css:before, .mainbg_css_rot:before
+{
+	content: ""; position: fixed; z-index: -1;
+	top:-25%;left:-25%;width:150%;height:150%;
+	/*background-image: url('../images/background-aamenu-large.png');*/
+	background-color:inherit;
+	background-image:inherit;
+	background-blend-mode:darken;
+	background-size:78px;
+	background-position: 0px 0px;
+	animation: animatedBackground 4s linear infinite;
+	-ms-animation: animatedBackground 4s linear infinite;
+	-moz-animation: animatedBackground 4s linear infinite;
+	-webkit-animation: animatedBackground 4s linear infinite;
+}
+
+.mainbg_css_rot:before
+{
+	transform: rotate(-14deg);
+}
+
+@keyframes animatedBackground2 { from { background-position: 0px 0px; } to { background-position: -640px -320px; } }
+@-moz-keyframes animatedBackground2 { from { background-position: 0px 0px; } to { background-position: -640px -320px; } }
+@-webkit-keyframes animatedBackground2 { from { background-position: 0px 0px; } to { background-position: -640px -320px; } }
+@-o-keyframes animatedBackground2 { from { background-position: 0px 0px; } to { background-position: -640px -320px; } }
+@-ms-keyframes animatedBackground2 { from { background-position: 0px 0px; } to { background-position: -640px -320px; } }
+
+.mainbg_img
+{
+	background-image: url('../images/aamenu-background-large.png');
+	background-position: 0px 0px;
+	animation: animatedBackground2 24s linear infinite;
+	-ms-animation: animatedBackground2 24s linear infinite;
+	-moz-animation: animatedBackground2 24s linear infinite;
+	-webkit-animation: animatedBackground2 24s linear infinite;
+}
+
+.pausebg, .mainbg_nothing
+{
+	background-color: rgba(10,10,10,0.6);
+}
