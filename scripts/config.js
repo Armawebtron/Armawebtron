@@ -1247,6 +1247,8 @@ if(typeof(document) != "undefined")
 	engine.hud = document.getElementById("HUD");
 	engine.hud.hide = function(){this.style.opacity=0;};
 	engine.hud.show = function(){this.style.opacity=1;};
+	engine.hud.basic = document.getElementById("gui_stats");
+	engine.hud.game = document.getElementById("game_stats");
 	engine.hud.fadein = true;
 }
 else

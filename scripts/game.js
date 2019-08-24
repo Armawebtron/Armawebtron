@@ -38,7 +38,8 @@ function endRound()
 		if(settings.SOUNDS_EXTRO) playSound(bufferLoader.bufferList[bufferLoader.other+2],0.5,1,false,ctx.destination);
 	}
 	engine.roundCommencing = true;
-	engine.hud.hide();
+	//engine.hud.hide();
+	engine.hud.game.style.opacity = 0;
 	engine.console.print("Deleting objects...\n",false);
 	if(!engine.network)
 	{
@@ -76,6 +77,7 @@ function playGame()
 	else
 	{
 		engine.paused = false;
+		engine.hud.show();
 	}
 	hideMenu(); newRound();
 	engine.inputState = 'game'; //change input state to accept game controls

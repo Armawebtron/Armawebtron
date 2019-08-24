@@ -219,15 +219,15 @@ function draw()
 		}
 	}
 	
-	if(engine.hud.fadein && engine.hud.style.opacity < 1)
+	if(engine.hud.fadein && engine.hud.game.style.opacity < 1)
 	{
-		engine.hud.style.opacity = (engine.hud.style.opacity*1)+(frametime*0.25); //workaround for opacity being a string
-		if(engine.hud.style.opacity > 1) engine.hud.style.opacity = 1;
+		engine.hud.game.style.opacity = (engine.hud.game.style.opacity*1)+(frametime*0.25); //workaround for opacity being a string
+		if(engine.hud.game.style.opacity > 1) engine.hud.game.style.opacity = 1;
 	}
-	else if(!engine.hud.fadein && engine.hud.style.opacity > 0)
+	else if(!engine.hud.fadein && engine.hud.game.style.opacity > 0)
 	{
-		engine.hud.style.opacity -= frametime*0.25;
-		if(engine.hud.style.opacity < 0) engine.hud.style.opacity = 0;
+		engine.hud.game.style.opacity -= frametime*0.25;
+		if(engine.hud.game.style.opacity < 0) engine.hud.game.style.opacity = 0;
 	}
 	
 	//update HUD (needs to be done for cycle being viewed)
