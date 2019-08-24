@@ -449,7 +449,7 @@ function game(oneoff=false)
 							{
 								var dir = cycle.turnQueue[0],dirmult;
 								var olddir = cdir(cycle.rotation.z);
-								cycle.dir.front = (dirmult = cdir(cycle.rotation.z -= deg2rad(360/settings.ARENA_AXES)*dir));
+								cycle.dir.front = (dirmult = cdir(cycle.rotation.z -= (pi(2)/settings.ARENA_AXES)*dir));
 								//cycle.rotation.z = cycle.rotation.z%(Math.PI*2);
 								//if(cycle.rotation.z < 0) cycle.rotation.z += Math.PI*2;
 								cycle.rotation.z = normalizeRad(cycle.rotation.z);
@@ -467,7 +467,7 @@ function game(oneoff=false)
 								if(cycle.haswall) cycle.newWallSegment();
 								if(engine.network)
 								{
-									engine.connection.send(JSON.stringify({type:"turn",data:rad2deg(cycle.rotation.z)}));
+									engine.connection.send(JSON.stringify({type:"turn",data:rad2deg(cycle.rotation.z),gtime:engine.gtime}));
 								}
 								if(window.svr) //force a player sync
 								{
