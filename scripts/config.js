@@ -85,20 +85,22 @@ settings = {
 	FLOOR_RED: 0.03,
 	FLOOR_GREEN: 0.266,
 	FLOOR_BLUE: 0.8,
-	FLOOR_TEXTURE: "images/textures/floor.png",
+	FLOOR_TEXTURE: "textures/floor.png",
 	/*GRID_SIZE: 2,
 	FLOOR_RED: 1,
 	FLOOR_GREEN: 1,
 	FLOOR_BLUE: 1,
-	FLOOR_TEXTURE: "images/textures/moviepack_t_r_u_e/floor.png",*/
+	FLOOR_TEXTURE: "textures/moviepack_t_r_u_e/floor.png",*/
 	/*GRID_SIZE: 1,
 	FLOOR_RED: 0.01,
 	FLOOR_GREEN: 0.14,
 	FLOOR_BLUE: 0.35,
-	FLOOR_TEXTURE: "images/textures/aaold/floor.png",*/
+	FLOOR_TEXTURE: "textures/aaold/floor.png",*/
 	
 	FLOOR_MIRROR: false,
 	FLOOR_MIRROR_INT: 1,
+	
+	CYCLE_TEXTURES: ["textures/cycle_body.png","textures/cycle_wheel.png"],
 	
 	EXPLOSIONS: true,
 	HIGH_RIM: false,
@@ -113,7 +115,7 @@ settings = {
 	RIM_WALL_STRETCH_Y: 13.5,
 	RIM_WALL_WRAP_Y: false,
 	RIM_WALL_REPEAT_TOP: false,
-	RIM_WALL_TEXTURE: "images/textures/futurerim.png",
+	RIM_WALL_TEXTURE: "textures/futurerim.png",
 	RIM_WALL_DEPTH: true,
 	RIM_WALL_LOWEST_HEIGHT: 0,
 	RIM_WALL_BELOW_HEIGHT_COLOR_R: 0,
@@ -131,7 +133,7 @@ settings = {
 	RIM_WALL_STRETCH_Y: 32,
 	LOW_RIM_HEIGHT: 32,
 	RIM_WALL_WRAP_Y: false,
-	RIM_WALL_TEXTURE: "images/textures/moviepack_eddkeefe/rim_wall.png",
+	RIM_WALL_TEXTURE: "textures/moviepack_eddkeefe/rim_wall.png",
 	RIM_WALL_LOWEST_HEIGHT: 32,
 	RIM_WALL_BELOW_HEIGHT_COLOR_R: 166/255,
 	RIM_WALL_BELOW_HEIGHT_COLOR_G: 45/255,
@@ -148,7 +150,7 @@ settings = {
 	RIM_WALL_STRETCH_Y: 32,
 	LOW_RIM_HEIGHT: 32,
 	RIM_WALL_WRAP_Y: false,
-	RIM_WALL_TEXTURE: "images/textures/moviepack_t_r_u_e/movie-rim-wall.png",
+	RIM_WALL_TEXTURE: "textures/moviepack_t_r_u_e/movie-rim-wall.png",
 	RIM_WALL_DEPTH: true,
 	RIM_WALL_LOWEST_HEIGHT: 32,
 	/*RIM_WALL_BELOW_HEIGHT_COLOR_R: 188/255,

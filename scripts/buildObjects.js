@@ -27,11 +27,11 @@
 
 function loadTextures()
 {
-	engine.textures.floor = new new THREE.TextureLoader().load(settings.FLOOR_TEXTURE);
-	engine.textures.rim_wall = new new THREE.TextureLoader().load(settings.RIM_WALL_TEXTURE);
-	engine.textures.cycle_wall = new new THREE.TextureLoader().load('images/textures/dir_wall.png');
-	engine.textures.cycle_body = new THREE.TextureLoader().load('images/textures/cycle_body.png');
-	engine.textures.cycle_wheel = new THREE.TextureLoader().load('images/textures/cycle_wheel.png')
+	engine.textures.floor = new new THREE.TextureLoader().load("images/"+settings.FLOOR_TEXTURE);
+	engine.textures.rim_wall = new new THREE.TextureLoader().load("images/"+settings.RIM_WALL_TEXTURE);
+	//engine.textures.cycle_wall = new new THREE.TextureLoader().load('images/textures/dir_wall.png');
+	engine.textures.cycle_body = new THREE.TextureLoader().load("images/"+settings.CYCLE_TEXTURES[0]);
+	engine.textures.cycle_wheel = new THREE.TextureLoader().load("images/"+settings.CYCLE_TEXTURES[1])
 	engine.textures.cycle_shadow = new THREE.TextureLoader().load('images/textures/shadow.png')
 }
 
@@ -1648,9 +1648,9 @@ function newWall(tailColor,x,y,z=0)
 	var textureBlending = true;
 	if(!engine.dedicated)
 	{
-		var texture = engine.textures.cycle_wall;
+		/*var texture = engine.textures.cycle_wall;
 		texture.wrapS = THREE.RepeatWrapping;
-		texture.repeat.set(xy,1);
+		texture.repeat.set(xy,1);*/
 		/*if (texture.image)
 		{
 			wallTextureProportion = (texture.image.width / texture.image.height) * xy; // *4 is actual size
