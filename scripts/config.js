@@ -610,7 +610,7 @@ var commands = {
 	{
 		if(params == "")
 		{
-			engine.console.print("Usage:\nSPAWN_ZONE SPAWN_ZONE <win|death|ball|target|blast|object|koh> <x> <y> <size> <growth> <xdir> <ydir> <interactive> <r> <g> <b>\nSPAWN_ZONE <acceleration|speed> <speed> <x> <y> <size> <growth> <xdir> <ydir> <interactive> <r> <g> <b>\nSPAWN_ZONE <rubber|rubberadjust> <x> <y> <size> <growth> <xdir> <ydir> <rubber> <interactive> <r> <g> <b>\nSPAWN_ZONE <fortress|flag> <x> <y> <size> <growth> <xdir> <ydir> <interactive> <r> <g> <b>\n");
+			engine.console.print("Usage:\nSPAWN_ZONE <win|death|ball|target|blast|object|koh> <x> <y> <size> <growth> <xdir> <ydir> <interactive> <r> <g> <b>\nSPAWN_ZONE <acceleration|speed> <speed> <x> <y> <size> <growth> <xdir> <ydir> <interactive> <r> <g> <b>\nSPAWN_ZONE <rubber|rubberadjust> <x> <y> <size> <growth> <xdir> <ydir> <rubber> <interactive> <r> <g> <b>\nSPAWN_ZONE <fortress|flag> <x> <y> <size> <growth> <xdir> <ydir> <interactive> <r> <g> <b>\n\nInstead of <x> <y> one can write: L <x1> <y1> <x2> <y2> [...] Z\nInstead of <size> one can write: P <scale> <x1> <y1> <x2> <y2> [...] Z");
 		}
 		else
 		{
@@ -624,9 +624,36 @@ var commands = {
 			{
 				zone.value = args.slice(1,2)[0];
 			}
-			zone.x = args[1]*engine.REAL_ARENA_SIZE_FACTOR;
-			zone.y = args[2]*engine.REAL_ARENA_SIZE_FACTOR;
-			zone.radius = args[3]*engine.REAL_ARENA_SIZE_FACTOR;
+			if(args[1] === "L")
+			{
+				for(var i=2;args[i]=="Z"||i>args.length;i+=2)
+				{
+					if(i == 2)
+					{
+						zone.x = args[i]  *engine.REAL_ARENA_SIZE_FACTOR;
+						zone.y = args[i+1]*engine.REAL_ARENA_SIZE_FACTOR;
+					}
+				}
+				args.slice(2,i);
+			}
+			else
+			{
+				zone.x = args[1]*engine.REAL_ARENA_SIZE_FACTOR;
+				zone.y = args[2]*engine.REAL_ARENA_SIZE_FACTOR;
+			}
+			if(args[3] === "P")
+			{
+				engine.console.print("WARNING: ShapePolygon may not currently work. Use at your own risk.\n",false);
+				for(var i=3;args[i]=="Z"||i>args.length;i+=2)
+				{
+					
+				}
+				args.slice(3,i);
+			}
+			else
+			{
+				zone.radius = args[3]*engine.REAL_ARENA_SIZE_FACTOR;
+			}
 			zone.expansion = args[4]*1;
 			zone.xdir = args[5]*1; zone.ydir = args[6]*1;
 			zone.bounce = Boolean(parseInt+(args[7]))&&args[7]!="false";
@@ -634,8 +661,6 @@ var commands = {
 			{
 				zone.color = new THREE.Color(args[7]/15,args[8]/15,args[9]/15);
 			}
-			//engine.zones.add(createZone(type,posX,posY,radius,color));
-			//engine.map.zones.push([type,posX,posY,radius,expansion,value]);
 			new Zone(zone).spawn();
 			console.log("new Zone: "+zone);
 		}
@@ -644,11 +669,23 @@ var commands = {
 	{
 		if(params == "")
 		{
-			engine.console.print("Usage:\nSPAWN_WALL <x> <y> <height>\n");
+			engine.console.print("Usage:\nSPAWN_WALL <height> <x1> <y1> <x2> <y2> [...]\n");
 		}
 		else
 		{
-			
+			var params = params.split(" "), height = params.slice(0,1)[0]*1, points = [];
+			for(var q=0;q<params.length;q+=2)
+			{
+				points.push(
+					[
+						params[q]*engine.REAL_ARENA_SIZE_FACTOR,
+						params[q+1]*engine.REAL_ARENA_SIZE_FACTOR,
+						0, height
+					]
+				);
+			}
+			engine.walls.add(buildWall(points,height));
+			engine.map.walls.push(points);
 		}
 	},
 	SET_ZONE_POSITION: function(params)

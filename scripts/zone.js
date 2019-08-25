@@ -22,7 +22,6 @@ if(typeof(THREE) == "undefined") var THREE = require('./lib/Three.js');
 var flagColors = [ 0x55AAFF, 0xFFFF55, 0xFF5555, 0x55FF55, 0xFF55FF, 0x55FFFF, 0xFFFFFF, 0x888888];
 class Zone
 {
-	timesEntered = 0
 	spawn()
 	{
 		engine.zones.add(this.mesh);
@@ -35,6 +34,8 @@ class Zone
 	}
 	constructor(prop)
 	{
+		this.timesEntered = 0;
+		
 		this.type = prop.type||"null";
 		this.rotationSpeed = prop.rot||settings.ZONE_SPIN_SPEED;
 		this.value = prop.value||0;
