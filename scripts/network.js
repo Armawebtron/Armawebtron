@@ -241,8 +241,14 @@ function connectionHandler(e)
 			for(var i=msg.data.length-1;i>=0;--i) if(msg.data[i])
 			{
 				var zone = msg.data[i];
-				
-				if(engine.zones[zone.id])
+				if(zone.destroyed)
+				{
+					if(engine.zones[zone.id])
+					{
+						engine.zones[zone.id].destroy();
+					}
+				}
+				else if(engine.zones[zone.id])
 				{
 					//maybe a bit hacky but it's the best way I can think of to ensure everything is correct, short of destroying and recreating the zone entirely (which would likely be too slow)
 					engine.zones[zone.id].constructor(zone);
