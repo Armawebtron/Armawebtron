@@ -39,7 +39,7 @@ function endRound()
 	}
 	engine.roundCommencing = true;
 	//engine.hud.hide();
-	engine.hud.game.style.opacity = 0;
+	if(engine.hud) engine.hud.game.style.opacity = 0;
 	engine.console.print("Deleting objects...\n",false);
 	if(!engine.network)
 	{
@@ -77,7 +77,7 @@ function playGame()
 	else
 	{
 		engine.paused = false;
-		engine.hud.show();
+		if(engine.hud) engine.hud.show();
 	}
 	hideMenu(); newRound();
 	engine.inputState = 'game'; //change input state to accept game controls
@@ -516,7 +516,7 @@ function game(oneoff=false)
 			if(typeof(engine.timer)=="undefined" || engine.timer != gTime)
 			{
 				engine.timer = gTime;
-				engine.hud.fadein = true;
+				if(engine.hud) engine.hud.fadein = true;
 				if(engine.dedicated) console.log(gTime);
 				else centerMessage(gTime,(gTime-time));
 				//engine.console.print(gTime+"\n");
@@ -791,7 +791,7 @@ function changeViewTarget(a=1,forcechange=false)
 			case 2:
 				engine.asendtm = 0.2;
 				centerMessage("Time Warp!",Infinity);
-				engine.hud.fadein = false;
+				if(engine.hud) engine.hud.fadein = false;
 				break;
 			case 3:
 				centerMessage("Please wait...",Infinity);
