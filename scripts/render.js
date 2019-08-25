@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-var draw2dmap = 2;
+var draw2dmap = true;
 
 function render()
 {
@@ -27,7 +27,15 @@ function render()
 		if(settings.GAME_LOOP > 0) game(true); //update game right before render
 		if(settings.REDRAW_MODE == 0) requestAnimationFrame(render); 
 		else setTimeout(render,1000/settings.TARGET_FPS);
-		draw(); if(settings.HUD_MAP && engine.hud.style.opacity > 0) requestAnimationFrame(draw2d); 
+		draw(); //actual 3d draw
+		if(settings.HUD_MAP && draw2dmap && engine.hud.style.opacity > 0)
+		{
+			draw2dmap = false;
+			if(settings.REDRAW_MODE == 0)
+				setTimeout(draw2d_canvas,0);
+			else
+				requestAnimationFrame(draw2d_canvas); 
+		}
 	}
 	else
 	{
@@ -348,7 +356,7 @@ function updateHUD(celement,thevalue,min=false,max=false)
 	}
 }
 
-function draw2d() //TODO: switch to svg, figure out how to improve performance
+function draw2d_canvas() //TODO: switch to svg, figure out how to improve performance
 {
 	var canvas = document.getElementById("canvas");
 	if(!canvas) return;
@@ -427,7 +435,7 @@ function draw2d() //TODO: switch to svg, figure out how to improve performance
 			ctx.stroke();
 		}
 	}
-	draw2dmap = 2;
+	draw2dmap = true;
 }
 
 
