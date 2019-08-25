@@ -22,6 +22,7 @@ if(typeof(THREE) == "undefined") var THREE = require('./lib/Three.js');
 var flagColors = [ 0x55AAFF, 0xFFFF55, 0xFF5555, 0x55FF55, 0xFF55FF, 0x55FFFF, 0xFFFFFF, 0x888888];
 class Zone
 {
+	timesEntered = 0
 	spawn()
 	{
 		engine.zones.add(this.mesh);
@@ -34,7 +35,7 @@ class Zone
 	}
 	constructor(prop)
 	{
-		this.type = prop.type;
+		this.type = prop.type||"null";
 		this.rotationSpeed = prop.rot||settings.ZONE_SPIN_SPEED;
 		this.value = prop.value||0;
 		this.expansion = prop.expansion||0;
@@ -166,6 +167,95 @@ class Zone
 		this.mesh.position.set(prop.x||0,prop.y||0,prop.z||0);
 		this.mesh.scale.set(this.radius,this.radius,1);
 		this.mesh.cfg = this;
+	}
+	onEnter(cycle,time)
+	{
+		switch(this.type)
+		{
+			case "wall":
+				cycle.position.x -= cycle.dir.front[0]*(engine.gtime-time);
+				cycle.position.y -= cycle.dir.front[1]*(engine.gtime-time);
+				break;
+			case "death":
+				cycle.kill()
+				engine.console.print(cycle.getColoredName()+"0xRESETT exploded on a deathzone.\n");
+				break;
+			case "win":
+				if(engine.winner == undefined && engine.declareRoundWinner == undefined)
+				{
+					engine.console.print("Hit time: "+hitTime);
+					engine.declareRoundWinner = cycle;
+				}
+				break;
+			case "target":
+				loadcfg(settings.DEFAULT_TARGET_COMMAND.replace(/\\n/g,"\n"));
+				cycle.score += settings.TARGET_INITIAL_SCORE;
+				updateScoreBoard();
+				break;
+		}
+	}
+	onInside(cycle,time,timestep)
+	{
+		switch(this.type)
+		{
+			case "rubber":
+				cycle.rubber += timestep*this.value;
+				if(cycle.rubber >= settings.CYCLE_RUBBER)
+				{
+					cycle.kill()
+					engine.console.print(cycle.getColoredName()+"0xRESETT exploded on a rubberzone.\n");
+				}
+				break;
+			case "fortress":
+				if(engine.gtime > 0)
+				{
+					this.rotationSpeed += timestep*0.5;
+					if(this.rotationSpeed > settings.ZONE_SPIN_SPEED*16)
+					{
+						engine.console.print(cycle.getColoredName()+"0xRESETT conquered a fortress zone.\n");
+						this.type = "null"; this.expansion = -10;
+						engine.declareRoundWinner = cycle.name;
+					}
+				}
+				break;
+			case "ball": case "soccerball":
+				var mindirx=0,mindiry=0,mindist=Infinity,apc=0;
+				for(var i=359;i>0;i--) 
+				{
+					var xdir = Math.cos(Math.PI*2*(i/360)), ydir=Math.sin(Math.PI*2*(i/360));
+					var xpos = xdir*this.radius+this.x, ypos=ydir*this.radius+this.y;
+					var dist = pointDistance(xpos,ypos,cycle.position.x,cycle.position.y);
+					if(dist < mindist)
+					{
+						/*if(mindist == Infinity)mindist = dist; else mindist += dist;
+						mindirx -= xdir; mindiry -= ydir;
+						apc++;*/
+						mindist=dist;mindirx=xdir;mindiry=ydir;apc=1;
+					}
+				}
+				//mindist /= apc; mindirx /= apc; mindiry /= apc;
+				if(mindist != Infinity)
+				{
+					this.xdir = -mindirx*cycle.speed; this.ydir = -mindiry*cycle.speed;
+					this.bounce = true;
+				}
+				break;
+			case "speed":
+				cycle.speed = this.value||0;
+				break;
+			case "acceleration":
+				accel = (this.value||0); cycle.accel += accel;
+				cycle.speed += cycle.speed*accel;
+				break;
+		}
+	}
+	onLeave(cycle,time)
+	{
+		
+	}
+	onOutside(cycle,time)
+	{
+		
 	}
 }
 

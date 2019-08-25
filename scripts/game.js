@@ -158,7 +158,7 @@ function ensurePlayersSane(removeAIs=true)
 	{
 		if(engine.players[x].AI)
 		{
-			engine.console.print(cycle.getColoredName()+"0xff7f7f left the game.\n");
+			engine.console.print(engine.players[x].getColoredName()+"0xff7f7f left the game.\n");
 			engine.players.splice(x,1);
 		}
 	}
@@ -531,23 +531,22 @@ function game(oneoff=false)
 		{
 			if(!engine.winzone && settings.WIN_ZONE_MIN_ROUND_TIME+engine.deaths*(settings.WIN_ZONE_MIN_LAST_DEATH) < timeElapsed/1000)
 			{
+				var zone = {expansion:settings.WIN_ZONE_EXPANSION};
 				if(settings.WIN_ZONE_DEATHS)
 				{
 					engine.console.print("Death zone activated. Avoid it!\n");
-					var type = "death";
+					zone.type = "death";
 				}
 				else
 				{
 					engine.console.print("Win zone activated. Enter it to win the round.\n");
-					var type = "win";
+					zone.type = "win";
 				}
-				var radius = Math.min(SMALL_NUM,settings.WIN_ZONE_INITIAL_SIZE)*engine.REAL_ARENA_SIZE_FACTOR,
-					posX = engine.REAL_ARENA_SIZE_FACTOR*(engine.logicalBox.center.x+(settings.WIN_ZONE_RANDOMNESS*(Math.random()-0.5)*2)*engine.logicalBox.center.x),
-					posY = engine.REAL_ARENA_SIZE_FACTOR*(engine.logicalBox.center.y+(settings.WIN_ZONE_RANDOMNESS*(Math.random()-0.5)*2)*engine.logicalBox.center.y);
-				//engine.zones.add(createZone(type,posX,posY,radius));
-				new Zone({type:type,x:posX,y:posY,radius:radius,expansion:settings.WIN_ZONE_EXPANSION}).spawn();
-				//engine.map.zones.push([type,posX,posY,radius,settings.WIN_ZONE_EXPANSION]);
-				console.log("ZONE SPAWNED: "+type);
+				zone.radius = Math.min(SMALL_NUM,settings.WIN_ZONE_INITIAL_SIZE)*engine.REAL_ARENA_SIZE_FACTOR;
+				zone.x = engine.REAL_ARENA_SIZE_FACTOR*(engine.logicalBox.center.x+(settings.WIN_ZONE_RANDOMNESS*(Math.random()-0.5)*2)*engine.logicalBox.center.x);
+				zone.y = engine.REAL_ARENA_SIZE_FACTOR*(engine.logicalBox.center.y+(settings.WIN_ZONE_RANDOMNESS*(Math.random()-0.5)*2)*engine.logicalBox.center.y);
+				new Zone(zone).spawn();
+				console.log("ZONE SPAWNED: "+zone.type);
 				engine.winzone = true;
 			}
 		}
@@ -557,7 +556,6 @@ function game(oneoff=false)
 		{
 			var zone = engine.zones.children[x].cfg;
 			//zones expand
-			var sphere;
 			if(zone.radius > 0)
 			{
 				engine.zones.children[x].scale.x = engine.zones.children[x].scale.y = (zone.radius += zone.expansion*timestep*engine.REAL_ARENA_SIZE_FACTOR);
@@ -600,84 +598,21 @@ function game(oneoff=false)
 				if(inZone)
 				{
 					var timediff = cycle.speed*dist;
-					var hitTime = timeElapsed+timediff;
-					inzone = true;
-					switch(zone.type)
-					{
-						case "wall":
-							cycle.position.x -= cycle.dir.front[0]*timediff;
-							cycle.position.y -= cycle.dir.front[1]*timediff;
-							break;
-						case "death":
-							cycle.kill()
-							engine.console.print(cycle.getColoredName()+"0xRESETT exploded on a deathzone.\n");
-							break;
-						case "win":
-							if(typeof(engine.winner) == "undefined" && typeof(engine.declareRoundWinner) == undefined)
-							{
-								engine.console.print("Hit time: "+hitTime);
-								engine.declareRoundWinner = cycle;
-							}
-							break;
-						case "rubber":
-							cycle.rubber += timestep*zone.value;
-							if(cycle.rubber >= settings.CYCLE_RUBBER)
-							{
-								cycle.kill()
-								engine.console.print(cycle.name+" exploded on a rubberzone.\n");
-							}
-							break;
-						case "fortress":
-							if(timeElapsed > 0)
-							{
-								zone.rotationSpeed += timestep*0.1;
-								if(zone.rotationSpeed > settings.ZONE_SPIN_SPEED*16)
-								{
-									engine.console.print(cycle.name+" conqest.\n");
-									zone.type = "null"; zone.expansion = -10;
-									engine.declareRoundWinner = cycle.name;
-								}
-							}
-							break;
-						case "target":
-							loadcfg(settings.DEFAULT_TARGET_COMMAND.replace(/\\n/g,"\n"));
-							cycle.score += settings.TARGET_INITIAL_SCORE;
-							updateScoreBoard();
-							break;
-						case "ball": case "soccerball":
-							var mindirx=0,mindiry=0,mindist=Infinity,apc=0;
-							for(var i=359;i>0;i--) 
-							{
-								var xdir = Math.cos(Math.PI*2*(i/360)), ydir=Math.sin(Math.PI*2*(i/360));
-								var xpos = xdir*zone.radius+zone.x, ypos=ydir*zone.radius+zone.y;
-								var dist = pointDistance(xpos,ypos,cycle.position.x,cycle.position.y);
-								if(dist < mindist)
-								{
-									/*if(mindist == Infinity)mindist = dist; else mindist += dist;
-									mindirx -= xdir; mindiry -= ydir;
-									apc++;*/
-									mindist=dist;mindirx=xdir;mindiry=ydir;apc=1;
-								}
-							}
-							//mindist /= apc; mindirx /= apc; mindiry /= apc;
-							if(mindist != Infinity)
-							{
-								zone.xdir = -mindirx*cycle.speed; zone.ydir = -mindiry*cycle.speed;
-								zone.bounce = true;
-							}
-							break;
-						case "speed":
-							cycle.speed = zone.value||0;
-							break;
-						case "acceleration":
-							accel = (zone.value||0); cycle.accel += accel;
-							cycle.speed += cycle.speed*accel;
-							break;
-					}
+					var hitTime = timeElapsed-timediff;
+					if(!wasInZone) zone.onEnter(cycle,hitTime,timestep);
+					if(cycle.alive) zone.onInside(cycle,engine.gtime,timestep);
 				}
 				else if(wasInZone) //left zone
 				{
-					
+					zone.onLeave(cycle,engine.gtime,timestep); //TODO: figure out "precise" left time
+				}
+				else
+				{
+					zone.onOutside(cycle,engine.gtime,timestep);
+				}
+				if(zone.type == "fortress") //fortress recover rate
+				{
+					zone.rotationSpeed += (settings.ZONE_SPIN_SPEED-zone.rotationSpeed)*timestep*settings.FORTRESS_CONQUEST_DECAY_RATE;
 				}
 			}
 			if(typeof(zone.xdir)+typeof(zone.ydir) !== "undefinedundefined")
@@ -722,10 +657,6 @@ function game(oneoff=false)
 				{
 					zone.mesh.position.x += zone.xdir*timestep; zone.mesh.position.y += zone.ydir*timestep;
 				}
-			}
-			if(!inzone)
-			{
-				zone.rotationSpeed += (settings.ZONE_SPIN_SPEED-zone.rotationSpeed)*timestep*2;
 			}
 		}
 		var dc = Object.keys(engine.delayedcommands);
