@@ -579,7 +579,7 @@ function game(oneoff=false)
 							) && 
 							is_in_circle(z2n[1],z2n[2],z2n[3],zone.x,zone.y,zone.radius))
 						{
-							if(typeof(engine.winner) == "undefined")
+							if(!engine.network && engine.winner == undefined)
 							{
 								centerMessage("0x00ff00Goal!");
 								startNewRound();
@@ -591,24 +591,27 @@ function game(oneoff=false)
 						}
 					}
 				}
-				//if(is_in_circle(zone.x,zone.y,zone.radius,cycle.position.x,cycle.position.y,0))
-				var lastdist = pointDistance(zone.mesh.position.x,zone.mesh.position.y,cycle.lastpos.x,cycle.lastpos.y)-zone.radius;
-				var dist = pointDistance(zone.mesh.position.x,zone.mesh.position.y,cycle.position.x,cycle.position.y)-zone.radius;
-				var inZone = (dist <= 0), wasInZone = (lastdist <= 0);
-				if(inZone)
+				//dont handle zones we don't need to
+				if(!zone.netObject || zone.type.indexOf("ball") >= 0)
 				{
-					var timediff = cycle.speed*dist;
-					var hitTime = timeElapsed-timediff;
-					if(!wasInZone) zone.onEnter(cycle,hitTime,timestep);
-					if(cycle.alive) zone.onInside(cycle,engine.gtime,timestep);
-				}
-				else if(wasInZone) //left zone
-				{
-					zone.onLeave(cycle,engine.gtime,timestep); //TODO: figure out "precise" left time
-				}
-				else
-				{
-					zone.onOutside(cycle,engine.gtime,timestep);
+					var lastdist = pointDistance(zone.mesh.position.x,zone.mesh.position.y,cycle.lastpos.x,cycle.lastpos.y)-zone.radius;
+					var dist = pointDistance(zone.mesh.position.x,zone.mesh.position.y,cycle.position.x,cycle.position.y)-zone.radius;
+					var inZone = (dist <= 0), wasInZone = (lastdist <= 0);
+					if(inZone)
+					{
+						var timediff = cycle.speed*dist;
+						var hitTime = timeElapsed-timediff;
+						if(!wasInZone) zone.onEnter(cycle,hitTime,timestep);
+						if(cycle.alive) zone.onInside(cycle,engine.gtime,timestep);
+					}
+					else if(wasInZone) //left zone
+					{
+						zone.onLeave(cycle,engine.gtime,timestep); //TODO: figure out "precise" left time
+					}
+					else
+					{
+						zone.onOutside(cycle,engine.gtime,timestep);
+					}
 				}
 				if(zone.type == "fortress") //fortress recover rate
 				{

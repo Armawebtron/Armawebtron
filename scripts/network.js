@@ -237,6 +237,33 @@ function connectionHandler(e)
 				}
 			updateScoreBoard();
 			break;
+		case "zone":
+			for(var i=msg.data.length-1;i>=0;--i) if(msg.data[i])
+			{
+				var zone = msg.data[i];
+				
+				if(engine.zones[zone.id])
+				{
+					//maybe a bit hacky but it's the best way I can think of to ensure everything is correct, short of destroying and recreating the zone entirely (which would likely be too slow)
+					engine.zones[zone.id].constructor(zone);
+				}
+				else
+				{
+					try
+					{
+						var s = new Zone(zone).spawn();
+						
+						//we don't need to process the zone ourselves (as that will all be handled by the server), however we should still know the type for our chatbot.
+						s.netObject = true;
+					}
+					catch(e)
+					{
+						engine.console.print("0xff7f7fAn error occurred when syncing zones. You may be missing some important elements of the game.\n");
+						console.error(e);
+					}
+				}
+			}
+			break;
 	}
 }
 

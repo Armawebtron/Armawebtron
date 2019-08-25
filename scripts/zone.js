@@ -34,7 +34,7 @@ class Zone
 	}
 	constructor(prop)
 	{
-		this.timesEntered = 0;
+		this.timesEntered = 0; this.netObject = false;
 		
 		this.type = prop.type||"null";
 		this.rotationSpeed = prop.rot||settings.ZONE_SPIN_SPEED;
@@ -92,7 +92,7 @@ class Zone
 		
 		var color = typeof(zoneColor)=="object"?zoneColor:new THREE.Color(zoneColor);
 		
-		switch("circle")
+		switch("circle") //zone.shape||"circle"
 		{
 			case "circle":
 				var zoneSegCoords = [];//get the coordinates for each segment vertex
@@ -163,11 +163,15 @@ class Zone
 		}
 		//var alpha = Math.max(color.r,color.g,color.b);
 		//color.r /= alpha; color.g /= alpha; color.b /= alpha;
-		this.mat = new THREE.MeshBasicMaterial( { color: color, transparent: settings.ALPHA_BLEND, opacity: settings.ZONE_ALPHA/**alpha*/, side: THREE.DoubleSide } );
-		this.mesh = new THREE.Mesh(geo,this.mat);
-		this.mesh.position.set(prop.x||0,prop.y||0,prop.z||0);
-		this.mesh.scale.set(this.radius,this.radius,1);
-		this.mesh.cfg = this;
+		if(!this.mat)
+			this.mat = new THREE.MeshBasicMaterial( { color: color, transparent: settings.ALPHA_BLEND, opacity: settings.ZONE_ALPHA/**alpha*/, side: THREE.DoubleSide } );
+		if(!this.mesh)
+		{
+			this.mesh = new THREE.Mesh(geo,this.mat);
+			this.mesh.position.set(prop.x||0,prop.y||0,prop.z||0);
+			this.mesh.scale.set(this.radius,this.radius,1);
+			this.mesh.cfg = this;
+		}
 	}
 	onEnter(cycle,time)
 	{
