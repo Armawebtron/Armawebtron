@@ -188,7 +188,6 @@ function connectionHandler(e)
 						{
 							if(!cycle.newPos) cycle.newPos = new THREE.Vector2(cycle.position.x,cycle.position.y);
 							cycle.newPos.x = data.position[0]; cycle.newPos.y = data.position[1];
-							//doNetSlide(cycle);
 						}
 						else //jump straight to the position, we're doing a turn
 						{
@@ -197,10 +196,10 @@ function connectionHandler(e)
 							delete cycle.newPos;
 							
 							if(data.wall) { cycle.walls.map = data.wall; cycle.resetWall(false); }
+							cycle.gameTime = Math.max(0,msg.gtime);
 						}
 						cycle.lastpos.z = cycle.position.z = data.position[2]||0;
 						
-						cycle.gameTime = msg.gtime;
 						
 						if(cycle.haswall)
 						{
