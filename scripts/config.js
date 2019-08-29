@@ -351,9 +351,9 @@ game_settings_default = {
 	TEAM_BLUE_7: 15,    //blue portion of team 7's color
 	
 	TEAM_NAME_8: "Team Black",    //name of team 8
-	TEAM_RED_8: 8,    //red portion of team 8's color
-	TEAM_GREEN_8: 8,    //green portion of team 8's color
-	TEAM_BLUE_8: 8,    //blue portion of team 8's color
+	TEAM_RED_8: 0,    //red portion of team 8's color
+	TEAM_GREEN_8: 0,    //green portion of team 8's color
+	TEAM_BLUE_8: 0,    //blue portion of team 8's color
 	
 	//MAP
 	ARENA_AXES: 4,
@@ -520,7 +520,7 @@ var commands = {
 		centerMessage("New Match");
 	},
 	CONSOLE_MESSAGE: function(param) { engine.console.print(param+"\n") },
-	CENTER_MESSAGE: centerMessage,
+	CENTER_MESSAGE: function(param) { centerMessage(param) },
 	SET_CYCLE_SPEED: function(params)
 	{
 		var s = params.split(" ");
@@ -934,10 +934,13 @@ function loadcfg(str,silent=false,dontforcecase=false)
 	var lines = str.split("\n");
 	for(var i=0;i<lines.length;i++)
 	{
-		split = lines[i].split(" ");
-		var cmd = split.shift();
-		if(dontforcecase && (cmd == "FLOOR_RED" || cmd == "FLOOR_GREEN" || cmd == "FLOOR_BLUE" || cmd == "MENU_RENDER")) { cmd=""; }
-		chsetting(dontforcecase?cmd:cmd.toUpperCase(),split.join(" "),silent); //TODO: deal with additional spaces and spaces in setting values
+		split = lines[i].trimLeft().split(" ");
+		var cmd = "";
+		if(!dontforcecase || (cmd != "FLOOR_RED" && cmd != "FLOOR_GREEN" && cmd != "FLOOR_BLUE" && cmd != "MENU_RENDER")) //HACK for user.cfg
+		{
+			cmd = split.shift();
+		}
+		chsetting(dontforcecase?cmd:cmd.toUpperCase(),split.join(" ").trimLeft(),silent);
 	}
 }
 
