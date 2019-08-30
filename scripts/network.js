@@ -103,7 +103,8 @@ function connectionHandler(e)
 				if(!engine.scene) init();
 				//endRound();
 			}
-			engine.totalPauseTime += (msg.gtime||0)-engine.gtime;
+			//engine.totalPauseTime += (msg.gtime||0)-engine.gtime;
+			if(msg.gtime !== undefined) engine.gtime = msg.gtime;
 			break;
 		case "leave":
 			if(engine.players[msg.data])
