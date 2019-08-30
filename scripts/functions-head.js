@@ -325,6 +325,15 @@ function hasClass(element, cls) {//checks if element has classname, returns true
     return (' ' + element.className + ' ').indexOf(' ' + cls + ' ') > -1;
 }
 
+function relPath(path,rel="/")
+{
+	if(rel.indexOf("/") != 0) rel = "/"+rel;
+	if(rel.indexOf("/",rel.length-1) == -1) rel += "/";
+	
+	if(path.indexOf("://") >= 0 || path.indexOf("/") == 0) return path;
+	else return rel+path;
+}
+
 function inround() //! Tries to determine if we're in a round or not.
 {
 	return !engine.roundCommencing && engine.gtime >= -4000;

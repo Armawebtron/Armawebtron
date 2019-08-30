@@ -27,11 +27,11 @@
 
 function loadTextures()
 {
-	engine.textures.floor = new new THREE.TextureLoader().load("images/"+settings.FLOOR_TEXTURE);
-	engine.textures.rim_wall = new new THREE.TextureLoader().load("images/"+settings.RIM_WALL_TEXTURE);
+	engine.textures.floor = new new THREE.TextureLoader().load(relPath(settings.FLOOR_TEXTURE,"images"));
+	engine.textures.rim_wall = new new THREE.TextureLoader().load(relPath(settings.RIM_WALL_TEXTURE,"images"));
 	//engine.textures.cycle_wall = new new THREE.TextureLoader().load('images/textures/dir_wall.png');
-	engine.textures.cycle_body = new THREE.TextureLoader().load("images/"+settings.CYCLE_TEXTURES[0]);
-	engine.textures.cycle_wheel = new THREE.TextureLoader().load("images/"+settings.CYCLE_TEXTURES[1])
+	engine.textures.cycle_body = new THREE.TextureLoader().load(relPath(settings.CYCLE_TEXTURES[0],"images"));
+	engine.textures.cycle_wheel = new THREE.TextureLoader().load(relPath(settings.CYCLE_TEXTURES[1],"images"))
 	engine.textures.cycle_shadow = new THREE.TextureLoader().load('images/textures/shadow.png')
 }
 
