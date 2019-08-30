@@ -327,7 +327,7 @@ function hasClass(element, cls) {//checks if element has classname, returns true
 
 function relPath(path,rel="/")
 {
-	if(rel.indexOf("/") != 0) rel = "/"+rel;
+	//if(rel.indexOf("/") != 0) rel = "/"+rel;
 	if(rel.indexOf("/",rel.length-1) == -1) rel += "/";
 	
 	if(path.indexOf("://") >= 0 || path.indexOf("/") == 0) return path;
