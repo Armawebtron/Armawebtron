@@ -81,7 +81,10 @@ function connectionHandler(e)
 	{
 		case "ping": engine.connection.send('{"type":"pong"}'); break;
 		case "endRound": if(inround()) endRound(); break;
-		case "newRound": if(!inround()) newRound(); break;
+		case "newRound": 
+			if(!engine.playGame) playGame();
+			else if(!inround()) newRound();
+		break;
 		case "setting":
 			console.log(e);
 			netcfg(msg.setting,""+msg.data);
@@ -189,16 +192,23 @@ function connectionHandler(e)
 						{
 							if(!cycle.newPos) cycle.newPos = new THREE.Vector2(cycle.position.x,cycle.position.y);
 							cycle.newPos.x = data.position[0]; cycle.newPos.y = data.position[1];
+							
+							if(!cycle.handleNetTurn) 
+							{
+								doNetSlide(cycle,Infinity);
+								cycle.handleNetTurn = true;
+							}
 						}
-						else //jump straight to the position, we're doing a turn
-						{
+						else if(cycle.handleNetTurn) //jump straight to the position, we're doing a turn
+						{ //also, don't handle updates until our last turn has been sent by the server
 							cycle.lastpos.x = cycle.position.x = data.position[0]||0; 
 							cycle.lastpos.y = cycle.position.y = data.position[1]||0;
 							delete cycle.newPos;
 							
-							if(data.wall) { cycle.walls.map = data.wall; cycle.resetWall(false); }
 							cycle.gameTime = Math.max(0,msg.gtime);
 						}
+						if(data.wall) { cycle.walls.map = data.wall; cycle.resetWall(false); }
+							
 						cycle.lastpos.z = cycle.position.z = data.position[2]||0;
 						
 						

@@ -39,6 +39,7 @@ class Player extends THREE.Object3D
 		this.turnQueue = [];
 		this.lastTurnTime = 0;
 		this.gameTime = 0;
+		this.handleNetTurn = true;
 	}
 	hardReset() //! Same as soft reset but resets all varaibles
 	{
