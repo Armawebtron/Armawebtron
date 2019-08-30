@@ -176,7 +176,7 @@ String.prototype.filter = function() //! Filter illegal player characters. Heavi
 	for(var i=0;i<str.length;i++)
 	{
 		char = str.charCodeAt(i);
-		if(char <= 126 && char >= 32) //Leave ASCII characters but convert them to lower case
+		if(char <= 126 && char > 32) //Leave ASCII characters but convert them to lower case
 		{
 			if(char == 48)
 				out += "o"; //map 0 to o because z-man
