@@ -163,7 +163,7 @@ function ensurePlayersSane(removeAIs=true)
 		}
 	}
 	var spawnslength = engine.map.spawns.length;
-	for(var x=0;x<minplayers;x++)
+	for(var x=engine.activePlayer;x<minplayers;x++)
 	{
 		if(!engine.map.spawns[x])
 		{
