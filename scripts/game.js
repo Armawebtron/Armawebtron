@@ -29,7 +29,7 @@ function endRound()
 	if(window.svr) 
 	{
 		window.svr.clients.forEach(function(ws){ws.send('{"type":"endRound"}')});
-		window.svr.clients.forEach(function(ws){ws.send('{"type":"syncdata","gtime":'+engine.gtime+'}')});
+		window.svr.clients.forEach(function(ws){ws.send('{"type":"syncdata","gtime":-4000}')});
 	}
 	
 	if(ctx)
