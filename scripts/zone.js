@@ -242,8 +242,9 @@ class Zone
 			case "win":
 				if(engine.winner == undefined && engine.declareRoundWinner == undefined)
 				{
-					engine.console.print("Hit time: "+hitTime);
-					engine.declareRoundWinner = cycle;
+					//engine.console.print(cycle.getColoredName()+"0xRESETT ");
+					this.expansion = -1;
+					engine.declareRoundWinner = cycle.name;
 				}
 				break;
 			case "target":
