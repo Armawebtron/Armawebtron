@@ -248,65 +248,90 @@ function buildZones()
 	console.log("NUM ZONES = "+mapsZones.length);
 	for (var p = 0; p < mapsZones.length; p++)
 	{
-		var zonesType = "death", color = false, value = 0;
-		if (mapsZones[p].hasAttribute("effect")) { zonesType = mapsZones[p].getAttribute("effect"); }
+		var zone = {};
+		if(mapsZones[p].hasAttribute("effect")) { zone.type = mapsZones[p].getAttribute("effect"); }
 		var point = mapsZones[p].getElementsByTagName("Point");
-		var zonesXpos = (point[0].getAttribute("x") * engine.REAL_ARENA_SIZE_FACTOR);
-		var zonesYpos = (point[0].getAttribute("y") * engine.REAL_ARENA_SIZE_FACTOR);
-		var circle = mapsZones[p].getElementsByTagName("ShapeCircle");
-		if(circle)
+		zone.x = (point[0].getAttribute("x") * engine.REAL_ARENA_SIZE_FACTOR);
+		zone.y = (point[0].getAttribute("y") * engine.REAL_ARENA_SIZE_FACTOR);
+		var shape = mapsZones[p].getElementsByTagName("ShapeCircle");
+		if(shape.length == 0)
 		{
-			var zonesRadius = (circle[0].getAttribute("radius") * engine.REAL_ARENA_SIZE_FACTOR);
-			var zonesExpansion = circle[0].getAttribute("growth")*1;
+			var shape = mapsZones[p].getElementsByTagName("ShapePolygon");
+			if(shape.length > 0)
+			{
+				zone.shape = "polygon"; zone.points = [];
+				for(var i=1;i<point.length;i++)
+				{
+					zone.points.push([point[i].attributes.x.value*1,point[i].attributes.y.value*1]);
+				}
+			}
+			else
+			{
+				console.error("Invalid or no zone shape specified");
+			}
+		}
+		
+		if(shape.length > 0)
+		{
+			if(shape[0].attributes.radius)
+			{
+				zone.radius = (shape[0].getAttribute("radius") * engine.REAL_ARENA_SIZE_FACTOR);
+			}
+			else
+			{
+				zone.radius = engine.REAL_ARENA_SIZE_FACTOR;
+			}
+			zone.expansion = shape[0].getAttribute("growth")*1;
+			
+			if(shape[0].attributes.rotation)
+			{
+				var s = shape[0].attributes.rotation.value.split(";");
+				zone.rot = s[1];
+			}
+			
+			var colorelement = mapsZones[p].getElementsByTagName("Color")[0];
+			if(colorelement)
+			{
+				if(colorelement.attributes.hexCode) // +ap compatibility
+				{
+					zone.color = 1*(colorelement.getAttribute("hexCode"));
+				}
+				else if(colorelement.attributes.r || colorelement.attributes.g || colorelement.attributes.b) // +ap compatibility
+				{
+					zone.color = new THREE.Color(colorelement.getAttribute("r")/15,colorelement.getAttribute("g")/15,colorelement.getAttribute("b")/15);
+				}
+				else if(colorelement.attributes.red || colorelement.attributes.green || colorelement.attributes.blue) //0.4 compatibility
+				{
+					var r=colorelement.getAttribute("red"),g=colorelement.getAttribute("green"),b=colorelement.getAttribute("blue");
+					var a = colorelement.attributes.alpha?colorelement.getAttribute("alpha"):1;
+					zone.color = new THREE.Color(r,g,b);
+					
+				}
+			}
+			
+			var delay = mapsZones[p].attributes.delay?mapsZones[p].getAttribute("delay"):0;
+			
+			switch(zone.type)
+			{
+				case "rubber":
+					zone.value = mapsZones[p].getAttribute("rubberVal");
+					break;
+				case "speed": case "acceleration":
+					zone.value = mapsZones[p].getAttribute("speed");
+					break;
+			}
+			
+			/*zone_object = createZone(zonesType,zonesXpos,zonesYpos,zonesRadius,color);
+			var zone_data = [zonesType, zonesXpos, zonesYpos, zonesRadius, zonesExpansion, value,0,0,false];
+			engine.map.zones.push(zone_data);
+			console.log("ZONE ADDED: "+zonesType);
+			engine.zones.add(zone_object);*/
+			new Zone(zone).spawn();
 		}
 		else
 		{
-			var polygon = mapsZones[p].getElementsByTagName("ShapePolygon");
-			if(polygon)
-			{
-				
-			}
+			console.log("Zone skipped");
 		}
-		if(isNaN(zonesExpansion)) zonesExpansion = 0;
-		
-		var colorelement = mapsZones[p].getElementsByTagName("Color")[0];
-		if(colorelement)
-		{
-			if(colorelement.attributes.hexCode)
-			{
-				color = 1*(colorelement.getAttribute("hexCode"));
-			}
-			else if(colorelement.attributes.r || colorelement.attributes.g || colorelement.attributes.b)
-			{
-				color = new THREE.Color(colorelement.getAttribute("r")/15,colorelement.getAttribute("g")/15,colorelement.getAttribute("b")/15);
-			}
-			else if(colorelement.attributes.red || colorelement.attributes.green || colorelement.attributes.blue)
-			{
-				var r=colorelement.getAttribute("red"),g=colorelement.getAttribute("green"),b=colorelement.getAttribute("blue");
-				var a = colorelement.attributes.alpha?colorelement.getAttribute("alpha"):1;
-				color = new THREE.Color(r,g,b);
-				
-			}
-		}
-		
-		var delay = mapsZones[p].attributes.delay?mapsZones[p].getAttribute("delay"):0;
-		
-		switch(zonesType)
-		{
-			case "rubber":
-				value = mapsZones[p].getAttribute("rubberVal");
-				break;
-			case "speed": case "acceleration":
-				value = mapsZones[p].getAttribute("speed");
-				break;
-		}
-		
-		/*zone_object = createZone(zonesType,zonesXpos,zonesYpos,zonesRadius,color);
-		var zone_data = [zonesType, zonesXpos, zonesYpos, zonesRadius, zonesExpansion, value,0,0,false];
-		engine.map.zones.push(zone_data);
-		console.log("ZONE ADDED: "+zonesType);
-		engine.zones.add(zone_object);*/
-		new Zone({type:zonesType,x:zonesXpos,y:zonesYpos,radius:zonesRadius,color:color}).spawn();
 	}
 	//for (var z = 0; z < engine.a_zone.length; z++) { all_zones.add( a_zone[z] ); }
 
