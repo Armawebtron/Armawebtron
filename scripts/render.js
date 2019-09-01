@@ -364,7 +364,7 @@ function draw2d_canvas() //TODO: have an svg output option
 	ctx.clearRect(0,0,canvas.width,canvas.height);
 	var xsize = engine.logicalBox.max.x-engine.logicalBox.min.x, ysize = engine.logicalBox.max.y-engine.logicalBox.min.y;
 	canvas.width = canvas.offsetWidth;
-	canvas.height = canvas.offsetWidth*(xsize/ysize);
+	canvas.height = canvas.offsetWidth*(ysize/xsize);
 	ctx.scale(
 		canvas.width/(xsize*engine.REAL_ARENA_SIZE_FACTOR),
 		canvas.height/(ysize*engine.REAL_ARENA_SIZE_FACTOR),
