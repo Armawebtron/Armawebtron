@@ -356,18 +356,22 @@ function updateHUD(celement,thevalue,min=false,max=false)
 	}
 }
 
-function draw2d_canvas() //TODO: switch to svg, figure out how to improve performance
+function draw2d_canvas() //TODO: have an svg output option
 {
 	var canvas = document.getElementById("canvas");
 	if(!canvas) return;
 	var ctx = canvas.getContext("2d");
 	ctx.clearRect(0,0,canvas.width,canvas.height);
 	var xsize = engine.logicalBox.max.x-engine.logicalBox.min.x, ysize = engine.logicalBox.max.y-engine.logicalBox.min.y;
-	canvas.width = (xsize * engine.REAL_ARENA_SIZE_FACTOR)+1;
-	canvas.height = (ysize * engine.REAL_ARENA_SIZE_FACTOR)+1;
+	canvas.width = canvas.offsetWidth;
+	canvas.height = canvas.offsetWidth*(xsize/ysize);
+	ctx.scale(
+		canvas.width/(xsize*engine.REAL_ARENA_SIZE_FACTOR),
+		canvas.height/(ysize*engine.REAL_ARENA_SIZE_FACTOR),
+	);
 	var ax = engine.logicalBox.min.x * engine.REAL_ARENA_SIZE_FACTOR, 
 		ay = engine.logicalBox.min.y * engine.REAL_ARENA_SIZE_FACTOR;
-	ctx.lineWidth = (xsize/canvas.offsetWidth)*engine.REAL_ARENA_SIZE_FACTOR;
+	ctx.lineWidth = ((xsize*engine.REAL_ARENA_SIZE_FACTOR)/canvas.width);
 	//ctx.lineWidth = canvas.width-canvas.height-2;
 	//ctx.lineWidth = (canvas.offsetWidth-canvas.width)*engine.REAL_ARENA_SIZE_FACTOR;
 	ctx.strokeStyle = "white";
@@ -384,21 +388,12 @@ function draw2d_canvas() //TODO: switch to svg, figure out how to improve perfor
 		}
 		ctx.stroke();
 	}
-	for(var x=engine.zones.children.length-1;x>=0;--x)
-	{
-		var zone = engine.zones.children[x];
-		var color = zone.material.color;
-		ctx.strokeStyle = "rgb("+(color.r*255)+","+(color.g*255)+","+(color.b*255)+")";
-		ctx.beginPath();
-		ctx.arc(zone.position.x-ax,zone.position.y-ay,zone.cfg.radius, 0,Math.PI*2);
-		ctx.stroke();
-	}
 	for(var x=engine.players.length-1;x>=0;x--) if(engine.players[x] !== undefined)
 	{
 		var color = engine.players[x].walls.children[0].children[0].material.color;
 		ctx.strokeStyle = "rgb("+(color.r*255)+","+(color.g*255)+","+(color.b*255)+")";
 		ctx.beginPath();
-		for(var y=engine.players[x].walls.map.length-1;y>=0;y--)
+		if(engine.players[x].walls.map.length > 0)
 		{
 			var walls = engine.players[x].walls.map;
 			ctx.moveTo(walls[walls.length-1][0]-ax,walls[walls.length-1][1]-ay);
@@ -417,22 +412,46 @@ function draw2d_canvas() //TODO: switch to svg, figure out how to improve perfor
 			ctx.fill();
 		}
 	}
+	
+	var lw = ctx.lineWidth;
+	ctx.lineWidth = lw*settings.ZONE_ALPHA*settings.ZONE_ALPHA_SERVER;
+	for(var x=engine.zones.children.length-1;x>=0;--x)
+	{
+		var zone = engine.zones.children[x];
+		var color = zone.material.color;
+		ctx.strokeStyle = "rgb("+(color.r*255)+","+(color.g*255)+","+(color.b*255)+")";
+		var geo = zone.geometry.clone(); geo.applyMatrix(zone.matrix); //apply rotation, scale, and position
+		
+		ctx.beginPath();
+		var pX = zone.position.x-ax, pY = zone.position.y-ay;
+		for(var i=geo.faces.length-2;i>=0;i-=2)
+		{
+			ctx.moveTo(geo.vertices[geo.faces[i].b].x-ax,geo.vertices[geo.faces[i].b].y-ay);
+			ctx.lineTo(geo.vertices[geo.faces[i].a].x-ax,geo.vertices[geo.faces[i].a].y-ay);
+		}
+		ctx.stroke();
+	}
+	
+	lw *= 0.7;
 	for(var x=engine.expl.length-1;x>=0;x--)
 	{
-		var colormult = engine.expl[x].children[0].material.opacity;
-		var scale = (engine.expl[x].children[0].scale.x+engine.expl[x].children[0].scale.y)/2;
-		var cx = engine.expl[x].children[0].position.x, cy = engine.expl[x].children[0].position.y;
-		for(var y=engine.expl[x].children.length;y--;)
+		ctx.lineWidth = lw*engine.expl[x].children[0].material.opacity;
+		if(ctx.lineWidth > 0)
 		{
-			var color = engine.expl[x].children[y].material.color;
-			ctx.strokeStyle = "rgb("+(color.r*255*colormult)+","+(color.g*255*colormult)+","+(color.b*255*colormult)+")";
-			ctx.beginPath();
-			ctx.moveTo(cx-ax,cy-ay);
-			ctx.lineTo(
-				(cx+engine.expl[x].children[y].geometry.vertices[1].x*scale)-ax,
-				(cy+engine.expl[x].children[y].geometry.vertices[1].y*scale)-ay
-			);
-			ctx.stroke();
+			var scale = (engine.expl[x].children[0].scale.x+engine.expl[x].children[0].scale.y)/2;
+			var cx = engine.expl[x].children[0].position.x, cy = engine.expl[x].children[0].position.y;
+			for(var y=engine.expl[x].children.length;y--;)
+			{
+				var color = engine.expl[x].children[y].material.color;
+				ctx.strokeStyle = "rgb("+(color.r*255)+","+(color.g*255)+","+(color.b*255)+")";
+				ctx.beginPath();
+				ctx.moveTo(cx-ax,cy-ay);
+				ctx.lineTo(
+					(cx+engine.expl[x].children[y].geometry.vertices[1].x*scale)-ax,
+					(cy+engine.expl[x].children[y].geometry.vertices[1].y*scale)-ay
+				);
+				ctx.stroke();
+			}
 		}
 	}
 	draw2dmap = true;
