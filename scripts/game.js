@@ -594,6 +594,8 @@ function game(oneoff=false)
 				//dont handle zones we don't need to
 				if(!zone.netObject || zone.type.indexOf("ball") >= 0)
 				{
+					//var lastdist = zone.distance(cycle.lastpos);
+					//var dist = zone.distance(cycle.position);
 					var lastdist = pointDistance(zone.mesh.position.x,zone.mesh.position.y,cycle.lastpos.x,cycle.lastpos.y)-zone.radius;
 					var dist = pointDistance(zone.mesh.position.x,zone.mesh.position.y,cycle.position.x,cycle.position.y)-zone.radius;
 					var inZone = (dist <= 0), wasInZone = (lastdist <= 0);

@@ -37,20 +37,25 @@ class Zone
 		this.timesEntered = 0; this.netObject = false;
 		
 		this.type = prop.type||"null";
-		this.rotationSpeed = prop.rot||settings.ZONE_SPIN_SPEED;
+		this.rotationSpeed = isNaN(prop.rot)?settings.ZONE_SPIN_SPEED:prop.rot;
 		this.value = prop.value||0;
 		this.expansion = prop.expansion||0;
 		this.radius = prop.radius||0;
 		this.xdir = prop.xdir||0; this.ydir = prop.ydir||0;
 		this.bounce = !!prop.bounce;
+		this.team = false;
 		var zoneHeight = prop.height||settings.ZONE_HEIGHT; 
 		if (settings.ZONE_SEGMENTS < 1) { settings.ZONE_SEGMENTS = 11; }
 		
 		var zoneSegments = (Math.floor(this.radius/10)*10)+1;
 		if (zoneSegments < 11) { zoneSegments = 11; }
-		if(!prop.color && prop.color !== 0)
+		var zoneColor = 0xFFFFFF;
+		if(prop.color || prop.color === 0)
 		{
-			var zoneColor = 0xFFFFFF;
+			zoneColor = prop.color;
+		}
+		else
+		{
 			switch(this.type)
 			{
 				case "death": zoneColor = 0xFF0000; break;
@@ -82,19 +87,53 @@ class Zone
 					break;
 				case "object": zoneColor = 0xBB0066; break;
 				case "checkpoint": zoneColor = 0xFF0088; break;
-				case "sumo": zoneColor = 0xFFFFFF; /*zoneHeight = 1;*/ break;
 				case "koh": zoneColor = 0xDDDDDD; break;
 				case "wall": case "ball": zoneColor = 0xFFFFFF; break;
 				case "switch": zoneColor = 0x999999; break; 
 			}
 		}
-		else zoneColor = prop.color;
 		
-		var color = typeof(zoneColor)=="object"?zoneColor:new THREE.Color(zoneColor);
+		var color = typeof(zoneColor)=="object"?zoneColor:new THREE.Color(zoneColor), geo = new THREE.Geometry();
 		
-		switch("circle") //zone.shape||"circle"
+		switch(prop.shape)
 		{
-			case "circle":
+			case "polygon":
+				var min = [Infinity,Infinity],
+					max = [-Infinity,-Infinity];
+				for(var i=0;i<prop.points.length;i++)
+				{
+					var point = prop.points[i];
+					//point[0] += (1*prop.x)||0; point[1] += (1*prop.y)||0;
+					geo.vertices[i] = new THREE.Vector3(point[0],point[1],0);
+					geo.vertices[prop.points.length+i] = new THREE.Vector3(point[0],point[1],zoneHeight);
+					
+					for(var z=1;z>=0;z--)
+					{
+						if(point[z] < min[z]) min[z] = point[z];
+						if(point[z] > max[z]) max[z] = point[z];
+						console.log(point[z]);
+					}
+					
+				}
+				for(var i=0,halfvert=(geo.vertices.length/2)-1;i<halfvert;i++)
+				{
+					var p1x = geo.vertices[i].x, p1y = geo.vertices[i].y;
+					var p2x = geo.vertices[i+1].x, p2y = geo.vertices[i+1].y;      
+
+					var dist = Math.sqrt( (p2x-=p1x)*p2x + (p2y-=p1y)*p2y );
+					var normal = new THREE.Vector3( (p2y - p1y), -(p2x - p1x), 0 );
+					
+					geo.faces.push( 
+						new THREE.Face3( (i), (i+1), (i+(geo.vertices.length/2)), normal ), //a,b,c
+						new THREE.Face3( (i+(geo.vertices.length/2)+1), (i+(geo.vertices.length/2)), (i+1), normal ) //d,c,b 
+					);
+				}
+				
+				//prop.x = (max[0]-min[0])/2; prop.y = (max[1]-min[1])/2; 
+				//this.radius = (max[0]<max[1]?max[0]:max[1])-(min[0]>min[1]?min[0]:min[1]); 
+				this.shape = "polygon";
+				break;
+			default: //circle
 				var zoneSegCoords = [];//get the coordinates for each segment vertex
 				var zoneSegMidpoints = [];//get midpoints for each segment
 				var trueSegments = [];
@@ -134,7 +173,6 @@ class Zone
 					trueSegments[s] = { x1:np1x, y1:np1y, x2:np2x, y2:np2y };
 				}
 				//have segment coordinates, now build it
-				var geo = new THREE.Geometry();
 				for (var n = 0; n < trueSegments.length; n++) {
 					geo.vertices.push( new THREE.Vector3( (trueSegments[n].x1), (trueSegments[n].y1), 0) );
 					geo.vertices.push( new THREE.Vector3( (trueSegments[n].x2), (trueSegments[n].y2), 0) );
@@ -149,16 +187,7 @@ class Zone
 						new THREE.Face3( (i+(geo.vertices.length/2)+1), (i+(geo.vertices.length/2)), (i+1) ) //d,c,b 
 					);
 				}
-				break;
-			case "polygon":
-				for (var n = 0; n < pointArray.length; n++) {
-					var thisPoint = pointArray[n].split(",");
-					geo.vertices.push( new THREE.Vector3( (thisPoint[0]), (thisPoint[1]), 0) );
-				}
-				for (var m = 0; m < pointArray.length; m++) {
-					var thisPoint = pointArray[m].split(",");
-					geo.vertices.push( new THREE.Vector3( (thisPoint[0]), (thisPoint[1]), height) );
-				}
+				this.shape = "circle";
 				break;
 		}
 		//var alpha = Math.max(color.r,color.g,color.b);
@@ -169,9 +198,34 @@ class Zone
 		{
 			this.mesh = new THREE.Mesh(geo,this.mat);
 			this.mesh.position.set(prop.x||0,prop.y||0,prop.z||0);
-			this.mesh.scale.set(this.radius,this.radius,1);
+			this.mesh.scale.set(this.radius||1,this.radius||1,1);
 			this.mesh.cfg = this;
 		}
+	}
+	distance(position)
+	{
+		switch(this.shape)
+		{
+			case "circle":
+				return pointDistance(this.mesh.position.x,this.mesh.position.y,position.x,position.y);
+				break;
+			case "polygon":
+				var min = Infinity, x, tmp, coords = this.mesh.geometry.vertices;
+				for(var i=(coords.length/2)-1;i>=0;x=(--i)-1)
+				{
+					if(coords[x] !== undefined)
+					{
+						tmp = distanceoflines(
+							coords[i].x,coords[i].y, coords[x].x,coords[x].y,
+							position.x,position.y, position.x,position.y
+						);
+						if(min > tmp) { min = tmp; }
+					}
+				}
+				return min;
+				break;
+		}
+		return Infinity;
 	}
 	onEnter(cycle,time)
 	{
@@ -182,7 +236,7 @@ class Zone
 				cycle.position.y -= cycle.dir.front[1]*(engine.gtime-time);
 				break;
 			case "death":
-				cycle.kill()
+				cycle.kill();
 				engine.console.print(cycle.getColoredName()+"0xRESETT exploded on a deathzone.\n");
 				break;
 			case "win":
@@ -207,7 +261,7 @@ class Zone
 				cycle.rubber += timestep*this.value;
 				if(cycle.rubber >= settings.CYCLE_RUBBER)
 				{
-					cycle.kill()
+					cycle.kill();
 					engine.console.print(cycle.getColoredName()+"0xRESETT exploded on a rubberzone.\n");
 				}
 				break;
@@ -242,7 +296,7 @@ class Zone
 				if(mindist != Infinity)
 				{
 					this.xdir = -mindirx*cycle.speed; this.ydir = -mindiry*cycle.speed;
-					this.bounce = true;
+					if(!this.bounce) this.bounce = true;
 				}
 				break;
 			case "speed":
