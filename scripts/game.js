@@ -83,6 +83,17 @@ function playGame()
 	engine.inputState = 'game'; //change input state to accept game controls
 }
 
+function revertMap()
+{
+	var mapfile = settings.RESOURCE_REPOSITORY_CACHE+(settings.MAP_FILE.replace(/\(.+\)/,""));
+	engine.console.print("Downloading map from "+mapfile+"...\n",false);
+	httpGetAsync(mapfile,loadRound,function()
+	{
+		engine.console.print("Unable to load map file. Ignoring for now...",false);
+		loadRound();
+	});
+}
+
 function newRound()
 {
 	engine.roundCommencing = true;
@@ -132,9 +143,9 @@ function newRound()
 	}
 	if(settings.MAP_FILE != "" && settings.MAP_FILE != engine.loadedMap)
 	{
-		var mapfile = settings.RESOURCE_REPOSITORY_SERVER+settings.MAP_FILE;
+		var mapfile = settings.RESOURCE_REPOSITORY_SERVER+(settings.MAP_FILE.replace(/\(.+\)/,""));
 		engine.console.print("Downloading map from "+mapfile+"...\n",false);
-		httpGetAsync(mapfile,loadRound);
+		httpGetAsync(mapfile,loadRound,revertMap);
 		//loadRound(httpGet(mapfile));
 	}
 	else
