@@ -200,9 +200,9 @@ settings = {
 	
 	//player (for armagetron nabs) //can't have people changing these on a server
 	PLAYER_1: function(val) { if(engine.dedicated) return (settings.PLAYER_1 = "Player 1");  if(typeof(val) != "undefined") {settings.players[0].name=val;} return settings.players[0].name; },
-	COLOR_R_1: function(r=undefined) { if(engine.dedicated) return (settings.COLOR_R_1=13); return plnumcolors({r:r}) },
-	COLOR_G_1: function(g=undefined) { if(engine.dedicated) return (settings.COLOR_G_1=13); return plnumcolors({g:g}) },
-	COLOR_B_1: function(b=undefined) { if(engine.dedicated) return (settings.COLOR_B_1=0); return plnumcolors({b:b}) },
+	COLOR_R_1: function(r=undefined) { if(engine.dedicated) return (settings.COLOR_R_1=13); return plnumcolors({r:r}).r },
+	COLOR_G_1: function(g=undefined) { if(engine.dedicated) return (settings.COLOR_G_1=13); return plnumcolors({g:g}).g },
+	COLOR_B_1: function(b=undefined) { if(engine.dedicated) return (settings.COLOR_B_1=0); return plnumcolors({b:b}).b },
 	
 	PLAYER_DEL_HIST_PERROUND: true, //what was this?
 	
@@ -749,24 +749,34 @@ var commands = {
 };
 function updategrid() { if(!window.engine || !engine.scene) return; engine.scene.remove(engine.grid); buildGrid(); engine.scene.add(engine.grid); }
 
+function armaColor(cycl,tail)
+{
+	if(tail > 0.25) return 31-(tail*15);
+	else return cycl*15;
+}
+
 function plnumcolors(o)
 {
+	var r,g,b;
 	if(typeof(o) == "object")
 	{
-		var r=o.r,g=o.g,b=o.b;
+		r=o.r; g=o.g; b=o.b;
 	}
 	var retr = typeof(r) != "undefined",retb=typeof(g) != "undefined",retg=typeof(b) != "undefined";
-	if(r!=undefined)
+	var cycl=new THREE.Color(settings.players[0].cycleColor),
+		tail=new THREE.Color(settings.players[0].tailColor);
+	if(retr||retb||retg)
 	{
+		if(!retr) r=armaColor(cycl.r,tail.r);
+		if(!retg) g=armaColor(cycl.g,tail.g);
+		if(!retb) b=armaColor(cycl.r,tail.r);
+		
 		var c_red=r&15,c_grn=g&15,c_blue=b&15;
 		var t_red=Math.max(15,r),t_grn=Math.max(15,g),t_blue=Math.max(15,b);
-		settings.players[0].cycleColor = "#"+(new THREE.Color(c_red,c_grn,c_blue)).toHexString();
-		settings.players[0].tailColor = "#"+(new THREE.Color(t_red,t_grn,t_blue)).toHexString();
+		settings.players[0].cycleColor = "#"+(new THREE.Color(c_red,c_grn,c_blue)).getHexString();
+		settings.players[0].tailColor = "#"+(new THREE.Color(t_red,t_grn,t_blue)).getHexString();
 	}
-	var cycl=new THREE.Color(settings.players[0].cycleColor), tail=new THREE.Color(settings.players[0].tailColor);
-	var r=(cycl.r+(tail.r/15))/17,g=(cycl.g+(tail.g/15))/17,b=(cycl.b+(tail.b/15))/17
-	if(retr&&retg&&retb) return {r:r,g:g,b:b};
-	if(retr) return r; if(retg) return g; if(retb) return b;
+	return {r:armaColor(cycl.r,tail.r),g:armaColor(cycl.g,tail.g),b:armaColor(cycl.b,tail.b)};
 }
 
 function preset(name)
