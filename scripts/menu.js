@@ -155,9 +155,10 @@ function hoverSelect(item)
 //MENU - changes menus, performs basic actions when menu switching (pause), optional active menu element
 function menu(act,from=false)
 {
-	var selectedItem = 0
+	var selectedItem = 0, ract=act;
 	if(act == "exitmenu")
 	{
+		var exitmenu = "menu:"+engine.menus[engine.menus.length-1];
 		act = "menu:"+engine.menus[engine.menus.length-2];
 		engine.menus.splice(engine.menus.length-2,2);
 	}
@@ -359,6 +360,14 @@ function menu(act,from=false)
 						}
 						engine.inputState = "menu:"+cmenu.attributes.id.value;
 						document.getElementById('menu').appendChild(list);
+						if(ract == "exitmenu") //select the menu we just left
+						{
+							var themenu = document.getElementById('menuList').childNodes;
+							for(var x=0;x<themenu.length;x++)
+							{
+								if(exitmenu == themenu[x].id) selectedItem = x;
+							}
+						}
 						hoverSelect(document.getElementById("menuList").children[selectedItem])
 						engine.menus.push(cmenu.attributes.id.value);
 						return true;
