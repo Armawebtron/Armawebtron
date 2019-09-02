@@ -107,8 +107,8 @@
 		<Item type="list" var="player.spectating" text="Spectator Mode">
 			<Option value="false" text="Off" /> <Option value="true" text="On" />
 		</Item>
-		<Item type="js" onenter="" text="Export player settings" />
-		<Item type="js" onenter="" text="Import settings" />
+		<Item type="js" onenter="exportUsrSets()" text="Export player settings" />
+		<Item type="js" onenter="importSets()" text="Import settings" />
 		<Item type="exitmenu" text="&lt;- Go Back"/>
 	</Menu>
 		<Menu id="macro" title="Instant Chats">

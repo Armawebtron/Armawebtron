@@ -15,6 +15,64 @@ function cdir(theta) //! Gets [xdir, ydir] from angle
 	return [x,y];
 }
 
+function fileOpen(callback,type="plain/text")
+{
+	if(window.FileReader)
+	{
+		var f = document.createElement("input");
+		f.type = "file";
+		f.onchange = function(e)
+		{
+			if(e.target.files.length > 0)
+			{
+				var r = new FileReader();
+				r.onload = function(e)
+				{
+					callback(e.target.result);
+				}
+				for(var i=0;i<e.target.files.length;i++)
+				{
+					switch(type)
+					{
+						case "plain/text":
+							r.readAsText(e.target.files[i]);
+							break;
+						default:
+							r.readAsDataURL(e.target.files[i]);
+							break;
+					}
+				}
+			}
+		}
+		f.click();
+	}
+	else
+	{
+		alert("FileReader doesn't exist in this browser. Contact nelg.");
+		return false;
+	}
+}
+
+function fileSave(filename,data,type="plain/text") //Based on https://stackoverflow.com/a/30832210
+{
+	//TODO: get type from filename / data ?
+	var file = new Blob([data],{type:type});
+	if(window.navigator.msSaveOrOpenBlob) // IE :(
+		window.navigator.msSaveOrOpenBlob(file,filename);
+	else
+	{
+		var a = document.createElement("a"), url = URL.createObjectURL(file);
+		a.href = url; a.download = filename;
+		document.body.appendChild(a);
+		a.click();
+		setTimeout(function()
+		{
+			document.body.removeChild(a);
+			window.URL.revokeObjectURL(url);  
+		},0); 
+	}
+}
+
 function httpGet(url) //! gets HTTP requests synchroniously. DEPRECATED and wont work in nodejs
 {
 	var xmlHttp = new XMLHttpRequest();

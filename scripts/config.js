@@ -944,7 +944,7 @@ function loadcfg(str,silent=false,dontforcecase=false)
 	var lines = str.split("\n");
 	for(var i=0;i<lines.length;i++)
 	{
-		split = lines[i].trimLeft().split(" ");
+		split = lines[i].replace(/\t/,"    ").trimLeft().split(" ");
 		var cmd = "";
 		if(!dontforcecase || (cmd != "FLOOR_RED" && cmd != "FLOOR_GREEN" && cmd != "FLOOR_BLUE" && cmd != "MENU_RENDER")) //HACK for user.cfg
 		{
@@ -954,6 +954,13 @@ function loadcfg(str,silent=false,dontforcecase=false)
 	}
 }
 
+function importSets()
+{
+	fileOpen(loadcfg);
+}
+
+var _aacompatvars = ["PLAYER_1","COLOR_R_1","COLOR_G_1","COLOR_B_1"];
+
 var uservars = [
 //	"GRID_SIZE","FLOOR_RED","FLOOR_GREEN","FLOOR_BLUE",
 	"EXPLOSIONS","HIGH_RIM",
@@ -961,6 +968,37 @@ var uservars = [
 	"ZONE_HEIGHT","ZONE_SEGMENTS","ZONE_SEG_LENGTH","ZONE_ALPHA","ZONE_SPIN_SPEED","ZONE_RENDER_TYPE",
 	"player","controls"
 ];
+
+function exportUsrSets()
+{
+	var txt = "# Warning: Do NOT replace user.cfg with this file. This file doesn't directly replace their user.cfg and I claim no reponsibility for lost settings and/or broken clients.\n\n# Armagetron Compatibility\n";
+	for(var i=0;i<_aacompatvars.length;i++)
+	{
+		txt += _aacompatvars[i]+" "+chsetting(_aacompatvars[i],undefined,true)+"\n";
+	}
+	for(var i=0;i<settings.instantchats.length;i++)
+	{
+		txt += "INSTANT_CHAT_STRING_1_"+(i+1)+" "+settings.instantchats[i].text+"\n";
+	}
+	txt += "\n# Native 3DCycles user.cfg settings. Most, but not all, also work with Armagetron.\n";
+	for(var i=0;i<uservars.length;i++)
+	{
+		if(typeof(settings[uservars[i]]) == "object")
+		{
+			txt += "MERGE_OBJ "+uservars[i]+" "+JSON.stringify(settings[uservars[i]]);
+		}
+		else
+		{
+			txt += uservars[i]+" ";
+			if(typeof(settings[uservars[i]]) == "boolean")
+				txt += settings[uservars[i]]?1:0;
+			else
+				txt += settings[uservars[i]];
+		}
+		txt += "\n";
+	}
+	fileSave("user_3dcexport.cfg",txt);
+}
 
 /*function netcfg(setting,value)
 {
