@@ -1653,6 +1653,30 @@ var cycleModel = function(colorCode) {//builds a single cycle
 	return model;
 };
 
+
+function newChatArrow()
+{
+	var mat = new THREE.MeshBasicMaterial({
+			side: THREE.DoubleSide, color: new THREE.Color("yellow"),
+		});
+	
+	var geo = new THREE.Geometry();
+	geo.vertices.push(new THREE.Vector3(0,0,0));
+	geo.vertices.push(new THREE.Vector3(-1,-1,2));
+	geo.vertices.push(new THREE.Vector3(-1, 1,2));
+	geo.vertices.push(new THREE.Vector3( 1, 1,2));
+	geo.vertices.push(new THREE.Vector3( 1,-1,2));
+	geo.vertices.push(new THREE.Vector3(-1,-1,2));
+	
+	for(var i=1;i<geo.vertices.length-1;i++)
+	{
+		geo.faces.push(new THREE.Face3(i,i+1,0));
+	}
+	
+	return new THREE.Mesh(geo,mat);
+}
+
+
 /*—–––––––––––cycle constructor—–––––––––––*/
 var createLightcycle = function(cfg) //DEPRECATED
 {

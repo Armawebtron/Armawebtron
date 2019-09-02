@@ -132,6 +132,12 @@ function draw()
 		cycle.rotation.x -= xd*(((cycle.rotation.x)*frametime*4)+(sens*frametime*xdir));
 		cycle.rotation.y -= yd*(((cycle.rotation.y)*frametime*4)+(sens*frametime*ydir));
 		
+		if(cycle.chatting != cycle.chatarrow.visible) cycle.chatarrow.visible = cycle.chatting;
+		if(cycle.chatting)
+		{
+			cycle.chatarrow.rotation.z += frametime;
+		}
+		
 		//sound
 		mixCycle(cycle);
 	}

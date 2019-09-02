@@ -553,6 +553,11 @@ class Player extends THREE.Object3D
 		this.add(this.model);
 		//this.shadow = cycleShadow();
 		//this.add(this.shadow);
+		this.chatarrow = newChatArrow();
+		this.chatarrow.position.z = 1.20;
+		this.chatarrow.position.x -= 0.5;
+		this.chatarrow.scale.set(0.25,0.25,0.25);
+		this.add(this.chatarrow);
 		
 		
 		this.cycleColor = cfg.cycleColor;
