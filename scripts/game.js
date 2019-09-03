@@ -375,7 +375,7 @@ function game(oneoff=false)
 		{
 			var cycle = engine.players[engine.activePlayer],data={},len=0;
 			if(cycle.braking != cycle.brakingPrev) {data.braking=cycle.braking; cycle.brakingPrev=cycle.braking; ++len;}
-			if(cycle.boosting != cycle.boostingPrev) {data.boosting=cycle.boosting; cycle.boostingPrev=cycle.boosting ++len;}
+			if(cycle.boosting != cycle.boostingPrev) {data.boosting=cycle.boosting; cycle.boostingPrev=cycle.boosting; ++len;}
 			
 			if(len > 0)
 			{
