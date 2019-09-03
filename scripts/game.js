@@ -373,11 +373,14 @@ function game(oneoff=false)
 	{
 		if(engine.network)
 		{
-			var cycle = engine.players[engine.activePlayer],data={};
-			if(cycle.braking != cycle.brakingPrev) {data.braking=cycle.braking; cycle.brakingPrev=cycle.braking}
-			if(cycle.boosting != cycle.boostingPrev) {data.boosting=cycle.boosting; cycle.boostingPrev=cycle.boosting}
+			var cycle = engine.players[engine.activePlayer],data={},len=0;
+			if(cycle.braking != cycle.brakingPrev) {data.braking=cycle.braking; cycle.brakingPrev=cycle.braking; ++len;}
+			if(cycle.boosting != cycle.boostingPrev) {data.boosting=cycle.boosting; cycle.boostingPrev=cycle.boosting ++len;}
 			
-			engine.connection.send(JSON.stringify({type:"playdata",data:data}));
+			if(len > 0)
+			{
+				engine.connection.send(JSON.stringify({type:"playdata",data:data}));
+			}
 		}
 		if(!oneoff && settings.GAME_LOOP != 1) {setTimeout(game,1000/settings.DEDICATED_FPS); engine.gameRunning = true;}
 		//time handlers and delta
