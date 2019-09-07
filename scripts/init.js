@@ -20,13 +20,15 @@
 //resize window listener function
 var resizeWindow = function()
 {
-	if(engine.camera && engine.renderer)
+	if(engine.renderer)
 	{
-		//CAMERA_ASPECT_RATIO = window.innerWidth / window.innerHeight;
-		engine.camera.aspect = window.innerWidth / window.innerHeight; //CAMERA_ASPECT_RATIO;
-		engine.camera.updateProjectionMatrix();
 		engine.renderer.setSize(window.innerWidth,window.innerHeight);
 		engine.renderer.render(engine.scene, engine.camera);
+	}
+	if(engine.camera)
+	{
+		engine.camera.aspect = window.innerWidth / window.innerHeight;
+		engine.camera.updateProjectionMatrix();
 	}
 };
 
