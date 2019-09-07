@@ -44,7 +44,6 @@ function init()
 	window.addEventListener('touchstart',touchControl);
 	window.addEventListener('resize',resizeWindow);
 }
-if(!engine.scene) init();
 
 
 function gameLostTab()
@@ -64,10 +63,9 @@ function gameGainedFocus()
 window.onblur = gameLostFocus;
 window.onfocus = gameGainedFocus;
 
-window.onload = function() {
-	//	document.getElementById("menu").onmousemove = function(e) { bgmove(e); };
-	//window.addEventListener('resize', resizeWindow );//moved to menu activation of gameplay - only needs to listen when its game time
-
+window.onload = function()
+{
+	if(!engine.scene) init();
 
 	httpGetAsync("layout/menu.xml",function(output){
 		engine.menu = xmlify(output); menu('menu:main'); aamenurender();
