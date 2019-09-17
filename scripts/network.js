@@ -80,6 +80,9 @@ function connectionHandler(e)
 	switch(msg.type)
 	{
 		case "ping": engine.connection.send('{"type":"pong"}'); break;
+		case "version": 
+			engine.connection.send(JSON.stringify({type:"version",data:0.7}));
+		break;
 		case "endRound": if(inround()) endRound(); break;
 		case "newRound": 
 			if(!engine.playGame) playGame();
