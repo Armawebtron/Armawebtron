@@ -54,11 +54,11 @@ class AI
 					}
 					else if(nearestPlayer)
 					{
-						if(nearestPlayer == this.cycle.sensors.objrear && (nearestPlayer != this.cycle.sensors.objleft && nearestPlayer != this.cycle.sensors.objright))
+						if(nearestPlayer == this.cycle.sensor.objrear && (nearestPlayer != this.cycle.sensor.objleft && nearestPlayer != this.cycle.sensor.objright))
 						{
 							this.cycle.turn(this.getRelDirToPoint(nearestPlayer.position.x,nearestPlayer.position.y)); //turn in front of the player
 						}
-						else if(nearestPlayer.sensors.objfront == nearestPlayer) //we're in front of our nearest cycle
+						else if(nearestPlayer.sensor.objfront == nearestPlayer) //we're in front of our nearest cycle
 						{
 							this.cycle.turn(this.getRelDirToPoint(nearestPlayer.position.x,nearestPlayer.position.y)); //turn back to the player
 						}
@@ -126,7 +126,7 @@ class AI
 	getRelDirToPoint(x,y)
 	{
 		//var dist = pointDistance(x,y,this.cycle.position.x,this.cycle.position.y);
-		var dir = [(this.cycle.position.x-pt[0]),(this.cycle.position.y-pt[1])];
+		var dir = [(this.cycle.position.x-x),(this.cycle.position.y-y)];
 		var ang = Math.atan2(dir[1],dir[0]);
 		//if(Math.round((this.cycle.rotation.z)/8) != Math.round(ang/8)) //point is not in front
 		{
