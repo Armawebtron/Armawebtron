@@ -41,33 +41,71 @@ class AI
 						{
 							var dist = pointDistance(engine.players[x].position.x,engine.players[x].position.y,
 													this.cycle.position.x,this.cycle.position.y);
-							if(dist > nearestPlayerDist)
+							if(dist < nearestPlayerDist)
 							{
 								nearestPlayerDist = dist; nearestPlayer = engine.players[x];
 							}
 						}
 					}
 					this.nearestPlayer = nearestPlayer;
-					if(shouldTurn) 
+					if(shouldTurn || (usingRubber && this.cycle.rubber >= settings.CYCLE_RUBBER*0.8)) 
 					{
+						if(this.sameTurnsUsed > 3 &&
+							this.cycle.sensor.objrear == this.cycle && 
+							this.cycle.sensor.nearestobj == this.cycle &&
+							this.cycle.sensor.objleft == this.cycle &&
+							this.cycle.sensor.objright == this.cycle)
+						{
+							//this.basicDecision();
+							if(-this.lastTurn == -1)
+								var d = this.cycle.sensor.leftTurn;
+							else
+								var d = this.cycle.sensor.rightTurn;
+							//if(d < 0.1)
+							{
+								this.turn(-this.lastTurn);
+								this.turn(this.lastTurn);
+								console.log("[DEBUG] Camping");
+								this.state = 4;
+								return true;
+							}
+							/*else
+							{
+								this.cycle.turn(this.lastTurn);
+								this.cycle.turn(this.lastTurn);
+								this.cycle.turn(this.lastTurn);
+								this.cycle.turn(-this.lastTurn);
+								return true;
+							}*/
+							//this.basicDecision();
+							//this.sameTurnsUsed = -4;
+						}
 						return this.basicDecision();
 					}
 					else if(nearestPlayer)
 					{
+						//engine.console.print("target: "+removeColors(nearestPlayer.name)+"\n");
+						
 						if(nearestPlayer == this.cycle.sensor.objrear && (nearestPlayer != this.cycle.sensor.objleft && nearestPlayer != this.cycle.sensor.objright))
 						{
-							this.cycle.turn(this.getRelDirToPoint(nearestPlayer.position.x,nearestPlayer.position.y)); //turn in front of the player
+							this.turn(this.getRelDirToPoint(nearestPlayer.position.x,nearestPlayer.position.y)); //turn in front of the player
 						}
-						else if(nearestPlayer.sensor.objfront == nearestPlayer) //we're in front of our nearest cycle
+						/*else if(this.cycle.sensor.nearestobj == nearestPlayer
+							|| this.cycle == nearestPlayer.sensor.objrear
+						) 
+						//we're in front of our nearest cycle
 						{
-							this.cycle.turn(this.getRelDirToPoint(nearestPlayer.position.x,nearestPlayer.position.y)); //turn back to the player
-						}
-						return;
+							this.turn(this.getRelDirToPoint(nearestPlayer.position.x,nearestPlayer.position.y)); //turn back to the player
+						}*/
 					}
 					break;
 				case 1:
-					if(this.target === false) this.target = engine.players[Math.round(Math.random()*engine.players.length)];
-					if(this.target == this || typeof(this.target) == "undefined" || !this.target.alive)
+					if(this.target === false) 
+					{
+						this.target = engine.players[Math.round(Math.random()*engine.players.length)];
+						if(this.target) engine.console.print("target: "+removeColors(this.target.name)+"\n");
+					}
+					if(this.target == this.cycle || typeof(this.target) == "undefined" || !this.target.alive)
 					{
 						this.target = false;
 					}
@@ -80,6 +118,23 @@ class AI
 				case 3:
 					
 					break;
+				case 4: //! temp state: wait until we're out of our camp.
+					if(this.cycle.sensor.objrear == this.cycle && 
+						this.cycle.sensor.nearestobj == this.cycle &&
+						this.cycle.sensor.objleft == this.cycle &&
+						this.cycle.sensor.objright == this.cycle)
+					{
+						//if(usingRubber) return this.basicDecision();
+						if(this.cycle.sensor.front <= this.cycle.minDistance.front+0.01)
+							return this.basicDecision();
+					}
+					else
+					{
+						console.log("[DEBUG] Normal");
+						this.state = 2;
+						return true;
+					}
+					break;
 				default:
 					console.error("Invalid state "+this.state+"!");
 					this.state = 0;
@@ -89,7 +144,7 @@ class AI
 		if(this.destPoints.length > 0 && engine.gtime > this.cycle.lastTurnTime+(settings.CYCLE_DELAY*1000))
 		{
 			var pt = this.destPoints[0];
-			this.cycle.turn(this.getRelDirToPoint(pt[0],pt[1]));
+			this.turn(this.getRelDirToPoint(pt[0],pt[1]));
 		}
 		this.cycle.braking = settings.AI_FORCE_BRAKE||(settings.CYCLE_BRAKE > 0 && dangerouslyNearWall && usingRubber);
 		this.lastRubber = this.cycle.rubber;
@@ -98,12 +153,12 @@ class AI
 	{
 		if(this.cycle.sensor.rightTurn < this.cycle.sensor.leftTurn)
 			//if(this.cycle.sensor.left > this.cycle.sensor.front) 
-				this.cycle.turn(-1);
+				this.turn(-1);
 		else if(this.cycle.sensor.rightTurn > this.cycle.sensor.leftTurn)
 			//if(this.cycle.sensor.right > this.cycle.sensor.front) 
-				this.cycle.turn(1);
+				this.turn(1);
 		else
-			this.cycle.turn([-1,1][Math.round(Math.random()*1)]);
+			this.turn([-1,1][Math.round(Math.random()*1)]);
 	}
 	huntDownTarget()
 	{
@@ -122,6 +177,7 @@ class AI
 			}
 			
 		}
+		this.turn(this.getRelDirToPoint(nearX,nearY)); //turn back to the player
 	}
 	getRelDirToPoint(x,y)
 	{
@@ -142,10 +198,21 @@ class AI
 			//centerMessage(angdiff);
 		}
 	}
+	turn(dir)
+	{
+		this.cycle.turn(dir);
+		if(dir == this.lastTurn)
+			this.sameTurnsUsed++;
+		else
+			this.sameTurnsUsed = 0;
+		this.lastTurn = dir;
+	}
 	constructor(cycle)
 	{
 		this.cycle = cycle; this.lastRubber = 0;
 		this.state = 2; //theoretical states: 0: survive, 1: trace, 2: closecombat, 3: pathfind
+		this.lastTurn = 0;
+		this.sameTurnsUsed = 0;
 		this.target = false;
 		this.targetX = NaN; this.targetY = NaN;
 		this.destPoints = [];
