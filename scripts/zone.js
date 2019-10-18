@@ -249,8 +249,7 @@ class Zone
 				break;
 			case "target":
 				loadcfg(settings.DEFAULT_TARGET_COMMAND.replace(/\\n/g,"\n"));
-				cycle.score += settings.TARGET_INITIAL_SCORE;
-				updateScoreBoard();
+				cycle.addScore(settings.TARGET_INITIAL_SCORE);
 				break;
 		}
 	}

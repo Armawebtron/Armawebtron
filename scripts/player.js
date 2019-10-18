@@ -21,6 +21,16 @@
 
 class Player extends THREE.Object3D
 {
+	setScore(x)
+	{
+		this.score = (x*1)||0;
+		engine.playersByScore.sort(function(a,b){return b.score-a.score});
+		updateScoreBoard();
+	}
+	addScore(x)
+	{
+		this.setScore(this.score+((x*1)||0));
+	}
 	softReset() //! Resets the cycle state to default variables
 	{
 		this.speed = 0;
@@ -44,7 +54,7 @@ class Player extends THREE.Object3D
 	hardReset() //! Same as soft reset but resets all varaibles
 	{
 		this.softReset();
-		this.score = 0;
+		this.setScore(0);
 		this.ping = 0;
 	}
 	getColoredName() //! Name with colors...
@@ -66,7 +76,7 @@ class Player extends THREE.Object3D
 	}
 	getBoringName() //! Name without colors...
 	{
-		return removeColors(cycle.name);
+		return removeColors(this.name);
 	}
 	newWallSegment() //should be called on turns
 	{

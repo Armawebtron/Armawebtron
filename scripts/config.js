@@ -1268,17 +1268,54 @@ engine = {
 	
 	//FOR PLAYER OBJECTS
 	//game stuff
-//	cycle: false,
-//	position: [0,0],
-//	speed: 1,
-//	angle: 0,
-	players: [],//array of player objects (info)
+	playersById: [],//array of player objects (info)
+	playersByScore: [],
 	
 	teams: [],//array of team objects
 	
 	round: 0,
 	delayedcommands: {},
 };
+
+engine.players = new Proxy(engine.playersById,{
+	apply: function(t,arg,ls)
+	{
+		return arg[t].apply(this,ls);
+	},
+	deleteProperty: function(t,id)
+	{
+		if(!isNaN(id))
+		{
+			for(var x=engine.playersByScore.length-1;x>=0;--x)
+			{
+				if(t[id] == engine.playersByScore[x])
+				{
+					engine.playersByScore.splice(x,1);
+				}
+			}
+		}
+		return true;
+	},
+	set: function(t,id,val)
+	{
+		if(!isNaN(id))
+		{
+			for(var x=engine.playersByScore.length-1;x>=0;--x)
+			{
+				if(t[id] == engine.playersByScore[x])
+				{
+					engine.players[x] = val;
+					updateScoreBoard();
+					t[id] = value;
+					return true;
+				}
+			}
+			engine.playersByScore.push(val);
+		}
+		t[id] = val;
+		return true;
+	},
+});
 
 settings.engine = engine; //hack to allow menu to change engine config. (Potentially insecure?)
 

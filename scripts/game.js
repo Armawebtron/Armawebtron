@@ -57,13 +57,13 @@ function endRound()
 	{ 
 		engine.scene.remove(engine.scene.children[0]); 
 	}
-	//if(!engine.network) engine.players = [];
+	//if(!engine.network) engine.players.splice(0);
 }
 
 function endGame()
 {
 	endRound();
-	engine.players = [];
+	engine.players.splice(0);
 	engine.round = 0;
 }
 
@@ -728,7 +728,7 @@ function doDeath(cycle,escape=false)
 		else if(typeof(objtoaccuse) == "object")
 		{
 			engine.console.print(objtoaccuse.getColoredName()+"0xRESETT core dumped "+cycle.getColoredName()+"0xRESETT for 1 point.\n");
-			objtoaccuse.score += 1;
+			objtoaccuse.addScore(1);
 		}
 		else
 		{
@@ -929,12 +929,13 @@ function updateScoreBoard()
 	if(engine.dedicated || scoreboard.style.display == "none") return;
 	var scoreBoard = document.getElementById("scoreboard").children[0];
 	var playersSB = scoreBoard.children[1];
-	playersSB.innerHTML = "";
-	for(var x=engine.players.length-1;x>=0;--x) if(typeof(engine.players[x]) != "undefined")
+	var tmp = "";
+	for(var x=0;x<engine.playersByScore.length;++x) if(typeof(engine.playersByScore[x]) != "undefined")
 	{
-		var cycle = engine.players[x];
-		playersSB.innerHTML += "<tr class=\"player\"><td>"+(cycle.chatting?"*":"&nbsp;")+replaceColors(cycle.getColoredName())+"</td><td>"+replaceColors(cycle.alive?"0x00ff00Yes":"0xff0000No")+"</td><td>"+cycle.score+"</td><td>"+cycle.ping+"</td><tr>";
+		var cycle = engine.playersByScore[x];
+		tmp += "<tr class=\"player\"><td>"+(cycle.chatting?"*":"&nbsp;")+replaceColors(cycle.getColoredName())+"</td><td>"+replaceColors(cycle.alive?"0x00ff00Yes":"0xff0000No")+"</td><td>"+cycle.score+"</td><td>"+cycle.ping+"</td><tr>";
 	}
+	playersSB.innerHTML = tmp;
 }
 /*function updateScoreBoard()
 {
