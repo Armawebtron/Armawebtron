@@ -27,7 +27,7 @@
 		<Item type="submenu" onenter="about" text="About"/>
 		<!-- <Item type="submenu" onenter="egg" text="&lt;- Go Back"/> -->
 		<!-- alt: <Item type="text" text="" /> <!- - no exit game function, escape will do nothing -->
-		<Item type="js" onenter="window.open('','_self').close();window.location.href = 'about:blank'" text="Quit"/>
+		<Item type="js" onenter="menu('quit')" text="Quit"/>
 	</Menu>
 	<!-- General game configuration -->
 	<Menu id="game" title="Play Game">
