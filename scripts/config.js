@@ -862,6 +862,8 @@ function aamenurender(value)
 	return settings.MENU_RENDER;
 }
 
+var cmds = Object.keys(settings).concat(Object.keys(commands)).sort();
+
 settings.controls = { //defaults declared
 		left: [65,68,70,83],//a s d f
 		right: [74,75,76,186],//j k l ;
@@ -1135,13 +1137,13 @@ function chsetting(setting,value,silent=false,txt="",pretxt="")
 		engine.console.print("Unknown command "+event[1]+"\n");
 		if(inround())
 		{
-			var sets = Object.keys(settings), len = 0, print="";
-			for(i=0;i<sets.length;i++)
+			var len = 0, print="";
+			for(i=0;i<cmds.length;i++)
 			{
-				if(sets[i].search(setting) > -1)
+				if(cmds[i].search(setting) > -1)
 				{
 					if(len != 0) print += ", ";
-					len++; print += sets[i];
+					len++; print += cmds[i];
 				}
 			}
 			if(len > 0) engine.console.print("Perhaps you meant: "+print+"\n");
