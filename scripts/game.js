@@ -81,6 +81,14 @@ function playGame()
 	}
 	hideMenu(); newRound();
 	engine.inputState = 'game'; //change input state to accept game controls
+	if(engine.network)
+	{
+		document.getElementById("progtitle").innerHTML = tStringify("@progtitleshort@ &bull; Playing online");
+	}
+	else
+	{
+		document.getElementById("progtitle").innerHTML = tStringify("@progtitleshort@ &bull; Playing locally");
+	}
 }
 
 function revertMap()

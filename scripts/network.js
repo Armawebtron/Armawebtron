@@ -292,6 +292,7 @@ function connectToGame()
 	if(!engine.connection)
 	{
 		engine.connection = connectTo(settings.CONNECT_HOST,settings.CONNECT_PORT)
+		document.getElementById("progtitle").innerHTML = tStringify("@progtitleshort@ &bull; Connecting to "+settings.CONNECT_HOST+":"+settings.CONNECT_PORT);
 	}
 }
 

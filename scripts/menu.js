@@ -391,9 +391,10 @@ function menu(act,from=false)
 			engine.menus = []; menu("menu:main");
 			document.getElementById('menu').className = "noselect mainbg_"+settings.MENU_RENDER;
 			aamenurender(); showMenu();
+			document.title = tStringify("@progtitleshort@");
 			break;
 		case 'quit'://quit game action from any menu
-			window.open('','_self',''); window.close(); location.replace('quit.html');
+			window.open('','_self',''); window.close(); location.replace('about:blank');
 			break;
 		case 'unpause'://return to game from pause menu
 			document.getElementById('menu').style.display = 'none';
