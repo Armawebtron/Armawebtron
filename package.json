@@ -1,0 +1,13 @@
+{
+	"name": "3dc-web",
+	"description": "A lightcycle game.",
+	"author": "Glen Harpring",
+	"license": "GNU GPLv2",
+	"main": "electron.js",
+	"scripts": {
+		"start": "electron ."
+	},
+	"devDependencies": {
+		"electron": "^7.0.0"
+	}
+}
