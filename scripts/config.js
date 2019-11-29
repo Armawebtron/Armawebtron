@@ -1279,45 +1279,67 @@ engine = {
 	delayedcommands: {},
 };
 
-engine.players = new Proxy(engine.playersById,{
-	apply: function(t,arg,ls)
-	{
-		return arg[t].apply(this,ls);
-	},
-	deleteProperty: function(t,id)
-	{
-		if(!isNaN(id))
+if(window.Proxy)
+{
+	engine.players = new Proxy(engine.playersById,{
+		apply: function(t,arg,ls)
 		{
-			for(var x=engine.playersByScore.length-1;x>=0;--x)
+			return arg[t].apply(this,ls);
+		},
+		deleteProperty: function(t,id)
+		{
+			if(!isNaN(id))
 			{
-				if(t[id] == engine.playersByScore[x])
+				for(var x=engine.playersByScore.length-1;x>=0;--x)
 				{
-					engine.playersByScore.splice(x,1);
+					if(t[id] == engine.playersByScore[x])
+					{
+						engine.playersByScore.splice(x,1);
+					}
 				}
 			}
-		}
-		return true;
-	},
-	set: function(t,id,val)
-	{
-		if(!isNaN(id))
+			return true;
+		},
+		set: function(t,id,val)
 		{
-			for(var x=engine.playersByScore.length-1;x>=0;--x)
+			if(!isNaN(id))
 			{
-				if(t[id] == engine.playersByScore[x])
+				for(var x=engine.playersByScore.length-1;x>=0;--x)
 				{
-					engine.players[x] = val;
-					updateScoreBoard();
-					t[id] = value;
-					return true;
+					if(t[id] == engine.playersByScore[x])
+					{
+						engine.players[x] = val;
+						updateScoreBoard();
+						t[id] = value;
+						return true;
+					}
 				}
+				engine.playersByScore.push(val);
 			}
-			engine.playersByScore.push(val);
-		}
-		t[id] = val;
-		return true;
-	},
-});
+			t[id] = val;
+			return true;
+		},
+	});
+}
+else
+{
+	//hacky workaround, only for browsers without Proxy support (very few)
+	engine.players = engine.playersById;
+	engine.players.prevLength = -1;
+	setInterval(function()
+	{
+		if(engine.players.length != engine.players.prevLength)
+		{
+			engine.players.prevLength = engine.players.length;
+			engine.playersByScore.splice(0);
+			for(var x=engine.playersById.length-1;x>=0;--x)
+			{
+				engine.playersByScore.push(engine.playersById[x]);
+			}
+			updateScoreBoard();
+		} 
+	},1000);
+}
 
 settings.engine = engine; //hack to allow menu to change engine config. (Potentially insecure?)
 

@@ -139,7 +139,7 @@ function draw()
 		}
 		
 		//sound
-		mixCycle(cycle);
+		if(window.mixCycle) mixCycle(cycle);
 	}
 	
 	if(settings.WALLS_STAY_UP_DELAY >= 0)
@@ -373,7 +373,7 @@ function draw2d_canvas() //TODO: have an svg output option
 	canvas.height = canvas.offsetWidth*(ysize/xsize);
 	ctx.scale(
 		canvas.width/(xsize*engine.REAL_ARENA_SIZE_FACTOR),
-		canvas.height/(ysize*engine.REAL_ARENA_SIZE_FACTOR),
+		canvas.height/(ysize*engine.REAL_ARENA_SIZE_FACTOR)
 	);
 	var ax = engine.logicalBox.min.x * engine.REAL_ARENA_SIZE_FACTOR, 
 		ay = engine.logicalBox.min.y * engine.REAL_ARENA_SIZE_FACTOR;
