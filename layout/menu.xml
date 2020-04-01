@@ -249,7 +249,9 @@
 			<Item type="text" style="font-size:15pt" text="0xff8800Developers: 0xRESETTNelg, Durf" />
 			<Item type="text" style="font-size:15pt" text="0xff8800Collision Detection: 0xRESETTDurf, softSurfer" />
 			<Item type="text" style="font-size:15pt" text="0xff8800ArmagetronAd Font: 0xRESETTLucifer, Fabrice Holbe" />
-			<Item type="text" style="font-size:15pt" text="0xff8800Textures: 0xRESETTSinewav, the Armagetron Advanced development team" />
+			<Item type="text" style="font-size:15pt" text="0xRESETTDefault Theme:" />
+			<Item type="text" style="font-size:15pt" text="0xff8800Wall Textures: 0xRESETTBrian Hilmers" />
+			<Item type="text" style="font-size:15pt" text="0xff8800Textures: 0xRESETTthe Armagetron Advanced development team" />
 			<Item type="text" style="font-size:15pt" text="0xff8800ArmagetronAd Cycles: 0xRESETTZ-Man(?)" />
 			<!--<Item type="text" style="font-size:15pt" text="0xff8800Testing: 0xRESETTdukevin, light, jericho, zoom" />-->
 			<Item type="exitmenu" text="&lt;- Go Back"/>
