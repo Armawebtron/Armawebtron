@@ -474,6 +474,11 @@ class Player extends THREE.Object3D
 			this.position.x += newx;
 			this.position.y += newy;
 			this.position.z += newz;
+			if(this.newPos)
+			{
+				this.newPos.x += newx;
+				this.newPos.y += newy;
+			}
 			if(this.position.z-this.sensor.bottom < this.model.rotation.y)
 			{
 				this.model.rotation.y = this.position.z;
