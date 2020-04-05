@@ -19,7 +19,7 @@
 
 function connectTo(host,port)
 {
-	hideMenu(); engine.inputState = "";
+	hideMenu(); engine.inputState = "game";
 	try
 	{
 		var connection = new WebSocket('ws'+(settings.CONNECT_SSL?'s':'')+'://'+host+':'+port);
