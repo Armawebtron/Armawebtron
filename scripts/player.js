@@ -25,7 +25,7 @@ class Player extends THREE.Object3D
 	{
 		this.score = (x*1)||0;
 		engine.playersByScore.sort(function(a,b){return b.score-a.score});
-		updateScoreBoard();
+		if(engine.playersByScore.indexOf(this) > -1) updateScoreBoard();
 	}
 	addScore(x)
 	{
@@ -581,10 +581,9 @@ class Player extends THREE.Object3D
 		this.walls.scale = this.walls.position = new THREE.Vector3();*/
 		
 		this.walls = createWall(this,0,0,0); //walls are still called upon when spectating
-
-		this.hardReset();
-
+		
 		this.chatting = cfg.chatting||false; this.spectating = cfg.spectating||false;
+
 		if(cfg.ai||settings.DEBUG_EVERYONE_IS_AI)
 		{
 			this.AI = new AI(this);
@@ -598,6 +597,9 @@ class Player extends THREE.Object3D
 
 		this.name = cfg.name;
 		
+		this.team = null;
+		
+		this.hardReset();
 		
 		//audio creation
 		this.engineType = cfg.engineType;
