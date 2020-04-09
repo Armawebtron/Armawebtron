@@ -79,7 +79,15 @@ function connectionHandler(e)
 	var msg = JSON.parse(e.data);
 	switch(msg.type)
 	{
-		case "ping": engine.connection.send('{"type":"pong"}'); break;
+		case "ping": engine.connection.send((JSON.stringify({type:"pong"}))); break;
+		case "timeSync": 
+			if(msg.data)
+			{
+				engine.gtime = msg.data;
+				engine.connection.send(JSON.stringify({type:"timeSync",data:engine.gtime}));
+			}
+			engine.connection.timeSync = false;
+			break;
 		case "version": 
 			engine.connection.send(JSON.stringify({type:"version",data:0.7}));
 		break;
@@ -164,11 +172,16 @@ function connectionHandler(e)
 		case "griddata":
 			if(!engine.playGame) playGame();
 			//console.log(msg.data);
-			engine.gtime = (performance.now()/settings.TIME_FACTOR)-engine.timeStart-engine.totalPauseTime-4000;
+			//engine.gtime = (performance.now()/settings.TIME_FACTOR)-engine.timeStart-engine.totalPauseTime-4000;
 			if(msg.gtime > engine.gtime)
 			{
-				engine.gtime = msg.gtime;
+				//engine.gtime = msg.gtime;
 				//console.log("S: ",msg.gtime-engine.gtime);
+				if(!engine.connection.timeSync) 
+				{
+					engine.connection.timeSync = true;
+					engine.connection.send(JSON.stringify({type:"timeSync",data:engine.gtime}));
+				}
 			}
 			var delta = engine.gtime-(msg.gtime);
 			var timestep = delta/1000;
@@ -209,6 +222,15 @@ function connectionHandler(e)
 							delete cycle.newPos;
 							
 							cycle.gameTime = Math.max(0,msg.gtime);
+							
+							//HACK to avoid cycle sticking to wall on a turn
+							{
+								var fakeTS = 0.01/cycle.speed;
+								var move2d = Math.cos(cycle.model.rotation.y)*(cycle.speed*fakeTS), dir = cdir(cycle.rotation.z);
+								cycle.lastpos.x = (cycle.position.x += move2d*dir[0]);
+								cycle.lastpos.y = (cycle.position.y += move2d*dir[1]);
+								cycle.gameTime += fakeTS;
+							}
 						}
 						if(data.wall) { cycle.walls.map = data.wall; cycle.resetWall(false); }
 							

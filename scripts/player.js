@@ -147,7 +147,7 @@ class Player extends THREE.Object3D
 		}
 		return this.walls.netLength;
 	}
-	resetWall(cycle,full=true) //! Completely redoes the 3D wall according to the actual wall
+	resetWall(full=true) //! Completely redoes the 3D wall according to the actual wall
 	{
 		if(full === true)
 		{
@@ -282,7 +282,7 @@ class Player extends THREE.Object3D
 	}
 	update(timestep=false) //! Simulates game movement on cycles
 	{
-		if(timestep === false) { timestep = (engine.gtime-this.gameTime)/1000; }
+		if(timestep === false) { timestep = (engine.gtime-this.gameTime)/1000; if(timestep < 0) return; }
 		this.gameTime += timestep*1000;
 		//var timeElapsed = engine.gtime;
 		var timeElapsed = this.gameTime;

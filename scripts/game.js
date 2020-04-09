@@ -491,7 +491,11 @@ function game(oneoff=false)
 								if(cycle.haswall) cycle.newWallSegment();
 								if(engine.network)
 								{
-									engine.connection.send(JSON.stringify({type:"turn",data:rad2deg(cycle.rotation.z),gtime:engine.gtime}));
+									engine.connection.send(JSON.stringify({
+										type:"turn",data:rad2deg(cycle.rotation.z),gtime:cycle.gameTime,
+										position:[cycle.position.x,cycle.position.y,cycle.position.z],
+										speed:cycle.speed, rubber:cycle.rubber, brakes:cycle.brakes
+									}));
 								}
 								if(window.svr) //force a player sync
 								{
