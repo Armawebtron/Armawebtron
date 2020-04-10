@@ -256,13 +256,15 @@ function ensurePlayersSane(removeAIs=true)
 			}
 			else
 			{
+				var AI_NUM = 1;
+				for(var z=engine.players.length-1;z>=0;--z) if(engine.players[z] && engine.players[z].AI) {AI_NUM++;}
 				var cycleColor = [0x000000,0xff0000,0x00ff00,0x0000ff][Math.round(Math.random()*3)];
 				var tailColor = [0x0000ff,0xff0000,0xffff00,0x00ff00][Math.round(Math.random()*3)];
 				if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = teamColor(1); }
 				var cycleinfo = { x:spawns[0], y:spawns[1], z:spawns[2], dir:deg2rad(spawns[3]), ai:true,
 				cycleColor:cycleColor, tailColor:tailColor,
 				/*engineType: 5,*/ engineType:(settings.players[0])?settings.players[0].engineType:5, spectating:false,
-				name: 'AI#'+x 
+				name: 'AI#'+AI_NUM 
 				};
 			}
 			engine.players.push(new Player(cycleinfo));

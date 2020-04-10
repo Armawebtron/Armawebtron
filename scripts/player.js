@@ -99,6 +99,7 @@ class Player extends THREE.Object3D
 	}*/
 	resetCurrWallSegment(tocurrpos=false,offset=0,breakWallLength=false) //! Redoes the current 3D wall segment to the actual wall segment.
 	{
+		if(this.walls.children.length == 0) return;
 		var wmap = this.walls.map;
 		var oldwall = this.walls.children[this.walls.children.length-1];
 		
@@ -161,15 +162,16 @@ class Player extends THREE.Object3D
 		{
 			if(full === true)
 			{
-				this.walls.add(wallmod = newWall(this.tailColor,wmap[x][0],wmap[x][1],wmap[x][2]));
+				this.walls.add(wallmod = newWall(this.tailColor,wmap[x-1][0],wmap[x-1][1],wmap[x-1][2]));
 			}
 			else
 			{
 				wallmod = this.walls.children[x-1];
-				wallmod.position.set(wmap[x][0],wmap[x][1],wmap[x][2]||0);
+				if(wallmod == undefined) break;
+				wallmod.position.set(wmap[x-1][0],wmap[x-1][1],wmap[x-1][2]||0);
 			}
-			wallmod.scale.x = (wmap[x-1][0]-wmap[x][0])/wallmod.size;
-			wallmod.scale.y = (wmap[x-1][1]-wmap[x][1])/wallmod.size;
+			wallmod.scale.x = (wmap[x][0]-wmap[x-1][0])/wallmod.size;
+			wallmod.scale.y = (wmap[x][1]-wmap[x-1][1])/wallmod.size;
 		}
 		if(full !== true)
 		{
