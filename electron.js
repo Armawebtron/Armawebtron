@@ -10,6 +10,7 @@ function createWindow()
 	window.once("ready-to-show",window.show);
 	window.on("closed",function(){window=null});
 	window.autoHideMenuBar = true;
+	window.setMenuBarVisibility(false);
 }
 
 app.on("ready",createWindow);
