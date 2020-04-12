@@ -585,6 +585,14 @@ var commands = {
 			engine.players[x].kill();
 		}
 	},
+	RESPAWN_ALL: function()
+	{
+		for(var x=engine.players.length-1;x>=0;--x) if(typeof(engine.players[x]) != "undefined")
+		{
+			var cycle = engine.players[x];
+			cycle.spawn({x:cycle.position.x||0,y:cycle.position.y||0,z:cycle.position.z||0,dir:cycle.rotation.z||0});
+		}
+	},
 	INCLUDE: function(params,silent=false,callback=undefined)
 	{
 		var file = params.replace(/\(.+\)/g,"");
