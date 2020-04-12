@@ -531,7 +531,7 @@ function game(oneoff=false)
 				console.log("DELETE WALLS id "+x);
 				
 			}
-			else if(settings.RESPAWN_TIME >= 0 && cycle.dedtime > settings.RESPAWN_TIME*1000)
+			else if(settings.RESPAWN_TIME >= 0 && !cycle.alive && timenow-cycle.dedtime > settings.RESPAWN_TIME*1000)
 			{
 				cycle.spawn({x:cycle.position.x||0,y:cycle.position.y||0,z:cycle.position.z||0,dir:cycle.rotation.z||0});
 			}
