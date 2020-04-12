@@ -65,12 +65,21 @@ function connectTo(host,port)
 
 function doNetSlide(cycle,timestep=1)
 {
-	timestep *= settings.CYCLE_SMOOTH_TIME;
-	if(timestep > 1) timestep = 1;
-	cycle.lastpos.x = (cycle.position.x += (cycle.newPos.x-cycle.position.x)*timestep);
-	cycle.lastpos.y = (cycle.position.y += (cycle.newPos.y-cycle.position.y)*timestep);
-	cycle.resetCurrWallSegment();
-	if(cycle.position.x == cycle.newPos.x && cycle.position.y == cycle.newPos.y) delete cycle.newPos;
+	if(isNaN(cycle.position.x) || isNaN(cycle.position.y))
+	{
+		cycle.position.x = cycle.newPos.x;
+		cycle.position.y = cycle.newPos.y;
+		delete cycle.newPos;
+	}
+	else
+	{
+		timestep *= settings.CYCLE_SMOOTH_TIME;
+		if(timestep > 1) timestep = 1;
+		cycle.lastpos.x = (cycle.position.x += (cycle.newPos.x-cycle.position.x)*timestep);
+		cycle.lastpos.y = (cycle.position.y += (cycle.newPos.y-cycle.position.y)*timestep);
+		cycle.resetCurrWallSegment();
+		if(cycle.position.x == cycle.newPos.x && cycle.position.y == cycle.newPos.y) delete cycle.newPos;
+	}
 }
 
 function connectionHandler(e)
