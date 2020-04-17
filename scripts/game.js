@@ -963,10 +963,12 @@ function changeViewTarget(a=1,forcechange=false)
 function checkForWinner()
 {
 	var alivecount = aliveaicount = 0;
+	var numPlay = 0;
 	var alive = [], theplayer = false;
 	var declareRoundWinner = typeof(engine.declareRoundWinner) != "undefined";
 	for(var x=engine.players.length-1;x>=0;--x) if(typeof(engine.players[x]) != "undefined")
 	{
+		if(!engine.players[x].spectating) numPlay++;
 		if(engine.players[x].alive) 
 		{
 			alivecount++;
@@ -982,7 +984,7 @@ function checkForWinner()
 	}
 	if(
 		(declareRoundWinner) ||
-		(settings.GAME_TYPE == 1 && settings.TEAMS_MIN > 1 && (alivecount <= 1 || (settings.FINISH_TYPE == 1 && aliveaicount == alivecount))) || 
+		(settings.GAME_TYPE == 1 && numPlay > 1 && (alivecount <= 1 || (settings.FINISH_TYPE == 1 && aliveaicount == alivecount))) || 
 		(/*settings.GAME_TYPE == 0 && */(alivecount <= 0))
 	)
 	{
@@ -1002,7 +1004,7 @@ function checkForWinner()
 		}
 		if(engine.asendtm > 0) {engine.asendtm = 0; engine.timemult = 1; centerMessage("Time Warp!",0);}
 		setTimeout(function(){centerMessage("Winner: "+engine.winner.name)},1000);
-		startNewRound();
+		if(!window.svr || window.svr.clients.size != 0) startNewRound();
 	}//*/
 	/*if(aliveaicount == alivecount)
 	{
