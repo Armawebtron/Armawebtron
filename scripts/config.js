@@ -244,6 +244,8 @@ if(!Detector.webgl)
 
 game_settings_default = {
 	AI_FORCE_BRAKE: false,
+	AI_TEAM: false,
+	AI_DUAL_COLOR_NAME: false,
 	//CYCLE
 	CYCLE_ACCEL: 10,
 	CYCLE_ACCEL_ENEMY: 1,
@@ -303,17 +305,19 @@ game_settings_default = {
 
 	WALLS_STAY_UP_DELAY: 1,
 	
+	SP_HUMANS_COUNT: 1,
 	//TEAMS
 	TEAMS_MAX_PLAYERS: 1,
 	TEAMS_MIN_PLAYERS: 1,
 	TEAMS_MAX: 16,
-	TEAMS_MIN: 4,
-	//TEAMS_MIN: 2,
-	TEAM_ALLOW_SHUFFLE_IP: 0,
+	//TEAMS_MIN: 4,
+	TEAMS_MIN: 2,
+	TEAM_ALLOW_SHUFFLE_UP: 0,
 	ALLOW_TEAM_NAME_PLAYER: true,
 	ALLOW_TEAM_NAME_COLOR: true,
 	MIN_PLAYERS: 1,
 	NUM_AIS: 0,
+	SP_NUM_AIS: 4,
 	
 	TEAM_NAME_1: "Team Blue",    //name of team 1
 	TEAM_RED_1: 4,    //red portion of team 1's color
@@ -1316,9 +1320,9 @@ if(window.Proxy)
 				{
 					if(t[id] == engine.playersByScore[x])
 					{
-						engine.players[x] = val;
+						engine.playersByScore[x] = val;
 						updateScoreBoard();
-						t[id] = value;
+						t[id] = val;
 						return true;
 					}
 				}

@@ -135,7 +135,7 @@ function getCycleSensors(full=false)
 	{
 		engine.zones.children[x].walldist = Infinity;
 	}
-	var campos = engine.camera.position, ppos = engine.players[engine.viewTarget].position;
+	if(!engine.dedicated) var campos = engine.camera.position, ppos = engine.players[engine.viewTarget].position;
 	for(var y=engine.map.walls.length-1;y>=0;--y)
 	{
 		//console.log("ohi");
@@ -222,10 +222,10 @@ function getCycleSensors(full=false)
 						engine.zones.children[x].walldist = walldist;
 					}
 				}
-				if(!lookThroughWall) lookThroughWall = (engine.walls.children[y]&&engine.walls.children[y].geometry.vertices[engine.walls.children[y].geometry.vertices.length-1].z) > campos.z && lineIntersect(campos.x,campos.y,ppos.x,ppos.y,w1x,w1y,w2x,w2y);
+				if(!engine.dedicated && !lookThroughWall) lookThroughWall = (engine.walls.children[y]&&engine.walls.children[y].geometry.vertices[engine.walls.children[y].geometry.vertices.length-1].z) > campos.z && lineIntersect(campos.x,campos.y,ppos.x,ppos.y,w1x,w1y,w2x,w2y);
 			}
 		}
-		if(engine.walls.children[y]) engine.walls.children[y].visible = !lookThroughWall;
+		if(!engine.dedicated && engine.walls.children[y]) engine.walls.children[y].visible = !lookThroughWall;
 	}
 	for(var a=engine.players.length-1;a>=0;--a) if(engine.players[a] !== undefined)
 	{

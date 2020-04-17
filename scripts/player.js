@@ -604,7 +604,7 @@ class Player extends THREE.Object3D
 
 		this.name = cfg.name;
 		
-		this.team = null;
+		this.team = cfg.team;
 		
 		this.hardReset();
 		

@@ -170,129 +170,246 @@ function teamColor(id)
 	}
 	return new THREE.Color();
 }
-function ensurePlayersSane(removeAIs=true)
+function createAIsettings()
 {
-	var minplayers = Math.max(settings.TEAMS_MIN,settings.MIN_PLAYERS,settings.NUM_AIS+settings.players.length);
-	if(removeAIs) for(var x=minplayers;x<engine.players.length-1;x++)
-	{
-		if(engine.players[x].AI)
-		{
-			engine.console.print(engine.players[x].getColoredName()+"0xff7f7f left the game.\n");
-			engine.players.splice(x,1);
-		}
-	}
+	var AI_NUM = 1;
+	for(var z=engine.players.length-1;z>=0;--z) if(engine.players[z] && engine.players[z].AI) {AI_NUM++;}
+	var cycleColor = [0x000000,0xff0000,0x00ff00,0x0000ff][Math.round(Math.random()*3)];
+	var tailColor = [0x0000ff,0xff0000,0xffff00,0x00ff00][Math.round(Math.random()*3)];
+	if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = teamColor(1); }
+	var colorcode = cycleColor.toString(16);
+	colorcode = ("0".repeat(6-colorcode.length))+colorcode;
+	var cycleinfo = { ai:true,
+	cycleColor:cycleColor, tailColor:tailColor,
+	/*engineType: 5,*/ engineType:(settings.players[0])?settings.players[0].engineType:5, spectating:false,
+	name: settings.AI_DUAL_COLOR_NAME?'AI0x'+colorcode+'#'+AI_NUM:'AI#'+AI_NUM 
+	};
+	return cycleinfo;
+}
+function calculateSpawn(x)
+{
 	var spawnslength = engine.map.spawns.length;
-	for(var x=engine.activePlayer;x<minplayers;x++)
+	if(!engine.map.spawns[x])
 	{
-		if(!engine.map.spawns[x])
+		var mult = Math.floor((x/spawnslength));
+		var currspawn = x-(spawnslength*mult);
+		var alt = (mult/2 != Math.floor(mult/2));
+		console.log(mult);
+		if(alt) mult = -Math.ceil(mult/2)
+		else mult = mult/2
+		console.log(mult,currspawn);
+		var spawns = JSON.parse(JSON.stringify(engine.map.spawns[Math.min(currspawn,(spawnslength-1))]||[]));
+		spawns[0] -= mult*settings.SPAWN_WINGMEN_SIDE;
+		spawns[1] -= Math.abs(mult)*settings.SPAWN_WINGMEN_BACK;
+	}
+	else
+	{
+		var spawns = engine.map.spawns[x];
+	}
+	return spawns;
+}
+function processPlayer(x,cfg)
+{
+	var spawns = calculateSpawn(x);
+	if(engine.players[x])
+	{
+		var cycle = engine.players[x];
+		cycle.engineType = (typeof(cfg)=="undefined")?5:cfg.engineType;
+		if(x == engine.activePlayer && !engine.dedicated)
 		{
-			var mult = Math.floor((x/spawnslength));
-			var currspawn = x-(spawnslength*mult);
-			var alt = (mult/2 != Math.floor(mult/2));
-			console.log(mult);
-			if(alt) mult = -Math.ceil(mult/2)
-			else mult = mult/2
-			console.log(mult,currspawn);
-			var spawns = JSON.parse(JSON.stringify(engine.map.spawns[Math.min(currspawn,(spawnslength-1))]||[]));
-			spawns[0] -= mult*settings.SPAWN_WINGMEN_SIDE;
-			spawns[1] -= Math.abs(mult)*settings.SPAWN_WINGMEN_BACK;
-		}
-		else
-		{
-			var spawns = engine.map.spawns[x];
-		}
-		if(engine.players[x])
-		{
-			
-			var cycle = engine.players[x];
-			cycle.engineType = (typeof(settings.players[x])=="undefined")?5:settings.players[x].engineType;
-			if(x == engine.activePlayer && !engine.dedicated)
+			var cycleColor = cfg.cycleColor,tailColor = cfg.tailColor;
+			if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = teamColor(0); }
+			if(cycle.name != cfg.name)
 			{
-				var cycleColor = settings.players[x].cycleColor,tailColor = settings.players[x].tailColor;
-				if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = teamColor(0); }
-				if(cycle.name != settings.players[x].name)
+				var out = cycle.getColoredName()+"0x7fff7f renamed to ";
+				cycle.cycleColor = cycleColor;
+				cycle.tailColor = tailColor;
+				cycle.name = cfg.name;
+				engine.console.print(out+cycle.getColoredName()+"\n");
+			}
+			else
+			{
+				cycle.cycleColor = cycleColor;
+				cycle.tailColor = tailColor;
+			}
+			if(cycle.spectating != cfg.spectating)
+			{
+				cycle.spectating = cfg.spectating;
+				if(cycle.spectating)
 				{
-					var out = cycle.getColoredName()+"0x7fff7f renamed to ";
-					cycle.cycleColor = cycleColor;
-					cycle.tailColor = tailColor;
-					cycle.name = settings.players[x].name;
-					engine.console.print(out+cycle.getColoredName()+"\n");
+					engine.console.print(cycle.getColoredName()+"0xff7f7f left to spectator mode.\n");
 				}
 				else
 				{
-					cycle.cycleColor = cycleColor;
-					cycle.tailColor = tailColor;
+					engine.console.print(cycle.getColoredName()+"0x7fff7f entered from spectator mode.\n");
 				}
-				if(cycle.spectating != settings.players[x].spectating)
-				{
-					cycle.spectating = settings.players[x].spectating;
-					if(cycle.spectating)
-					{
-						engine.console.print(cycle.getColoredName()+"0xff7f7f entered spectator mode.\n");
-					}
-					else
-					{
-						engine.console.print(cycle.getColoredName()+"0x7fff7f entered the game.\n");
-					}
-				}
-			}
-			else
-			{
-				if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = teamColor(1); }
 			}
 		}
 		else
 		{
-			//if(x == engine.activePlayer)
-			if(settings.players[x])
-			{
-				var cycleColor = settings.players[x].cycleColor,tailColor = settings.players[x].tailColor;
-				if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = teamColor(0); }
-				var cycleinfo = { x:spawns[0], y:spawns[1], z:spawns[2], dir:deg2rad(spawns[3]), ai:false,
-					cycleColor:cycleColor, tailColor:tailColor,
-					engineType:settings.players[x].engineType, spectating:settings.players[x].spectating,
-					name:settings.players[x].name 
-				};
-			}
-			else
-			{
-				var AI_NUM = 1;
-				for(var z=engine.players.length-1;z>=0;--z) if(engine.players[z] && engine.players[z].AI) {AI_NUM++;}
-				var cycleColor = [0x000000,0xff0000,0x00ff00,0x0000ff][Math.round(Math.random()*3)];
-				var tailColor = [0x0000ff,0xff0000,0xffff00,0x00ff00][Math.round(Math.random()*3)];
-				if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = teamColor(1); }
-				var cycleinfo = { x:spawns[0], y:spawns[1], z:spawns[2], dir:deg2rad(spawns[3]), ai:true,
-				cycleColor:cycleColor, tailColor:tailColor,
-				/*engineType: 5,*/ engineType:(settings.players[0])?settings.players[0].engineType:5, spectating:false,
-				name: 'AI#'+AI_NUM 
-				};
-			}
-			engine.players.push(new Player(cycleinfo));
-			var cycle = engine.players[x];
-			if(cycle.spectating)
-			{
-				engine.console.print(cycle.getColoredName()+"0xff7f7f entered as spectator.\n");
-			}
-			else
-			{
-				engine.console.print(cycle.getColoredName()+"0x7fff7f entered the game.\n");
-			}
-		}
-		var deg = (360/settings.ARENA_AXES);
-		if(cycle.spectating) 
-		{
-			console.log("Spectating");
-			minplayers++;
-		}
-		else if(removeAIs)
-		{
-			cycle.spawn({x:spawns[0],y:spawns[1],z:spawns[2],dir:deg2rad(settings.STRICT_AXES_SPAWN?(Math.round(spawns[3]/deg)*deg):spawns[3])},false,false);
+			if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = teamColor(1); }
 		}
 	}
-	if(engine.players[engine.activePlayer].spectating) changeViewTarget(1);
+	else
+	{
+		cfg.x = spawns[0]; cfg.y = spawns[1]; cfg.z = spawns[2];
+		engine.players[x] = (new Player(cfg));
+		var cycle = engine.players[x];
+		if(cycle.spectating)
+		{
+			engine.console.print(cycle.getColoredName()+"0xff7f7f entered as spectator.\n");
+		}
+		else
+		{
+			engine.console.print(cycle.getColoredName()+"0x7fff7f entered the game.\n");
+		}
+	}
+	if(cycle.spectating)
+	{
+		cycle.team = null;
+	}
+	else if(!cycle.team)
+	{
+		if(engine.teams.length < settings.TEAMS_MAX)
+		{
+			engine.teams.push(cycle.team = new Team({name:cfg.name,x:spawns[0], y:spawns[1], z:spawns[2], dir:deg2rad(spawns[3])}));
+		}
+		else
+		{
+			var minPCount = 0, minPlayers = Infinity, minTeam;
+			for(var x=engine.teams.length-1;x>=0;--x)
+			{
+				if(engine.teams[x].members.length == minPlayers)
+				{
+					minPCount++;
+					if(minTeam.push)
+					{
+						minTeam.push(x);
+					}
+					else
+					{
+						minTeam = [minTeam,x];
+					}
+				}
+				else if(engine.teams[x].members.length < minPlayers)
+				{
+					minPlayers = engine.teams[x].members.length;
+					minTeam = x; minPCount = 1;
+				}
+			}
+			if(minPCount != 1)
+			{
+				minTeam = Math.floor(Math.random()*minTeam.length);
+			}
+			cycle.team = engine.teams[minTeam];
+		}
+		cycle.team.members.push(cycle);
+	}
+}
+function ensurePlayersSane(removeAIs=true)
+{
+	var numAIs = 0, numPlay = 0, numSpec = 0, numWantPlay = 0;
+	for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x])
+	{
+		if(engine.players[x].AI) numAIs++;
+		if(engine.players[x].spectating) numSpec++; else numPlay++;
+		//if(engine.players[x].spectating && !settings.players[x].spectating) numWantPlay++;
+	}
+	var numHuman = numPlay-numAIs;
+	if(removeAIs)
+	{
+		for(var x=settings.TEAMS_MAX;x<engine.teams.length;++x) if(engine.teams[x])
+		{
+			for(var i=engine.teams[x].members.length-1;i>=0;--i)
+			{
+				engine.console.print(engine.teams[x].members[i].getColoredName()+"0xff7f7f left to spectator mode.\n");
+				engine.teams[x].members[i].spectating = true;
+			}
+		}
+		engine.teams.splice(settings.TEAMS_MAX);
+	}
+	for(var x=settings.players.length-1;x>=0;--x) if(settings.players[x])
+	{
+		if(engine.players[x] && engine.players[x].AI)
+		{
+			engine.players[engine.players.length-1] = engine.players[x];
+			engine.players[x] = undefined;
+		}
+		if(!engine.players[x])
+		{
+			numPlay++; numHuman++;
+		}
+		processPlayer(x,settings.players[x]);
+	}
+	if(removeAIs)
+	{
+		console.log(numHuman);
+		var shouldAIs = Math.max(0,(settings.MIN_PLAYERS-numHuman));
+		if(!settings.AI_TEAM)
+		{
+			shouldAIs += (numHuman <= settings.SP_HUMANS_COUNT)?settings.SP_NUM_AIS:settings.NUM_AIS;
+		}
+				
+		if(shouldAIs > numAIs)
+		{
+			var AIsToAdd = (shouldAIs-numAIs);
+			console.log(numAIs+" AIs in the game, adding "+AIsToAdd+".");
+			for(var x=AIsToAdd;x>0;--x)
+			{
+				var cycleinfo = createAIsettings();
+				processPlayer(engine.players.length,cycleinfo);
+			}
+			numAIs += AIsToAdd; 
+		}
+		else if(numAIs != 0)
+		{
+			var AIsToDealWith = (numAIs-shouldAIs);
+			console.log(numAIs+" AIs in the game, removing "+AIsToDealWith+".");
+			if(AIsToDealWith != 0)
+			{
+				for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x])
+				{
+					if(engine.players[x].AI)
+					{
+						engine.console.print(engine.players[x].getColoredName()+"0xff7f7f left the game.\n");
+						engine.players.splice(x,1);
+						AIsToDealWith--;
+						if(window.svr)
+						{
+							var data = JSON.stringify({type:"leave",data:x});
+							window.svr.clients.forEach(function(ws){ws.send(data)});
+						}
+					}
+					if(AIsToDealWith == 0) break;
+				}
+			}
+		}
+		
+		//clean up teams / remove ghost teams
+		for(var x=engine.teams.length-1;x>=0;--x) if(engine.teams[x])
+		{
+			for(var i=engine.teams[x].members.length-1;i>=0;--i)
+			{
+				if(engine.players.indexOf(engine.teams[x].members[i]) == -1)
+				{
+					engine.teams[x].members.splice(i,1);
+				}
+			}
+			if(engine.teams[x].members.length == 0)
+			{
+				engine.teams.splice(x,1);
+			}
+			else
+			{
+				engine.teams[x].spawn(false,false); //and finally spawn everyone
+			}
+		}
+		if(!engine.dedicated && !engine.players[engine.activePlayer].alive) changeViewTarget(1);
+	}
 	
 	if(window.svr) window.svr.clients.forEach(function(ws){ws.senddata(0)});
-}
+}//*/
+
 function loadRound(dlmap)
 {
 	if(typeof(dlmap) != "undefined")
@@ -344,7 +461,7 @@ function loadRound(dlmap)
 		if(engine.round == 0)
 		{
 			engine.console.print("Resetting scores...\n");
-			for(var x=engine.players.length-1;x>=0;--x)
+			for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x])
 			{
 				engine.players[x].score = 0;
 			}
@@ -791,12 +908,13 @@ function unpauseRender()
 
 function changeViewTarget(a=1,forcechange=false) 
 {
+	if(engine.dedicated) return;
 	if(a != 0)
 	{
 		if(!forcechange && engine.players[engine.activePlayer].alive) return;
 		var first = true; //force the loop to get started
 		var itcount = 0;
-		/*if(alive > 0) */while(first || !engine.players[engine.viewTarget].alive)
+		/*if(alive > 0) */while(first || !engine.players[engine.viewTarget] || !engine.players[engine.viewTarget].alive)
 		{
 			first = false;
 			engine.viewTarget+=a;
@@ -929,7 +1047,7 @@ function updateScoreBoard()
 	if(window.svr)
 	{
 		var tmp = [];
-		for(var x=engine.players.length-1;x>=0;--x)
+		for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x])
 		{
 			tmp.push({netid:x,score:engine.players[x].score,ping:engine.players[x].ping,chatting:engine.players[x].chatting});
 		}
@@ -947,7 +1065,7 @@ function updateScoreBoard()
 	for(var x=0;x<engine.playersByScore.length;++x) if(typeof(engine.playersByScore[x]) != "undefined")
 	{
 		var cycle = engine.playersByScore[x];
-		tmp += "<tr class=\"player\"><td>"+(cycle.chatting?"*":"&nbsp;")+replaceColors(cycle.getColoredName())+"</td><td>"+replaceColors(cycle.alive?"0x00ff00Yes":"0xff0000No")+"</td><td>"+cycle.score+"</td><td>"+cycle.ping+"</td><tr>";
+		tmp += "<tr class=\"player\"><td>"+(cycle.chatting?"*":"&nbsp;")+replaceColors(cycle.getColoredName())+"</td><td>"+replaceColors(cycle.alive?"0x00ff00Yes":"0xff0000No")+"</td><td>"+cycle.score+"</td><td>"+cycle.ping+"</td><td>"+(cycle.team?cycle.team.name:"")+"</td><tr>";
 	}
 	playersSB.innerHTML = tmp;
 }
