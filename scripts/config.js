@@ -317,7 +317,7 @@ game_settings_default = {
 	ALLOW_TEAM_NAME_COLOR: true,
 	MIN_PLAYERS: 1,
 	NUM_AIS: 0,
-	SP_NUM_AIS: 4,
+	SP_NUM_AIS: 3,
 	
 	TEAM_NAME_1: "Team Blue",    //name of team 1
 	TEAM_RED_1: 4,    //red portion of team 1's color
