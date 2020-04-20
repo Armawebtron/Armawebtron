@@ -37,7 +37,7 @@ var keyboardKeyDown = function(e)
 	//for each input state, either switch(keyCode) {}, or send keycode to appropriate function
 	var keyCode = typeof(keyCodeRemap[e.keyCode]) == "undefined"?e.keyCode:keyCodeRemap[e.keyCode];
 	var specificState = engine.inputState.split(':');
-	if(settings.controls.console.indexOf(keyCode) > -1) //console key works everywhere
+	if(specificState[0] != "input" && settings.controls.console.indexOf(keyCode) > -1) //console key works everywhere except other inputs
 	{
 		var input = document.getElementById("input");
 		input.style.display = "block";
