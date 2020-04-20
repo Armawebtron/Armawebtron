@@ -31,6 +31,11 @@
 </head>
 
 <body>
+	<div id="inputbuttons">
+		<button class="cancel" onclick='keyboardKeyDown({keyCode:27});'>Cancel input</button>
+		<button class="bindtoesc" onclick="keyboardKeyDown({keyCode:27,forceHACK:true});">Bind to Escape key</button>
+	</div>
+
 	<div id="input">
 	<span>Say:</span>&nbsp;<input type="text" class="fakemenu-active" onblur="if(engine.inputState.substr(0,5)=='input')keyboardKeyDown({keyCode:27})"/>
 	</div>

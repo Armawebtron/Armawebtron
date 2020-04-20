@@ -183,6 +183,7 @@ function menu(act,from=false)
 	{
 		case "menu":
 			engine.concatch = engine.msgcatch = undefined;
+			document.getElementById("inputbuttons").style.display = "none";
 			document.getElementById('menu').innerHTML = "<h1>I don't know either</h1>";
 			var doc = engine.menu.getElementsByTagName("Menus");
 			if(doc.length > 0)
@@ -379,6 +380,7 @@ function menu(act,from=false)
 		case "controlAR":
 			engine.inputState = act;
 			document.getElementById('menuList').getElementsByClassName("menu-active")[0].childNodes[0].childNodes[1].innerHTML = "Press a key...";
+			document.getElementById("inputbuttons").style.display = "block";
 			break;
 		case "var": case "list":
 			changeMenuItem(action,1,true,from,"menu")

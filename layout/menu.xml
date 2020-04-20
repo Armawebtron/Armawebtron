@@ -230,6 +230,7 @@
 				<Item type="keys" var="scroll_down" text="Scroll Down" />
 				<Item type="keys" var="scroll_end" text="Scroll to End" />
 				<Item type="keys" var="score" text="Toggle Scoreboard" />
+				<Item type="keys" var="esc" text="In-game Menu" />
 				<Item type="exitmenu" text="&lt;- Go Back"/>
 			</Menu>
 	
