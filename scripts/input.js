@@ -169,6 +169,11 @@ var keyboardKeyDown = function(e)
 		if(specificState[0] == 'controlAR')
 		{
 			stopPropagation(e);
+			if(e.keyCode == 27)
+			{
+				engine.inputState = "menu:"+engine.menus[engine.menus.length-1]; menu("reload");
+				return;
+			}
 			var temp_items = Object.keys(settings.controls);
 			var temp_item = temp_items.indexOf(specificState[1]) || 0;
 			
