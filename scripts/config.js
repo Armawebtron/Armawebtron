@@ -223,6 +223,7 @@ settings = {
 	
 	CYCLE_SMOOTH_TIME: 0.3,
 	CYCLE_SYNC_INTERVAL: 0.1,
+	DEBUG_NETWORK_TURN_WAIT: true,
 	
 	SERVER_PORT: 5331,
 	SERVER_NAME: "Unnamed Server",

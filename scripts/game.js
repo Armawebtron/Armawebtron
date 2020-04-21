@@ -592,6 +592,15 @@ function game(oneoff=false)
 							{
 								var dir = cycle.turnQueue[0],dirmult;
 								var olddir = cdir(cycle.rotation.z);
+								if(engine.network && settings.DEBUG_NETWORK_TURN_WAIT)
+								{
+									var rot = normalizeRad(cycle.rotation.z - (pi(2)/settings.ARENA_AXES)*dir);
+									engine.connection.send(JSON.stringify({
+										type:"turn",data:rad2deg(rot),gtime:cycle.gameTime
+									}));
+									cycle.lastTurnTime = Infinity;
+									cycle.turnQueue.splice(0,1); continue;
+								}
 								cycle.dir.front = (dirmult = cdir(cycle.rotation.z -= (pi(2)/settings.ARENA_AXES)*dir));
 								//cycle.rotation.z = cycle.rotation.z%(Math.PI*2);
 								//if(cycle.rotation.z < 0) cycle.rotation.z += Math.PI*2;

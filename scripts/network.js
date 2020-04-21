@@ -232,6 +232,8 @@ function connectionHandler(e)
 							
 							cycle.gameTime = Math.max(0,msg.gtime);
 							
+							if(settings.DEBUG_NETWORK_TURN_WAIT) cycle.lastTurnTime = 0;
+							
 							//HACK to avoid cycle sticking to wall on a turn
 							{
 								var fakeTS = 0.01/cycle.speed;
