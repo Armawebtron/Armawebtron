@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-if(typeof(THREE) == "undefined") var THREE = require('./lib/Three.js');
+//if(typeof(THREE) == "undefined") var THREE = require('./lib/Three.js');
 
 var flagColors = [ 0x55AAFF, 0xFFFF55, 0xFF5555, 0x55FF55, 0xFF55FF, 0x55FFFF, 0xFFFFFF, 0x888888];
 class Zone
