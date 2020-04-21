@@ -23,7 +23,7 @@ function getPlayer(name)
 {
 	name = removeColors(name).filter();
 	var matches = [];
-	for(var i=engine.players.length;i--;)
+	for(var i=engine.players.length-1;i>=0;--i) if(engine.players[i])
 	{
 		if(engine.players[i].getBoringName().filter() == name)
 		{

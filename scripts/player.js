@@ -495,7 +495,7 @@ class Player extends THREE.Object3D
 				this.model.rotation.y += timestep*(1-this.model.rotation.y);
 			}
 			//if(typeof(this.walls.children) != "undefined")
-			if(this.haswall)
+			if(this.haswall && this.walls.children.length > 0 && this.walls.map.length > 0)
 			{
 				var wallmod = this.walls.children[this.walls.children.length-1];
 				var wallmap = this.walls.map[this.walls.map.length-1];
@@ -527,7 +527,7 @@ class Player extends THREE.Object3D
 						this.walls.remove(this.walls.children[0]);
 						this.walls.map.shift();
 					}
-					else
+					else if(this.walls.children[0] && this.walls.map[0])
 					{
 						this.walls.children[0].scale.x -= xdir/wallmod.size;
 						this.walls.children[0].position.x += xdir;
@@ -536,7 +536,7 @@ class Player extends THREE.Object3D
 						this.walls.map[0][0] += xdir;
 						this.walls.map[0][1] += ydir;
 						this.walls.netLength -= Math.sqrt((xdir*xdir)+(ydir*ydir));
-					}
+					} else { break; }
 					
 					lendiff = this.walls.netLength - settings.WALLS_LENGTH;
 				}//*/
