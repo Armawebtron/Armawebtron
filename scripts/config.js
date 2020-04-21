@@ -1068,15 +1068,6 @@ function saveusercfg()
 	}
 	localStorage.setItem("user.cfg",usercfg);
 }
-function loadsettingcfgs()
-{
-	loadcfg(localStorage.getItem("user.cfg"),true,true);
-	loadcfg(localStorage.getItem("server_info.cfg"),true);
-	loadcfg(localStorage.getItem("settings_custom.cfg"),true);
-	loadcfg(localStorage.getItem("autoexec.cfg"),true);
-}
-loadsettingcfgs();
-window.onbeforeunload = saveusercfg;
 
 function chsetting(setting,value,silent=false,txt="",pretxt="")
 {
@@ -1461,3 +1452,13 @@ engine.map = { //virtual map data (used for positions, lines and stuff to calcul
 	walls: [],
 
 };
+
+function loadsettingcfgs()
+{
+	loadcfg(localStorage.getItem("user.cfg"),true,true);
+	loadcfg(localStorage.getItem("server_info.cfg"),true);
+	loadcfg(localStorage.getItem("settings_custom.cfg"),true);
+	loadcfg(localStorage.getItem("autoexec.cfg"),true);
+}
+loadsettingcfgs();
+window.onbeforeunload = saveusercfg;
