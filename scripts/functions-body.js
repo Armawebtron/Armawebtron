@@ -131,7 +131,7 @@ function getCycleSensors(full=false)
 		engine.players[x].dir.leftTurn = cdir(engine.players[x].rotation.z+(Math.PI/(settings.ARENA_AXES*0.5)));
 		engine.players[x].dir.rightTurn = cdir(engine.players[x].rotation.z-(Math.PI/(settings.ARENA_AXES*0.5)));
 	}
-	for(var x=engine.map.zones.length-1;x>=0;--x)
+	for(var x=engine.zones.children.length-1;x>=0;--x)
 	{
 		engine.zones.children[x].walldist = Infinity;
 	}
@@ -142,11 +142,11 @@ function getCycleSensors(full=false)
 		var lookThroughWall = false;
 		for(var i=engine.map.walls[y].length-1;i>=0;--i)
 		{
-			var w1x = engine.map.walls[y][i][0], w1y = engine.map.walls[y][i][1];
+			var w1x = engine.map.walls[y][i][0], w1y = engine.map.walls[y][i][1], p=engine.map.walls[y][i+1];
 			
-			if(engine.map.walls[y][i+1] !== undefined)
+			if(p !== undefined)
 			{
-				var w2x = engine.map.walls[y][i+1][0], w2y = engine.map.walls[y][i+1][1];
+				var w2x = p[0], w2y = p[1]/*,w2z = p[2]*/;
 				
 				for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x] !== undefined && engine.players[x].alive)
 				{
@@ -212,14 +212,14 @@ function getCycleSensors(full=false)
 						*/
 					}
 				}
-				for(var x=engine.map.zones.length-1;x>=0;--x)
+				for(var x=engine.zones.children.length-1;x>=0;--x)
 				{
-					var zone = engine.map.zones[x];
-					var posx = zone[1], posy = zone[2],w2z = p[2]*1;
-					var walldist = distanceoflines(posx,posy,posx,posy,w1x,w1y,w2x,w2y)-zone[3];
-					if(walldist < engine.zones.children[x].walldist)
+					var zone = engine.zones.children[x];
+					var posx = zone.position.x, posy = zone.position.y;
+					var walldist = distanceoflines(posx,posy,posx,posy,w1x,w1y,w2x,w2y)-zone.cfg.radius;
+					if(walldist < zone.walldist)
 					{
-						engine.zones.children[x].walldist = walldist;
+						zone.walldist = walldist;
 					}
 				}
 				if(!engine.dedicated && !lookThroughWall) lookThroughWall = (engine.walls.children[y]&&engine.walls.children[y].geometry.vertices[engine.walls.children[y].geometry.vertices.length-1].z) > campos.z && lineIntersect(campos.x,campos.y,ppos.x,ppos.y,w1x,w1y,w2x,w2y);

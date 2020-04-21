@@ -268,7 +268,7 @@ class Zone
 			case "fortress":
 				if(engine.gtime > 0)
 				{
-					this.rotationSpeed += timestep*0.5;
+					this.rotationSpeed += timestep*settings.FORTRESS_CONQUEST_RATE;
 					if(this.rotationSpeed > settings.ZONE_SPIN_SPEED*16)
 					{
 						engine.console.print(cycle.getColoredName()+"0xRESETT conquered a fortress zone.\n");
@@ -282,7 +282,7 @@ class Zone
 				for(var i=359;i>0;i--) 
 				{
 					var xdir = Math.cos(Math.PI*2*(i/360)), ydir=Math.sin(Math.PI*2*(i/360));
-					var xpos = xdir*this.radius+this.x, ypos=ydir*this.radius+this.y;
+					var xpos = xdir*this.radius+this.mesh.position.x, ypos=ydir*this.radius+this.mesh.position.y;
 					var dist = pointDistance(xpos,ypos,cycle.position.x,cycle.position.y);
 					if(dist < mindist)
 					{

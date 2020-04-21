@@ -716,13 +716,13 @@ function game(oneoff=false)
 				{
 					for(var z=engine.zones.children.length-1;z>=0;--z)
 					{
-						var z2n = engine.map.zones[z];
+						var z2n = engine.zones.children[z].cfg;
 						if(
 							(
-								(zone.type == "ball" && z2n[0] == "fortress") ||
-								(zone.type == "soccerball" && z2n[0] == "soccergoal")
+								(zone.type == "ball" && z2n.type == "fortress") ||
+								(zone.type == "soccerball" && z2n.type == "soccergoal")
 							) && 
-							is_in_circle(z2n[1],z2n[2],z2n[3],zone.x,zone.y,zone.radius))
+							is_in_circle(z2n.x,z2n.y,z2n.radius,zone.x,zone.y,zone.radius))
 						{
 							if(!engine.network && engine.winner == undefined)
 							{
@@ -767,14 +767,14 @@ function game(oneoff=false)
 			}
 			if(typeof(zone.xdir)+typeof(zone.ydir) !== "undefinedundefined")
 			{
-				if(zone.bounce && zone.walldist <= timestep)
+				if(zone.bounce && zone.mesh.walldist <= timestep)
 				{
 					var mindirx,mindiry,mindist=Infinity,apc=0;
-					var px = zone.x+(zone.walldist*zone.xdir), py = zone.y+(zone.walldist*zone.ydir);
+					var px = zone.mesh.position.x+(zone.mesh.walldist*zone.xdir), py = zone.mesh.position.y+(zone.mesh.walldist*zone.ydir);
 					for(var i=359;i>0;i--) 
 					{
 						var xdir = Math.sin(Math.PI*2*(i/360)), ydir=Math.cos(Math.PI*2*(i/360));
-						var xpos = xdir*zone.radius+zone.x, ypos=ydir*zone.radius+zone.y;
+						var xpos = xdir*zone.radius+zone.mesh.position.x, ypos=ydir*zone.radius+zone.mesh.position.y;
 						var dist = pointDistance(xpos,ypos,px,py);
 						if(dist < mindist)
 						{
@@ -794,8 +794,8 @@ function game(oneoff=false)
 						var dir = cdir(angle);
 						zone.xdir = dir[0]*speed; zone.ydir = dir[1]*speed;
 						
-						zone.x -= dir[0]*realzone.walldist; zone.y -= dir[1]*realzone.walldist;
-						zone.x += dir[0]*speed*timestep; zone.y += dir[1]*speed*timestep;
+						zone.mesh.position.x -= dir[0]*zone.mesh.walldist; zone.mesh.position.y -= dir[1]*zone.mesh.walldist;
+						zone.mesh.position.x += dir[0]*speed*timestep; zone.mesh.position.y += dir[1]*speed*timestep;
 						console.log(zone);
 					}
 					else
