@@ -134,6 +134,7 @@ function getCycleSensors(full=false)
 	for(var x=engine.zones.children.length-1;x>=0;--x)
 	{
 		engine.zones.children[x].walldist = Infinity;
+		engine.zones.children[x].wall = [0,0,0,0];
 	}
 	if(!engine.dedicated) var campos = engine.camera.position, ppos = engine.players[engine.viewTarget].position;
 	for(var y=engine.map.walls.length-1;y>=0;--y)
@@ -220,6 +221,7 @@ function getCycleSensors(full=false)
 					if(walldist < zone.walldist)
 					{
 						zone.walldist = walldist;
+						zone.wall[0]=w1x;zone.wall[1]=w1y;zone.wall[2]=w2x;zone.wall[3]=w2y;
 					}
 				}
 				if(!engine.dedicated && !lookThroughWall) lookThroughWall = (engine.walls.children[y]&&engine.walls.children[y].geometry.vertices[engine.walls.children[y].geometry.vertices.length-1].z) > campos.z && lineIntersect(campos.x,campos.y,ppos.x,ppos.y,w1x,w1y,w2x,w2y);

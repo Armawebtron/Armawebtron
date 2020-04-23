@@ -716,42 +716,53 @@ function game(oneoff=false)
 			}
 			else if(zone.radius < 0) engine.zones.children[x].scale.x = engine.zones.children[x].scale.y = zone.radius = 0;
 			
+			if(zone.type == "ball" || zone.type == "soccerball")
+			{
+				for(var z=engine.zones.children.length-1;z>=0;--z)
+				{
+					var z2n = engine.zones.children[z].cfg;
+					if(
+						(
+							(zone.type == "ball" && z2n.type == "fortress") ||
+							(zone.type == "soccerball" && z2n.type == "soccergoal")
+						) && 
+						is_in_circle(z2n.mesh.position.x,z2n.mesh.position.y,z2n.radius,zone.mesh.position.x,zone.mesh.position.y,zone.radius))
+					{
+						if(!engine.network && engine.declareRoundWinner == undefined && engine.winner == undefined)
+						{
+							if(zone.lastHitCycle)
+							{
+								engine.declareRoundWinner = zone.lastHitCycle.name;
+							}
+							else
+							{
+								startNewRound();
+							}
+						}
+						else
+						{
+							zone.xdir *= 1-timestep; zone.ydir *= 1-timestep;
+							if(!engine.dedicated) centerMessage("0x00ff00Goal!");
+						}
+					}
+				}
+				if(settings.BALL_SPEED_DECAY)
+				{
+					var dir = cdir(Math.atan2(zone.ydir,zone.xdir));
+					var speed = Math.sqrt((zone.xdir*zone.xdir)+(zone.ydir*zone.ydir));
+					var decay = settings.BALL_SPEED_DECAY*delta;
+					if(decay > speed) decay = speed;
+					speed -= decay;
+					zone.xdir = dir[0]*speed; zone.ydir = dir[1]*speed;
+				}
+			}
+			
 			//zone effect
 			var inzone = false;
 			for(var y=engine.players.length-1;y>=0;--y) if(engine.players[y] && engine.players[y].alive)
 			{
 				var cycle = engine.players[y];
-				if(zone.type == "ball" || zone.type == "soccerball")
-				{
-					for(var z=engine.zones.children.length-1;z>=0;--z)
-					{
-						var z2n = engine.zones.children[z].cfg;
-						if(
-							(
-								(zone.type == "ball" && z2n.type == "fortress") ||
-								(zone.type == "soccerball" && z2n.type == "soccergoal")
-							) && 
-							is_in_circle(z2n.mesh.position.x,z2n.mesh.position.y,z2n.radius,zone.mesh.position.x,zone.mesh.position.y,zone.radius))
-						{
-							if(!engine.network && engine.declareRoundWinner == undefined && engine.winner == undefined)
-							{
-								if(zone.lastHitCycle)
-								{
-									engine.declareRoundWinner = zone.lastHitCycle.name;
-								}
-								else
-								{
-									startNewRound();
-								}
-							}
-							else
-							{
-								zone.xdir *= 1-timestep; zone.ydir *= 1-timestep;
-								if(!engine.dedicated) centerMessage("0x00ff00Goal!");
-							}
-						}
-					}
-				}
+				
 				//dont handle zones we don't need to
 				if(!zone.netObject/* || zone.type.indexOf("ball") >= 0*/)
 				{
@@ -785,39 +796,45 @@ function game(oneoff=false)
 			{
 				if(zone.bounce && zone.mesh.walldist <= timestep)
 				{
-					var mindirx,mindiry,mindist=Infinity,apc=0;
-					var px = zone.mesh.position.x+(zone.mesh.walldist*zone.xdir), py = zone.mesh.position.y+(zone.mesh.walldist*zone.ydir);
-					for(var i=359;i>0;i--) 
+					var dir = cdir(Math.atan2(zone.ydir,zone.xdir));
+					//zone.mesh.position.x -= dir[0]*zone.mesh.walldist; zone.mesh.position.y -= dir[1]*zone.mesh.walldist;
+					var mindist=Infinity,apc=false;
+					//var px = zone.mesh.position.x+(zone.mesh.walldist*zone.xdir), py = zone.mesh.position.y+(zone.mesh.walldist*zone.ydir);
+					var px = zone.mesh.position.x+zone.radius*dir[0], py = zone.mesh.position.y+zone.radius*dir[1];
+					//lineIntersect(posx,posy,posx+(dir[0]*rg),posy+(dir[1]*rg),w1x,w1y,w2x,w2y)
+					for(var i=4;i>0;--i) 
 					{
-						var xdir = Math.sin(Math.PI*2*(i/360)), ydir=Math.cos(Math.PI*2*(i/360));
-						var xpos = xdir*zone.radius+zone.mesh.position.x, ypos=ydir*zone.radius+zone.mesh.position.y;
-						var dist = pointDistance(xpos,ypos,px,py);
-						if(dist < mindist)
+						var xdir = Math.sin(Math.PI*2*(i/4)), ydir=Math.cos(Math.PI*2*(i/4));
+						if(lineIntersect(zone.mesh.position.x,zone.mesh.position.y,zone.mesh.position.x+xdir*(zone.radius+zone.mesh.walldist),zone.mesh.position.y+ydir*(zone.radius+zone.mesh.walldist),zone.mesh.wall[0],zone.mesh.wall[1],zone.mesh.wall[2],zone.mesh.wall[3]))
 						{
-							//mindist += dist; mindirx += xdir; mindiry += ydir;
-							//apc++;
-							mindist=dist;mindirx=xdir;mindiry=ydir;apc=1;
+							//console.log(i);
+							switch(i)
+							{
+								case 1: zone.xdir = -Math.abs(zone.xdir); break;
+								case 2: zone.ydir = Math.abs(zone.ydir); break;
+								case 3: zone.xdir = Math.abs(zone.xdir); break;
+								case 4: zone.ydir = -Math.abs(zone.ydir); break;
+							}
+							apc = true;
 						}
 					}
-					//mindist /= apc; mindirx /= apc; mindiry /= apc;
-					var speed = Math.sqrt((zone.xdir*zone.xdir)+(zone.ydir*zone.ydir));
-					if(mindist != Infinity)
+					//console.log(apc);
+					//*/zone.xdir *= -1; zone.ydir *= -1;
+					//if(!apc) {console.log("?"); zone.xdir *= -1; zone.ydir *= -1;}
+					var dir = cdir(Math.atan2(zone.ydir,zone.xdir));
+					//zone.mesh.position.x -= dir[0]*zone.mesh.walldist; zone.mesh.position.y -= dir[1]*zone.mesh.walldist;
+					zone.mesh.position.x += dir[0]; zone.mesh.position.y += dir[1]; 
+					zone.mesh.position.x += zone.xdir*(timestep); zone.mesh.position.y += zone.ydir*(timestep);
+					
+					if(settings.BALL_SPEED_HIT_DECAY)
 					{
-						var angle = Math.atan2(mindiry,mindirx);
-						//var angle = Math.atan2(mindiry,mindirx)*2;
-						//var angle = Math.atan2(mindiry,mindirx)+(Math.PI/2);
-						//var angle = Math.PI-Math.atan2(mindiry,mindirx);
-						var dir = cdir(angle);
+						var speed = Math.sqrt((zone.xdir*zone.xdir)+(zone.ydir*zone.ydir));
+						var decay = settings.BALL_SPEED_HIT_DECAY*delta;
+						if(decay > speed) decay = speed;
+						speed -= decay;
 						zone.xdir = dir[0]*speed; zone.ydir = dir[1]*speed;
-						
-						zone.mesh.position.x -= dir[0]*zone.mesh.walldist; zone.mesh.position.y -= dir[1]*zone.mesh.walldist;
-						zone.mesh.position.x += dir[0]*speed*timestep; zone.mesh.position.y += dir[1]*speed*timestep;
-						//console.log(zone);
 					}
-					else
-					{
-						zone.xdir *= -1; zone.ydir *= -1;
-					}
+					
 					zone.netSync();
 				}
 				else

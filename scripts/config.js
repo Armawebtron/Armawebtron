@@ -415,6 +415,10 @@ game_settings_default = {
 	TARGET_INITIAL_SCORE: 10,
 	//TARGET_SCORE_DEPLETE: 2,
 	//TARGET_SURVIVE_TIME: 10,
+	
+	//BALL
+	BALL_SPEED_DECAY: 0,
+	BALL_HIT_WALL_DECAY: 0,
 };
 
 var sets = Object.keys(game_settings_default);
