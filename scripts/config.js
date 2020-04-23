@@ -418,7 +418,7 @@ game_settings_default = {
 	
 	//BALL
 	BALL_SPEED_DECAY: 0,
-	BALL_HIT_WALL_DECAY: 0,
+	BALL_SPEED_HIT_DECAY: 0,
 };
 
 var sets = Object.keys(game_settings_default);
