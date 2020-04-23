@@ -197,10 +197,37 @@ class Zone
 		if(!this.mesh)
 		{
 			this.mesh = new THREE.Mesh(geo,this.mat);
-			this.mesh.position.set(prop.x||0,prop.y||0,prop.z||0);
-			this.mesh.scale.set(this.radius||1,this.radius||1,1);
 			this.mesh.cfg = this;
 		}
+		this.mesh.position.set(prop.x||0,prop.y||0,prop.z||0);
+		this.mesh.scale.set(this.radius||1,this.radius||1,1);
+	}
+	netSync()
+	{
+		if(window.svr)
+		{
+			var zone = {
+				id: engine.zones.children.indexOf(this.mesh),
+				x: this.mesh.position.x, y:this.mesh.position.y, z:this.mesh.position.z,
+				type:this.type, rotationSpeed:this.rot, value: this.value,
+				expansion:this.expansion, radius: this.radius,
+				xdir: this.xdir, ydir: this.ydir, bounce: this.bounce,
+				team: this.team, color: this.mesh.material.color.getHex(),
+				shape: this.shape,
+			};
+			if(this.shape == "polygon")
+			{
+				zone.points = [];
+				for(var i=geo.faces.length-2;i>=0;i-=2)
+				{
+					var geo = this.mesh.geometry.clone(); geo.applyMatrix(this.mesh.matrix);
+					zone.points.push(geo.vertices[geo.faces[i].b].x,geo.vertices[geo.faces[i].b].y);
+				}
+			}
+			var data = JSON.stringify({type:"zone",data:[zone],gtime:engine.gtime});
+			window.svr.clients.forEach(function(ws){ws.send(data)});
+		}
+		return this;
 	}
 	distance(position)
 	{
@@ -297,6 +324,8 @@ class Zone
 				{
 					this.xdir = -mindirx*cycle.speed; this.ydir = -mindiry*cycle.speed;
 					if(!this.bounce) this.bounce = true;
+					this.lastHitCycle = cycle;
+					this.netSync();
 				}
 				break;
 			case "speed":

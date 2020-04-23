@@ -676,8 +676,8 @@ var commands = {
 			{
 				zone.color = new THREE.Color(args[7]/15,args[8]/15,args[9]/15);
 			}
-			new Zone(zone).spawn();
-			console.log("new Zone: "+zone);
+			new Zone(zone).spawn().netSync();
+			//console.log("new Zone: "+zone);
 		}
 	},
 	SPAWN_WALL: function(params)
@@ -712,6 +712,7 @@ var commands = {
 			{
 				engine.zones.children[x].position.x = args[1]*engine.REAL_ARENA_SIZE_FACTOR;
 				engine.zones.children[x].position.y = args[2]*engine.REAL_ARENA_SIZE_FACTOR;
+				engine.zones.children[x].netSync();
 				return true;
 			}
 		}

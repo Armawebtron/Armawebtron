@@ -295,10 +295,13 @@ function connectionHandler(e)
 						engine.zones[zone.id].destroy();
 					}
 				}
-				else if(engine.zones[zone.id])
+				else if(engine.zones.children[zone.id])
 				{
-					//maybe a bit hacky but it's the best way I can think of to ensure everything is correct, short of destroying and recreating the zone entirely (which would likely be too slow)
-					engine.zones[zone.id].constructor(zone);
+					var myZone = engine.zones.children[zone.id];
+					if(zone.x!==undefined) {myZone.position.x = zone.x; myZone.position.y = zone.y; myZone.position.z = zone.z;}
+					if(zone.xdir!==undefined) {myZone.cfg.xdir = zone.xdir; myZone.cfg.ydir = zone.ydir;}
+					if(zone.bounce!== undefined)myZone.cfg.bounce = zone.bounce;
+					myZone.cfg.netObject = true;
 				}
 				else
 				{

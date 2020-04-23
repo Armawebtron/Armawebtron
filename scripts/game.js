@@ -731,22 +731,29 @@ function game(oneoff=false)
 								(zone.type == "ball" && z2n.type == "fortress") ||
 								(zone.type == "soccerball" && z2n.type == "soccergoal")
 							) && 
-							is_in_circle(z2n.x,z2n.y,z2n.radius,zone.x,zone.y,zone.radius))
+							is_in_circle(z2n.mesh.position.x,z2n.mesh.position.y,z2n.radius,zone.mesh.position.x,zone.mesh.position.y,zone.radius))
 						{
-							if(!engine.network && engine.winner == undefined)
+							if(!engine.network && engine.declareRoundWinner == undefined && engine.winner == undefined)
 							{
-								centerMessage("0x00ff00Goal!");
-								startNewRound();
+								if(zone.lastHitCycle)
+								{
+									engine.declareRoundWinner = zone.lastHitCycle.name;
+								}
+								else
+								{
+									startNewRound();
+								}
 							}
 							else
 							{
 								zone.xdir *= 1-timestep; zone.ydir *= 1-timestep;
+								if(!engine.dedicated) centerMessage("0x00ff00Goal!");
 							}
 						}
 					}
 				}
 				//dont handle zones we don't need to
-				if(!zone.netObject || zone.type.indexOf("ball") >= 0)
+				if(!zone.netObject/* || zone.type.indexOf("ball") >= 0*/)
 				{
 					//var lastdist = zone.distance(cycle.lastpos);
 					//var dist = zone.distance(cycle.position);
@@ -805,12 +812,13 @@ function game(oneoff=false)
 						
 						zone.mesh.position.x -= dir[0]*zone.mesh.walldist; zone.mesh.position.y -= dir[1]*zone.mesh.walldist;
 						zone.mesh.position.x += dir[0]*speed*timestep; zone.mesh.position.y += dir[1]*speed*timestep;
-						console.log(zone);
+						//console.log(zone);
 					}
 					else
 					{
 						zone.xdir *= -1; zone.ydir *= -1;
 					}
+					zone.netSync();
 				}
 				else
 				{
