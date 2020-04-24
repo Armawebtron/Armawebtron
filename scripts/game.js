@@ -176,9 +176,17 @@ function createAIsettings()
 	for(var z=engine.players.length-1;z>=0;--z) if(engine.players[z] && engine.players[z].AI) {AI_NUM++;}
 	var cycleColor = [0x000000,0xff0000,0x00ff00,0x0000ff][Math.round(Math.random()*3)];
 	var tailColor = [0x0000ff,0xff0000,0xffff00,0x00ff00][Math.round(Math.random()*3)];
-	if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = teamColor(1); }
-	var colorcode = cycleColor.toString(16);
-	colorcode = ("0".repeat(6-colorcode.length))+colorcode;
+	var colorcode;
+	if(settings.ALLOW_TEAM_NAME_COLOR)
+	{
+		colorcode = cycleColor.toString(16);
+		colorcode = ("0".repeat(6-colorcode.length))+colorcode;
+	}
+	else
+	{
+		cycleColor = tailColor = teamColor(1);
+		colorcode = cycleColor.getHexString();
+	}
 	var cycleinfo = { ai:true,
 	cycleColor:cycleColor, tailColor:tailColor,
 	/*engineType: 5,*/ engineType:(settings.players[0])?settings.players[0].engineType:5, spectating:false,
@@ -215,10 +223,10 @@ function processPlayer(x,cfg)
 	{
 		var cycle = engine.players[x];
 		cycle.engineType = (typeof(cfg)=="undefined")?5:cfg.engineType;
-		if(x == engine.activePlayer && !engine.dedicated)
+		//if(x == engine.activePlayer && !engine.dedicated)
 		{
 			var cycleColor = cfg.cycleColor,tailColor = cfg.tailColor;
-			if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = teamColor(0); }
+			if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = teamColor(engine.teams.indexOf(engine.players[x].team)); }
 			if(cycle.name != cfg.name)
 			{
 				var out = cycle.getColoredName()+"0x7fff7f renamed to ";
@@ -244,10 +252,6 @@ function processPlayer(x,cfg)
 					engine.console.print(cycle.getColoredName()+"0x7fff7f entered from spectator mode.\n");
 				}
 			}
-		}
-		else
-		{
-			if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = teamColor(1); }
 		}
 	}
 	else
@@ -407,7 +411,16 @@ function ensurePlayersSane(removeAIs=true)
 		if(!engine.dedicated && !engine.players[engine.activePlayer].alive) changeViewTarget(1);
 	}
 	
-	if(window.svr) window.svr.clients.forEach(function(ws){ws.senddata(0)});
+	if(window.svr) 
+	{
+		var teams = [];
+		for(var x=engine.teams.length-1;x>=0;--x)
+		{
+			teams.push({id:x,name:engine.teams[x].name,x:engine.teams[x].x,y:engine.teams[x].y,z:engine.teams[x].z});
+		}
+		teams=JSON.stringify({type:"team",data:teams});
+		window.svr.clients.forEach(function(ws){ws.send(teams);ws.senddata(0)});
+	}
 }//*/
 
 function loadRound(dlmap)
@@ -457,7 +470,7 @@ function loadRound(dlmap)
 	//CYCLE
 	if(!engine.network)
 	{
-		ensurePlayersSane();
+		ensurePlayersSane();ensurePlayersSane();
 		if(engine.round == 0)
 		{
 			engine.console.print("Resetting scores...\n");
@@ -728,21 +741,27 @@ function game(oneoff=false)
 						) && 
 						is_in_circle(z2n.mesh.position.x,z2n.mesh.position.y,z2n.radius,zone.mesh.position.x,zone.mesh.position.y,zone.radius))
 					{
-						if(!engine.network && engine.declareRoundWinner == undefined && engine.winner == undefined)
+						if(!engine.network && engine.winner == undefined)
 						{
 							if(zone.lastHitCycle)
 							{
-								engine.declareRoundWinner = zone.lastHitCycle.name;
+								if(engine.teams.indexOf(zone.lastHitCycle.team) == z2n.team)
+								{
+									engine.console.print(zone.lastHitCycle.getColoredName()+"0xRESETT scored in their own goal and lost a point. Boo!\n");
+									zone.lastHitCycle.addScore(-1);
+								}
+								else
+								{
+									engine.console.print(zone.lastHitCycle.getColoredName()+"0xRESETT scored a goal for 1 point.\n");
+									zone.lastHitCycle.addScore(1);
+								}
 							}
-							else
-							{
-								startNewRound();
-							}
+							engine.winner = false; startNewRound();
 						}
 						else
 						{
 							zone.xdir *= 1-timestep; zone.ydir *= 1-timestep;
-							if(!engine.dedicated) centerMessage("0x00ff00Goal!");
+							if(!engine.dedicated) centerMessage("Goal!");
 						}
 					}
 				}

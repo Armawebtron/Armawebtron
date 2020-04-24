@@ -73,13 +73,23 @@ class Zone
 				case "fortress": case "flag":
 					var lastDist = Infinity;
 					var closestSpawn = 0;
-					for(var w=0;w<engine.map.spawns.length;w++)
+					if(engine.teams.length > 0)
 					{
-						var checkx = engine.map.spawns[w][0];
-						var checky = engine.map.spawns[w][1];
-						var disValue = pointDistance( checkx, checky, prop.x, prop.y );
-						if (disValue < 0) { disValue = -disValue; }
-						if (disValue < lastDist) { lastDist = disValue; closestSpawn = w; }
+						for(var w=0;w<engine.teams.length;w++)
+						{
+							var disValue = pointDistance(engine.teams[w].x,engine.teams[w].y, prop.x, prop.y);
+							if (disValue < lastDist) { lastDist = disValue; closestSpawn = w; }
+						}
+					}
+					else
+					{
+						for(var w=0;w<engine.map.spawns.length;w++)
+						{
+							var checkx = engine.map.spawns[w][0];
+							var checky = engine.map.spawns[w][1];
+							var disValue = pointDistance( checkx, checky, prop.x, prop.y );
+							if (disValue < lastDist) { lastDist = disValue; closestSpawn = w; }
+						}
 					}
 					if (closestSpawn > 7) { zoneColor = 0x4488FF; }
 					else { zoneColor = (this.type=="fortress"?teamColor:teamColor)(closestSpawn); }

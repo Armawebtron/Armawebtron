@@ -163,6 +163,7 @@ function connectionHandler(e)
 						name:data.name||"1",
 						cycleColor:data.cycleColor, tailColor:data.tailColor,
 						engineType:data.engineType||settings.player.engineType,
+						team: engine.teams[data.team]||new Team({name:(data.alive?data.name:"")}),
 					});
 					console.log(data);
 					
@@ -283,6 +284,13 @@ function connectionHandler(e)
 					engine.lastPingTime = performance.now();
 				}
 			updateScoreBoard();
+			break;
+		case "team":
+			engine.teams.splice(0);
+			for(var i=msg.data.length-1;i>=0;--i) if(msg.data[i])
+			{
+				engine.teams[msg.data[i].id] = new Team(msg.data[i]);
+			}
 			break;
 		case "zone":
 			for(var i=msg.data.length-1;i>=0;--i) if(msg.data[i])
