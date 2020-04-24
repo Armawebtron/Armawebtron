@@ -1,6 +1,6 @@
 Definitely:
 * Sound is choppy
-* Balls don't bounce at the correct angles
+* Balls jump away from the wall and glitch on rounded corners
 * Minimap doesn't scale in resolution well (fix would be using SVG instead of Canvas)
 * Minimap has some performance negatives, similar as below
 * The more turns, the more walls that have to be calculated, meaning lower FPS.
@@ -12,10 +12,8 @@ Maybe:
 
 Todo: 
 * Mindistance stabbing
-* Teams
 * Fortress, Sumo
 * Capture the flag
-* Complete support for styball
 * Shooting
 * Better bots
  > Camping detection
