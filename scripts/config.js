@@ -1044,7 +1044,7 @@ function netcfg(setting,value)
 			{
 				if(netChanged[i][0] == setting) settingFound = true;
 			}
-			if(!settingFound) netChanged.push([setting,chsetting("CYCLE_SPEED",undefined,true)]);
+			if(!settingFound) netChanged.push([setting,chsetting(setting,undefined,true)]);
 			
 			return "0xff7f7f"+chsetting(setting,value,false," on server order","0x808080");
 		}
@@ -1077,6 +1077,13 @@ function saveusercfg()
 function chsetting(setting,value,silent=false,txt="",pretxt="")
 {
 	if(setting[0] == "#" || setting == "") return;
+	if(engine.network && txt == "" && typeof(value) != "undefined" && value != "")
+	{
+		for(var i=netChanged.length-1;i>=0;--i)
+		{
+			if(netChanged[i][0] == setting) return;
+		}
+	}
 	var exec = false, ret = undefined;
 	var event = getVarFromString(setting);
 	if(typeof(event[0][event[1]]) != "undefined")
