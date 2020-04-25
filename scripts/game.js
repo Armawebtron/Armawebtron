@@ -93,13 +93,22 @@ function playGame()
 
 function revertMap()
 {
-	var mapfile = settings.RESOURCE_REPOSITORY_CACHE+(settings.MAP_FILE.replace(/\(.+\)/,""));
-	engine.console.print("Downloading map from "+mapfile+"...\n",false);
-	httpGetAsync(mapfile,loadRound,function()
+	if(engine.dedicated)
 	{
-		engine.console.print("Unable to load map file. Ignoring for now...",false);
+		engine.console.print("Unable to load map file. Reverting...\n",true);
+		chsetting("MAP_FILE",engine.loadedMap);
 		loadRound();
-	});
+	}
+	else
+	{
+		var mapfile = settings.RESOURCE_REPOSITORY_CACHE+(settings.MAP_FILE.replace(/\(.+\)/,""));
+		engine.console.print("Downloading map from "+mapfile+"...\n",false);
+		httpGetAsync(mapfile,loadRound,function()
+		{
+			engine.console.print("Unable to load map file. Ignoring for now...\n",false);
+			loadRound();
+		});
+	}
 }
 
 function newRound()

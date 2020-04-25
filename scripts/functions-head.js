@@ -88,8 +88,13 @@ function httpGetAsync(url,callback,errcb=false) //! gets HTTP requests asynchron
 		var req = new XMLHttpRequest();
 		req.onreadystatechange = function() 
 		{ 
-			if(req.readyState == 4 && req.status == 200)
-				callback(req.responseText);
+			if(req.readyState == 4)
+				if(req.status == 200)
+					callback(req.responseText);
+				else if(errcb)
+				{
+					req.onerror = null; errcb();
+				}
 		}
 		if(errcb)
 		{
@@ -107,22 +112,33 @@ function httpGetAsync(url,callback,errcb=false) //! gets HTTP requests asynchron
 			res.on('data',function(data)
 			{
 				res.data += data;
+			});
+			res.on('end',function()
+			{
 				if(res.statusCode == 200)
 					callback(res.data)
+				else if(errcb)
+					errcb();
 			});
 		});
 		if(errcb) req.on('error',errcb);
 	}
 	else if(window.http) //no https support
 	{
+		url=url.replace("https://","http://");
 		var req = http.get(url.replace("https://","http://"),function(res)
 		{
 			res.data = "";
 			res.on('data',function(data)
 			{
 				res.data += data;
+			});
+			res.on('end',function()
+			{
 				if(res.statusCode == 200)
 					callback(res.data)
+				else if(errcb)
+					errcb();
 			});
 		});
 		if(errcb) req.on('error',errcb);
