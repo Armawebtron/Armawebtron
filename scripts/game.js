@@ -656,7 +656,14 @@ function game(oneoff=false)
 										alive:cycle.alive,
 										netid:x, wall:cycle.walls.map,
 									}],gtime:engine.gtime});
-									window.svr.clients.forEach(function(ws){ws.send(data)});
+									if(cycle.speed > 1) cycle.update(0.01/cycle.speed);
+									var data2 = JSON.stringify({type:"griddata",data:[{
+										position:[cycle.position.x,cycle.position.y,cycle.position.z],
+										direction:rad2deg(cycle.rotation.z), 
+										speed:cycle.speed, rubber:cycle.rubber,
+										alive:cycle.alive,
+										netid:x}],gtime:engine.gtime});
+									window.svr.clients.forEach(function(ws){ws.send(data);ws.send(data2)});
 								}
 							}
 							cycle.turnQueue.splice(0,1);
