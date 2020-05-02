@@ -19,7 +19,7 @@
 
 function connectTo(host,port)
 {
-	hideMenu(); engine.inputState = "game";
+	engine.playGame = false; engine.inputState = "game";
 	try
 	{
 		var connection = new WebSocket('ws'+(settings.CONNECT_SSL?'s':'')+'://'+host+':'+port);
@@ -27,6 +27,8 @@ function connectTo(host,port)
 		connection.onerror = function(e)
 		{ 
 			console.log(e); var msg;
+			disconnectFromGame();menu("leave");showMenu();
+			menu("menu:connectfail");
 			if(engine.network)
 			{
 				engine.console.print(msg="An error occurred with the connection."); 
@@ -35,21 +37,17 @@ function connectTo(host,port)
 			{
 				engine.console.print(msg="Couldn't connect to server. Please ensure that you have the right host and port."); 
 			}
-			disconnectFromGame();menu("leave");showMenu();
-			menu("menu:");
-			document.getElementById('menu').innerHTML = "<h1>Connection Error</h1><div style='text-align:left;font-size:11pt'>"+msg+"</div>";
 		}
 		connection.onclose = function(e)
 		{
 			console.log(e); var msg;
 			if(engine.network)
 			{
+				disconnectFromGame();menu("leave");showMenu();
+				menu("menu:connectterm");
 				engine.console.print(msg="Our connection with the server has been terminated.");
 				msg += "  ";
 				if(e.reason == "") engine.console.print(msg+="No reason given.\n"); else engine.console.print(msg+="Reason: "+e.reason+"\n");
-				disconnectFromGame();menu("leave");showMenu();
-				menu("menu:");
-				document.getElementById('menu').innerHTML = "<h1>Connection Terminated</h1><div style='text-align:left;font-size:11pt'>"+msg+"</div>";
 			}
 		}
 		return connection;
@@ -337,6 +335,7 @@ function connectToGame()
 	{
 		engine.connection = connectTo(settings.CONNECT_HOST,settings.CONNECT_PORT)
 		document.getElementById("progtitle").innerHTML = tStringify("@progtitleshort@ &bull; Connecting to "+settings.CONNECT_HOST+":"+settings.CONNECT_PORT);
+		menu("menu:connect");
 	}
 }
 

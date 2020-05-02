@@ -45,6 +45,18 @@
 			<Item type="js" onenter="connectToGame()" text="Connect"/>
 			<Item type="exitmenu" text="&lt;- Go Back"/>
 		</Menu>
+		<Menu id="connect" title="Connecting...">
+			<Item type="text" text="" from="con:last" style="font-size:14pt;text-align:left;padding:10px;color:grey" />
+			<Item type="leave" text="&lt;- Cancel"/>
+		</Menu>
+		<Menu id="connectfail" title="Connection Failure">
+			<Item type="text" text="" from="con:last" style="font-size:11pt;text-align:left;padding:10px" />
+			<Item type="leave" text="&lt;- Okay"/>
+		</Menu>
+		<Menu id="connectterm" title="Connection Terminated">
+			<Item type="text" text="" from="con:last" style="font-size:11pt;text-align:left;padding:10px" />
+			<Item type="leave" text="&lt;- Okay"/>
+		</Menu>
 			<Menu id="game_setup" title="Local Game Config" if="not engine.network">
 				<Item type="submenu" onenter="presets" text="Load Preset..."/>
 				<Item type="num" range="0,Infinity" var="TEAMS_MIN" text="Min Teams (# of Humans+AIs)" />
