@@ -401,12 +401,35 @@ function handleChat(cycle,output)
 		split.shift();
 		loadcfg(split.join(" "));
 	}
-	else if(split[0] == "/admin" && !engine.network)
+	else if(split[0][0] == "/" && !engine.network)
 	{
-		split.shift();
-		var ln = split.join(" ");
-		loadcfg(ln);
-		engine.console.print('Remote admin command0x7f7fff: '+ln+'\n');
+		switch(split[0])
+		{
+			case "/admin":
+				split.shift();
+				var ln = split.join(" ");
+				engine.console.print('Remote admin command from '+cycle.getBoringName()+'0x7f7fff: '+ln+'\n');
+				var text = []; engine.concatch = {to:text,type:"list"};
+				loadcfg(ln);
+				engine.concatch = undefined;
+				for(var i=0;i<text.length;++i)
+				{
+					engine.console.print('0xff7f7fRA:0xRESETT '+text[i]+'\n',cycle);
+				}
+				break;
+			case "/players":
+				for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x])
+				{
+					engine.console.print(x+": "+engine.players[x].getColoredName()+"\n",cycle);
+				}
+				break;
+			case "/me":
+				cycle.doChat(output);
+				break;
+			default:
+				
+				break;
+		}
 	}
 	else
 	{

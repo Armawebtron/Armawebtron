@@ -1117,7 +1117,7 @@ function chsetting(setting,value,silent=false,txt="",pretxt="")
 					var to = JSON.parse(value);
 					break;
 				default:
-					engine.console.print("Unknown/unimplemented setting type "+typeof(event[0][event[1]])+".\n");
+					engine.console.print("Unknown/unimplemented setting type "+typeof(event[0][event[1]])+".\n",false);
 					//return false;
 			}
 			if(isfunction) event[0][event[1]](to);
@@ -1137,7 +1137,7 @@ function chsetting(setting,value,silent=false,txt="",pretxt="")
 		}
 		else
 		{
-			if(!silent) engine.console.print(event[1]+" is currently set to "+from+"\n");
+			if(!silent) engine.console.print(event[1]+" is currently set to "+from+"\n",false);
 			ret = from;
 		}
 		var exec = true;
@@ -1150,7 +1150,7 @@ function chsetting(setting,value,silent=false,txt="",pretxt="")
 	if(exec) return ret==undefined?exec:ret;
 	if(!silent)
 	{
-		engine.console.print("Unknown command "+event[1]+"\n");
+		engine.console.print("Unknown command "+event[1]+"\n",false);
 		if(inround())
 		{
 			var len = 0, print="";
@@ -1162,7 +1162,7 @@ function chsetting(setting,value,silent=false,txt="",pretxt="")
 					len++; print += cmds[i];
 				}
 			}
-			if(len > 0) engine.console.print("Perhaps you meant: "+print+"\n");
+			if(len > 0) engine.console.print("Perhaps you meant: "+print+"\n",false);
 		}
 	}
 	return exec;
@@ -1371,6 +1371,7 @@ if(typeof(document) != "undefined")
 		if(engine.concatch) 
 		{
 			if(engine.concatch.type == "all") engine.concatch.to.append(str);
+			else if(engine.concatch.type == "list") engine.concatch.to.push(str);
 			else engine.concatch.to.innerText = str;
 		}
 		if(settings.TEXT_OUT_MODE == 1)
@@ -1427,14 +1428,35 @@ else
 	engine.console = {style:{}};
 	engine.console.print = function(str,netSend=true) 
 	{ 
-		process.stdout.write(removeColors(str)); 
+		process.stdout.write(removeColors(str));
+		if(engine.concatch) 
+		{
+			if(engine.concatch.type == "all") engine.concatch.to.append(str);
+			else if(engine.concatch.type == "list") engine.concatch.to.push(str);
+			else engine.concatch.to.innerText = str;
+		}
 		if(netSend && global.svr) //send over network
 		{
-			var data = JSON.stringify({type:"con",data:str}); //since all clients get the same info
-			global.svr.clients.forEach(function(ws) //I know this is slow, but I'm not aware of any other way
+			var data = JSON.stringify({type:"con",data:str});
+			switch(typeof(netSend))
 			{
-				ws.send(data);
-			});
+				case "boolean":
+					global.svr.clients.forEach(function(ws) //I know this is slow, but I'm not aware of any other way
+					{
+						ws.send(data);
+					});
+					break;
+				case "object":
+					var lookForID = engine.players.indexOf(netSend);
+					global.svr.clients.forEach(function(ws)
+					{
+						if(ws.netid == lookForID)
+						{
+							ws.send(data);
+						}
+					});
+					break;
+			}
 		}
 	};
 }
