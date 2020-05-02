@@ -345,6 +345,17 @@ class Zone
 				accel = (this.value||0); cycle.accel += accel;
 				cycle.speed += cycle.speed*accel;
 				break;
+			case "flag":
+				if(!cycle.hasFlag && engine.teams.indexOf(cycle.team) != this.team)
+				{
+					engine.console.print(cycle.getColoredName()+"0xRESETT picked up "+engine.teams[this.team].name+"0xRESETT's flag.\n");
+					cycle.hasFlag = this;
+					this.type = "flagHeld";
+					this.heldBy = cycle;
+					if(!this.px) this.px = this.mesh.position.x;
+					if(!this.py) this.py = this.mesh.position.y;
+				}
+				break;
 		}
 	}
 	onLeave(cycle,time)

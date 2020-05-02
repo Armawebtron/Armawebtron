@@ -784,6 +784,46 @@ function game(oneoff=false)
 					zone.xdir = dir[0]*speed; zone.ydir = dir[1]*speed;
 				}
 			}
+			else if(zone.type == "flagHeld")
+			{
+				zone.mesh.position.x = zone.heldBy.position.x;
+				zone.mesh.position.y = zone.heldBy.position.y;
+				var h=[];
+				for(var z=engine.zones.children.length-1;z>=0;--z)
+				{
+					if(zone.type == "flagHeld") { h.push(zone.team); }
+				}
+				for(var z=engine.zones.children.length-1;z>=0;--z)
+				{
+					var z2n = engine.zones.children[z].cfg;
+					if(
+						(zone.type == "flagHeld" && z2n.type == "fortress") && 
+						is_in_circle(z2n.mesh.position.x,z2n.mesh.position.y,z2n.radius,zone.heldBy.position.x,zone.heldBy.position.y,zone.radius))
+					{
+						if(engine.teams.indexOf(zone.heldBy.team) == z2n.team)
+						{
+							if(h.length > 1 && h.indexOf(z2n.team) > -1)
+							{
+								if(!zone.homeMSG)
+								{
+									engine.console.print(zone.heldBy.getColoredName()+"0xRESETT took the enemy flag home, but their team flag must be returned to their base. Get them!\n");
+									zone.homeMSG = true;
+								}
+							}
+							else
+							{
+								engine.console.print(zone.heldBy.getColoredName()+"0xRESETT took the flag to their base for 1 point!\n");
+								zone.heldBy.addScore(1);
+								zone.heldBy.hasFlag = null;
+								zone.type = "flag";
+								zone.mesh.position.x = zone.px;
+								zone.mesh.position.y = zone.py;
+								zone.homeMSG = false;
+							}
+						}
+					}
+				}
+			}
 			
 			//zone effect
 			var inzone = false;

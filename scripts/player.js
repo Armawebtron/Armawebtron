@@ -111,7 +111,7 @@ class Player extends THREE.Object3D
 		
 		if(typeof(wmap[wmap.length-3]) == "undefined")
 		{
-			console.warn("Wall was undefined when trying to calculate wall size");
+			//console.warn("Wall was undefined when trying to calculate wall size");
 			//console.log();
 			return;
 		}
@@ -243,6 +243,13 @@ class Player extends THREE.Object3D
 			spawnExplosion(this.position,this.cycleColor,this.tailColor);
 		}
 		updateScoreBoard();
+		
+		if(this.hasFlag)
+		{
+			engine.console.print(this.getColoredName()+"0xRESETT dropped the flag they were holding.\n");
+			this.hasFlag.type = "flag";
+			this.hasFlag = null;
+		}
 		
 		if(engine.dedicated) 
 		{

@@ -83,6 +83,8 @@
 						text="0xc0c000&gt;&gt;&gt; 0xff0000F0xff1c1cA0xff3838S0xff5555T0xff7171T0xff8d8dR0xffaaaaA0xffc6c6C0xffe2e2K 0xc0c000&lt;&lt;&lt;" title="Gotta go fast! Very fast!"/>
 					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('fort')" 
 						text="Fortress" title="Take the enemy's base, try not to let them take yours."/>
+					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('ctf')" 
+						text="Capture the Flag" title="Take the enemy's flag, try not to let them take yours."/>
 					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('styball')" 
 						text="Styball (Soccer / Hockey)" title="Push the ball into the enemy's base, but don't let them push it into yours!"/>
 					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('racing')" 

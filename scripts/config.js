@@ -853,7 +853,7 @@ function preset(name)
 			break;
 		case "ft":
 			applysettings(tmp_settings);
-			commands.RINCLUDE("vov/configs/fasttrack.cfg",function(){leave();loadcfg("TEAMS_MIN 4\nALLOW_TEAM_NAME_COLOR 1")});
+			commands.RINCLUDE("vov/configs/fasttrack.cfg",function(){leave();loadcfg("SP_NUM_AIS 4\nALLOW_TEAM_NAME_COLOR 1")});
 			break;
 		case "racing":
 			applysettings(tmp_settings);
@@ -865,6 +865,10 @@ function preset(name)
 			applysettings(tmp_settings);
 			settings.CYCLE_JUMP = 0;
 			commands.INCLUDE("nelg/snake.cfg",false,leave);
+			break;
+		case "ctf":
+			applysettings(tmp_settings);
+			commands.RINCLUDE("vov/configs/ctf.cfg",function(){leave();loadcfg("SP_NUM_AIS 1\nALLOW_TEAM_NAME_COLOR 0")});
 			break;
 	}
 	commands.KILL_ALL();
