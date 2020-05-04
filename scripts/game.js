@@ -826,6 +826,7 @@ function game(oneoff=false)
 								zone.mesh.position.x = zone.px;
 								zone.mesh.position.y = zone.py;
 								zone.homeMSG = false;
+								zone.netSync();
 							}
 						}
 					}

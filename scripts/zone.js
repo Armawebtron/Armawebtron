@@ -225,6 +225,7 @@ class Zone
 				team: this.team, color: this.mesh.material.color.getHex(),
 				shape: this.shape,
 			};
+			if(this.type == "flagHeld") zone.heldBy = engine.players.indexOf(this.heldBy);
 			if(this.shape == "polygon")
 			{
 				zone.points = [];
@@ -346,7 +347,7 @@ class Zone
 				cycle.speed += cycle.speed*accel;
 				break;
 			case "flag":
-				if(!cycle.hasFlag && engine.teams.indexOf(cycle.team) != this.team)
+				if(!engine.network && !cycle.hasFlag && engine.teams.indexOf(cycle.team) != this.team)
 				{
 					engine.console.print(cycle.getColoredName()+"0xRESETT picked up "+engine.teams[this.team].name+"0xRESETT's flag.\n");
 					cycle.hasFlag = this;
@@ -354,6 +355,8 @@ class Zone
 					this.heldBy = cycle;
 					if(!this.px) this.px = this.mesh.position.x;
 					if(!this.py) this.py = this.mesh.position.y;
+					this.mesh.position.set(cycle.position.x,cycle.position.y,0);
+					this.netSync();
 				}
 				break;
 		}
