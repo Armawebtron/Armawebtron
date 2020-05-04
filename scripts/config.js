@@ -100,11 +100,14 @@ settings = {
 	FLOOR_MIRROR: false,
 	FLOOR_MIRROR_INT: 1,
 	
+	FLOOR_DETAIL: 4, //0=off, 1=line, 2=good, 3=best (4 is a hack to choose between 2 and 3 based on software or hardware renderer)
+	
 	CYCLE_TEXTURES: ["textures/cycle_body.png","textures/cycle_wheel.png"],
 	
 	EXPLOSIONS: true,
-	HIGH_RIM: false,
-	LOW_RIM_HEIGHT: 50,
+	HIGH_RIM: true,
+	HIGH_RIM_HEIGHT: 50,
+	LOW_RIM_HEIGHT: 4,
 	
 	RIM_WALL_RED: 0,
 	RIM_WALL_GREEN: 0, // 0.533
@@ -148,7 +151,7 @@ settings = {
 	//RIM_WALL_STRETCH_Y: 50,
 	RIM_WALL_STRETCH_X: 1536,
 	RIM_WALL_STRETCH_Y: 32,
-	LOW_RIM_HEIGHT: 32,
+	HIGH_RIM_HEIGHT: 32,
 	RIM_WALL_WRAP_Y: false,
 	RIM_WALL_TEXTURE: "textures/moviepack_t_r_u_e/movie-rim-wall.png",
 	RIM_WALL_DEPTH: true,
@@ -204,6 +207,8 @@ settings = {
 	COLOR_G_1: function(g=undefined) { if(engine.dedicated) return (settings.COLOR_G_1=13); return plnumcolors({g:g}).g },
 	COLOR_B_1: function(b=undefined) { if(engine.dedicated) return (settings.COLOR_B_1=0); return plnumcolors({b:b}).b },
 	
+	CFG_VERSION: 0,
+	
 	PLAYER_DEL_HIST_PERROUND: true, //what was this?
 	
 	TIMESTEP_MAX: 0.2,
@@ -241,6 +246,7 @@ if(!Detector.webgl)
 	settings.RIM_WALL_TEXTURE = "";
 	settings.RIM_WALL_DEPTH = false;
 	settings.ALPHA_BLEND = false;
+	settings.FLOOR_DETAIL = 2;
 }
 
 game_settings_default = {
@@ -884,6 +890,8 @@ function aamenurender(value)
 	return settings.MENU_RENDER;
 }
 
+function aamenurender_nocallonreq(value) { if(value==undefined) return settings.MENU_RENDER; else aamenurender(value); }
+
 var cmds = Object.keys(settings).concat(Object.keys(commands)).sort();
 
 settings.controls = { //defaults declared
@@ -986,8 +994,9 @@ function importSets()
 var _aacompatvars = ["PLAYER_1","COLOR_R_1","COLOR_G_1","COLOR_B_1"];
 
 var uservars = [
+	"CFG_VERSION",
 //	"GRID_SIZE","FLOOR_RED","FLOOR_GREEN","FLOOR_BLUE",
-	"EXPLOSIONS","HIGH_RIM",
+	"EXPLOSIONS","HIGH_RIM","FLOOR_DETAIL",
 	/*"MENU_RENDER",*/"REDRAW_MODE","MAX_TARGET_FPS",//"GAME_LOOP",
 	"ZONE_HEIGHT","ZONE_SEGMENTS","ZONE_SEG_LENGTH","ZONE_ALPHA","ZONE_SPIN_SPEED","ZONE_RENDER_TYPE",
 	"player","controls"
@@ -1494,6 +1503,7 @@ engine.map = { //virtual map data (used for positions, lines and stuff to calcul
 function loadsettingcfgs()
 {
 	loadcfg(localStorage.getItem("user.cfg"),true,true);
+	if(settings.CFG_VERSION < 0.8) { if(Detector.webgl) {settings.HIGH_RIM = true;} settings.CFG_VERSION = 0.8;}
 	loadcfg(localStorage.getItem("server_info.cfg"),true);
 	loadcfg(localStorage.getItem("settings_custom.cfg"),true);
 	loadcfg(localStorage.getItem("autoexec.cfg"),true);

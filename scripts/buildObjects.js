@@ -53,57 +53,81 @@ function buildGrid()
 	var logicalHeight = ((logicalBox[5]-logicalBox[3]) * engine.REAL_ARENA_SIZE_FACTOR)/* + 10*/;//+10 for outer edge
 	var logicalWidth = ((logicalBox[4]-logicalBox[2]) * engine.REAL_ARENA_SIZE_FACTOR)/* + 10*/;
 	
-	if(!engine.dedicated)
+	var grid_object;
+	if(!engine.dedicated && settings.FLOOR_DETAIL > 0)
 	{
-		var floorTexture = engine.textures.floor;
-		floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
-		floorTexture.repeat.set(logicalWidth,logicalHeight);	//floorTexture.repeat.set( 500, 500 );
-
-		var centerOffset_x = (logicalBox[2] * engine.REAL_ARENA_SIZE_FACTOR);//offset from bottom left corner
-		var centerOffset_x2 = Math.round((centerOffset_x % 1)*100000000)/100000000;
-		floorTexture.offset.x = centerOffset_x2;  
-		
-		var centerOffset_y = (logicalBox[3] * engine.REAL_ARENA_SIZE_FACTOR);//-5;//not needed since we only take %1 offset
-		var centerOffset_y2 = Math.round((centerOffset_y % 1)*100000000)/100000000;
-		
-		floorTexture.offset.y = centerOffset_y2; 
-
-
-		if(engine.usingWebgl)
+		if(settings.FLOOR_DETAIL == 1)
 		{
-			var maxAnisotropy = engine.renderer.capabilities.getMaxAnisotropy();
-			floorTexture.anisotropy = maxAnisotropy;
+			var minX = engine.logicalBox.min.x*engine.REAL_ARENA_SIZE_FACTOR, minY = engine.logicalBox.min.y*engine.REAL_ARENA_SIZE_FACTOR;
+			var maxX = engine.logicalBox.max.x*engine.REAL_ARENA_SIZE_FACTOR, maxY = engine.logicalBox.max.y*engine.REAL_ARENA_SIZE_FACTOR;
+			var geometry = new THREE.Geometry();
+			for(var y=minY;y<maxY;y+=settings.GRID_SIZE)
+			{
+				geometry.vertices.push(new THREE.Vector3(minX,y,0));
+				geometry.vertices.push(new THREE.Vector3(maxX,y,0));
+				geometry.vertices.push(new THREE.Vector3(minX,y,0));
+			}
+			for(var x=minX;x<maxX;x+=settings.GRID_SIZE)
+			{
+				geometry.vertices.push(new THREE.Vector3(x,minY,0));
+				geometry.vertices.push(new THREE.Vector3(x,maxY,0));
+				geometry.vertices.push(new THREE.Vector3(x,minY,0));
+			}
+			var color = new THREE.Color(settings.FLOOR_RED,settings.FLOOR_GREEN,settings.FLOOR_BLUE);
+			grid_object = new THREE.Line(geometry,new THREE.LineBasicMaterial({color:color,transparent:false}));
 		}
-		
-		var color = new THREE.Color(settings.FLOOR_RED,settings.FLOOR_GREEN,settings.FLOOR_BLUE);
-		var floorMaterial = new THREE.MeshBasicMaterial( { color:color, map: floorTexture,/* transparent: settings.ALPHA_BLEND /*, side: THREE.DoubleSide*/} );
+		else
+		{
+			var floorTexture = engine.textures.floor;
+			floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
+			floorTexture.repeat.set(logicalWidth,logicalHeight);	//floorTexture.repeat.set( 500, 500 );
 
-		
-		floorMaterial.needsUpdate = true;//is this needed?
-		var floorGeometry = new THREE.PlaneBufferGeometry(logicalWidth*settings.GRID_SIZE,logicalHeight*settings.GRID_SIZE,1,1);
-		floorGeometry.dynamic = true;//is this needed?
-		var grid_object = new THREE.Mesh(floorGeometry, floorMaterial);
-		grid_object.position.x = logicalBox[0] * engine.REAL_ARENA_SIZE_FACTOR;
-		grid_object.position.y = logicalBox[1] * engine.REAL_ARENA_SIZE_FACTOR;
+			var centerOffset_x = (logicalBox[2] * engine.REAL_ARENA_SIZE_FACTOR);//offset from bottom left corner
+			var centerOffset_x2 = Math.round((centerOffset_x % 1)*100000000)/100000000;
+			floorTexture.offset.x = centerOffset_x2;  
+			
+			var centerOffset_y = (logicalBox[3] * engine.REAL_ARENA_SIZE_FACTOR);//-5;//not needed since we only take %1 offset
+			var centerOffset_y2 = Math.round((centerOffset_y % 1)*100000000)/100000000;
+			
+			floorTexture.offset.y = centerOffset_y2; 
+
+
+			if(settings.FLOOR_DETAIL > 2)
+			{
+				var maxAnisotropy = engine.renderer.capabilities.getMaxAnisotropy();
+				floorTexture.anisotropy = maxAnisotropy;
+			}
+			
+			var color = new THREE.Color(settings.FLOOR_RED,settings.FLOOR_GREEN,settings.FLOOR_BLUE);
+			var floorMaterial = new THREE.MeshBasicMaterial( { color:color, map: floorTexture,/* transparent: settings.ALPHA_BLEND /*, side: THREE.DoubleSide*/} );
+
+			
+			floorMaterial.needsUpdate = true;//is this needed?
+			var floorGeometry = new THREE.PlaneBufferGeometry(logicalWidth*settings.GRID_SIZE,logicalHeight*settings.GRID_SIZE,1,1);
+			floorGeometry.dynamic = true;//is this needed?
+			grid_object = new THREE.Mesh(floorGeometry, floorMaterial);
+			grid_object.position.x = logicalBox[0] * engine.REAL_ARENA_SIZE_FACTOR;
+			grid_object.position.y = logicalBox[1] * engine.REAL_ARENA_SIZE_FACTOR;
+			//grid_object.scale.set(settings.GRID_SIZE,settings.GRID_SIZE,1);
+			//console.log("gridx: "+grid_object.position.x+"  gridy: "+grid_object.position.y);
+			grid_object.geometry.dynamic = true;//is this needed?
+			
+			if(settings.FLOOR_MIRROR)
+			{
+				engine.grid.mirror = grid_object.clone();
+				engine.grid.mirror.position.z -= 1/100;
+				engine.grid.reflection = new THREE.CubeCamera(0.01,100000,128);
+				engine.scene.add(engine.grid.reflection);
+				floorMaterial.envMap = engine.grid.reflection.renderTarget;
+				engine.grid.reflection.position.copy(grid_object.position);
+				//engine.grid.reflection.position.z = -250;
+			}
+		}
 		grid_object.position.z = -2/100;//move down 2/100 units for render glitch
-		//grid_object.scale.set(settings.GRID_SIZE,settings.GRID_SIZE,1);
-		//console.log("gridx: "+grid_object.position.x+"  gridy: "+grid_object.position.y);
-		grid_object.geometry.dynamic = true;//is this needed?
-		
-		if(settings.FLOOR_MIRROR)
-		{
-			engine.grid.mirror = grid_object.clone();
-			engine.grid.mirror.position.z -= 1/100;
-			engine.grid.reflection = new THREE.CubeCamera(0.01,100000,128);
-			engine.scene.add(engine.grid.reflection);
-			floorMaterial.envMap = engine.grid.reflection.renderTarget;
-			engine.grid.reflection.position.copy(grid_object.position);
-			//engine.grid.reflection.position.z = -250;
-		}
 	}
 	
 //	return grid_object;
-	engine.grid.add(grid_object);//add to global object
+	if(grid_object) engine.grid.add(grid_object);//add to global object
 	
 
 	//SPAWNS add to map data
@@ -132,7 +156,7 @@ engine.walls = new THREE.Object3D();
 	for (var r = 0; r < allWalls.length; r++) {
 		var wall_points = new Array();
 		if(settings.HIGH_RIM)
-			var wall_height = Math.pow(2,16);
+			var wall_height = settings.HIGH_RIM_HEIGHT;
 		else
 			var wall_height = settings.LOW_RIM_HEIGHT; //4
 		if (allWalls[r].hasAttribute("height")) { wall_height = allWalls[r].getAttribute("height")*1; }

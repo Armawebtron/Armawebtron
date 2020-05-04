@@ -200,7 +200,13 @@
 			<Item type="exitmenu" text="&lt;- Go Back"/>
 		</Menu>
 			<Menu id="detail" title="Detail Settings">
-				<Item type="list" call="aamenurender" text="Menu Background Rendering" title="How the background is rendered. Default: Image">
+				<Item type="list" var="FLOOR_DETAIL" text="Floor Detail" title="">
+					<Option value="0" text="No Grid" />
+					<Option value="1" text="Line Grid" />
+					<Option value="2" text="Textured Floor (Standard quality)" />
+					<Option value="3" text="Textured Floor (Maximum quality)" />
+				</Item>
+				<Item type="list" call="aamenurender_nocallonreq" text="Menu Background Rendering" title="How the background is rendered. Default: Image">
 					<Option value="img" text="Image" />
 					<Option value="css" text="CSS" />
 					<Option value="css_rot" text="CSS+Rotation" />
