@@ -306,12 +306,18 @@ class Zone
 			case "fortress":
 				if(engine.gtime > 0)
 				{
-					this.rotationSpeed += timestep*settings.FORTRESS_CONQUEST_RATE;
-					if(this.rotationSpeed > settings.ZONE_SPIN_SPEED*16)
+					if(this.team == engine.teams.indexOf(cycle.team))
 					{
-						engine.console.print(cycle.getColoredName()+"0xRESETT conquered a fortress zone.\n");
-						this.type = "null"; this.expansion = -10;
-						engine.declareRoundWinner = cycle.name;
+					}
+					else
+					{
+						this.rotationSpeed += timestep*settings.FORTRESS_CONQUEST_RATE;
+						if(this.rotationSpeed > settings.ZONE_SPIN_SPEED*16)
+						{
+							engine.console.print(cycle.getColoredName()+"0xRESETT conquered a fortress zone.\n");
+							this.type = "null"; this.expansion = -10;
+							engine.declareRoundWinner = cycle.name;
+						}
 					}
 				}
 				break;
