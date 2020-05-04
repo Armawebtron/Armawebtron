@@ -100,7 +100,7 @@ settings = {
 	FLOOR_MIRROR: false,
 	FLOOR_MIRROR_INT: 1,
 	
-	FLOOR_DETAIL: 4, //0=off, 1=line, 2=good, 3=best (4 is a hack to choose between 2 and 3 based on software or hardware renderer)
+	FLOOR_DETAIL: 3, //0=off, 1=line, 2=good, 3=best
 	
 	CYCLE_TEXTURES: ["textures/cycle_body.png","textures/cycle_wheel.png"],
 	
