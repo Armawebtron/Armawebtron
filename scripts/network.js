@@ -165,7 +165,8 @@ function connectionHandler(e)
 					});
 					console.log(data);
 					
-					engine.players[data.netid].spawn(cycleinfo,false);
+					if(data.alive) engine.players[data.netid].spawn(cycleinfo,false);
+					else if(data.netid == engine.activePlayer) changeViewTarget();
 					
 					audioMixing(engine.players[data.netid]);
 				}
@@ -174,6 +175,8 @@ function connectionHandler(e)
 					engine.players[data.netid].name = data.name;
 					engine.players[data.netid].cycleColor = data.cycleColor;
 					engine.players[data.netid].tailColor = data.tailColor;
+					if(data.alive) engine.players[data.netid].spawn({x:data.x||0, y:data.y||0, z:data.z||0, dir:data.dir||0},false);
+					else if(data.netid == engine.activePlayer) changeViewTarget();
 				}
 			}
 			break;
