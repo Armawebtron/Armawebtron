@@ -160,14 +160,13 @@ class Player extends THREE.Object3D
 		var wmap = this.walls.map, wallmod;
 		for(var x=1,len=wmap.length;x<len;x++)
 		{
-			if(full === true)
+			if(full === true || !this.walls.children[x-1])
 			{
 				this.walls.add(wallmod = newWall(this.tailColor,wmap[x-1][0],wmap[x-1][1],wmap[x-1][2]));
 			}
 			else
 			{
 				wallmod = this.walls.children[x-1];
-				if(wallmod == undefined) break;
 				wallmod.position.set(wmap[x-1][0],wmap[x-1][1],wmap[x-1][2]||0);
 			}
 			wallmod.scale.x = (wmap[x][0]-wmap[x-1][0])/wallmod.size;
