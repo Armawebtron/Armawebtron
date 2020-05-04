@@ -27,7 +27,7 @@ class Team
 		}
 		return false;
 	}
-	spawn(respawn=true,update=true)
+	spawn(respawn=true,update=true,ifAlive=true)
 	{
 		// Player 0 spawns in center, 1 on right, 2 on left, 3 on right, 4 on left, etc
 		if(this.members.length > 0)
@@ -35,17 +35,17 @@ class Team
 			var t = cdir(this.dir);
 			var addx = (t[0]*settings.SPAWN_WINGMEN_SIDE)+(t[1]*settings.SPAWN_WINGMEN_BACK),
 				addy = (t[1]*settings.SPAWN_WINGMEN_SIDE)+(t[0]*settings.SPAWN_WINGMEN_BACK);
-			this.members[0].spawn({
+			if(ifAlive || !this.members[0].alive) this.members[0].spawn({
 				x: this.x, y: this.y, z: this.z, dir: this.dir
 			},respawn,update);
 			for(var i=1;i<this.members.length;i+=2)
 			{
-				this.members[i].spawn({
+				if(ifAlive || !this.members[i].alive) this.members[i].spawn({
 					x: this.x+addx*(i/2), y: this.y+addy*(i/2), z: this.z, dir: this.dir
 				},respawn,update);
 				if(this.members[i+1])
 				{
-					this.members[i+1].spawn({
+					if(ifAlive || !this.members[i+1].alive) this.members[i+1].spawn({
 						x: this.x-addx*(i/2), y: this.y-addy*(i/2), z: this.z, dir: this.dir
 					},respawn,update);
 				}

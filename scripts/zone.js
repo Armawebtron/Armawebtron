@@ -306,6 +306,10 @@ class Zone
 			case "fortress":
 				if(engine.gtime > 0)
 				{
+					if(settings.BASE_RESPAWN)
+					{
+						engine.teams[this.team].spawn(true,true,false);
+					}
 					if(this.team == engine.teams.indexOf(cycle.team))
 					{
 					}
