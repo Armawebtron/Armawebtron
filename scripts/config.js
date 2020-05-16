@@ -218,8 +218,6 @@ settings = {
 	HACK_TURN_LEFT_WHEN_POSSIBLE: 0,
 	HACK_TURN_RIGHT_WHEN_POSSIBLE: 0,
 	HACK_TURN_SENSOR_DIST: 5,
-	
-	CHATBOT_ALWAYS_ACTIVE: false,
 
 	//NETWORK
 	CONNECT_PORT: 5331,
@@ -253,6 +251,7 @@ game_settings_default = {
 	AI_FORCE_BRAKE: false,
 	AI_TEAM: false,
 	AI_DUAL_COLOR_NAME: false,
+	CHATBOT_ALWAYS_ACTIVE: false,
 	//CYCLE
 	CYCLE_ACCEL: 10,
 	CYCLE_ACCEL_ENEMY: 1,
@@ -1049,6 +1048,7 @@ var netChanged = [];
 function netcfg(setting,value)
 {
 	setting = setting.toUpperCase();
+	if(setting.indexOf("ROUND_") == 0 || setting.indexOf("RESOURCE_REPOSITORY_") == 0) return;
 	for(var i=sets.length-1;i>=0;--i)
 	{
 		if(sets[i] == setting)
