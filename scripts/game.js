@@ -40,7 +40,8 @@ function endRound()
 	engine.roundCommencing = true;
 	//engine.hud.hide();
 	if(engine.hud) engine.hud.game.style.opacity = 0;
-	engine.console.print("Deleting objects...\n",false);
+	engine.console.print("Clearing grid...\n",false);
+	if(engine.renderer) engine.renderer.clear();
 	if(!engine.network)
 	{
 		if(settings.ROUND_CENTER_MESSAGE != "")
@@ -442,7 +443,7 @@ function loadRound(dlmap)
 	
 	engine.mapXML = xmlify(engine.mapString);
 
-	engine.console.print("Creating objects...\n",false);
+	engine.console.print("Preparing grid...\n",false);
 	
 	if(window.svr) window.svr.clients.forEach(function(ws){ws.send('{"type":"newRound"}')});
 	
