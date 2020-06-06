@@ -96,7 +96,7 @@ function connectionHandler(e)
 			engine.connection.timeSync = false;
 			break;
 		case "version": 
-			engine.connection.send(JSON.stringify({type:"version",data:0.7}));
+			engine.connection.send(JSON.stringify({type:"version",data:0.71}));
 		break;
 		case "endRound": if(inround()) endRound(); break;
 		case "newRound": 
@@ -127,6 +127,7 @@ function connectionHandler(e)
 			//engine.totalPauseTime += (msg.gtime||0)-engine.gtime;
 			if(msg.gtime !== undefined) engine.gtime = msg.gtime;
 			break;
+		case "del":
 		case "leave":
 			if(engine.players[msg.data])
 			{
@@ -139,7 +140,10 @@ function connectionHandler(e)
 					changeViewTarget(1);
 				}
 				if(engine.players[msg.data].alive) engine.players[msg.data].kill();
-				engine.players.splice(msg.data,1);
+				if(msg.type == "del")
+					delete engine.players[msg.data];
+				else
+					engine.players.splice(msg.data,1);
 				updateScoreBoard();
 			}
 			else
