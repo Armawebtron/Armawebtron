@@ -291,7 +291,7 @@ function processPlayer(x,cfg)
 		else
 		{
 			var minPCount = 0, minPlayers = Infinity, minTeam;
-			for(var x=engine.teams.length-1;x>=0;--x)
+			for(var x=engine.teams.length-1;x>=0;--x) if(engine.teams[x])
 			{
 				if(engine.teams[x].members.length == minPlayers)
 				{
@@ -424,7 +424,7 @@ function ensurePlayersSane(removeAIs=true)
 	if(window.svr) 
 	{
 		var teams = [];
-		for(var x=engine.teams.length-1;x>=0;--x)
+		for(var x=engine.teams.length-1;x>=0;--x) if(engine.teams[x])
 		{
 			teams.push({id:x,name:engine.teams[x].name,x:engine.teams[x].x,y:engine.teams[x].y,z:engine.teams[x].z});
 		}

@@ -354,6 +354,9 @@ function disconnectFromGame()
 	engine.connection = engine.network = false;
 	engine.viewTarget = engine.activePlayer = 0;
 	
+	engine.players.splice(0);
+	engine.teams.splice(0);
+	
 	for(var i=netChanged.length-1;i>=0;--i)
 	{
 		chsetting(netChanged[i][0],netChanged[i][1],true);
