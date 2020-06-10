@@ -17,14 +17,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-function doNewRound()
+(function(game){
+
+/*if(this.require)
+{
+	if(typeof(THREE) === "undefined")
+		var THREE = require('./lib/Three.js');
+	if(typeof(Zone) === "undefined")
+		var Zone = require("./zone.js");
+}*/
+
+game.doNewRound = function()
 {
 	if(engine.uRound !== false) { clearTimeout(engine.uRound); engine.uRound = false; }
-	endRound();
-	setTimeout(newRound,engine.dedicated?300:0); //give clients an opportunity to sync their data
+	game.endRound();
+	setTimeout(game.newRound,engine.dedicated?300:0); //give clients an opportunity to sync their data
 }
 
-function endRound()
+game.endRound = function()
 {
 	if(window.svr) 
 	{
@@ -44,7 +54,7 @@ function endRound()
 	if(engine.renderer) engine.renderer.clear();
 	if(!engine.network)
 	{
-		if(settings.ROUND_CENTER_MESSAGE != "")
+		//if(settings.ROUND_CENTER_MESSAGE != "")
 		{
 			centerMessage(settings.ROUND_CENTER_MESSAGE);
 		}
@@ -61,14 +71,14 @@ function endRound()
 	//if(!engine.network) engine.players.splice(0);
 }
 
-function endGame()
+game.end = function()
 {
-	endRound();
+	game.endRound();
 	engine.players.splice(0);
 	engine.round = 0;
 }
 
-function playGame()
+game.play = function()
 {
 	engine.playGame = true;
 	if(!engine.scene)
@@ -80,7 +90,7 @@ function playGame()
 		engine.paused = false;
 		if(engine.hud) engine.hud.show();
 	}
-	hideMenu(); newRound();
+	hideMenu(); game.newRound();
 	engine.inputState = 'game'; //change input state to accept game controls
 	if(engine.network)
 	{
@@ -104,15 +114,15 @@ function revertMap()
 	{
 		var mapfile = settings.RESOURCE_REPOSITORY_CACHE+(settings.MAP_FILE.replace(/\(.+\)/,""));
 		engine.console.print("Downloading map from "+mapfile+"...\n",false);
-		httpGetAsync(mapfile,loadRound,function()
+		httpGetAsync(mapfile,game.loadRound,function()
 		{
 			engine.console.print("Unable to load map file. Ignoring for now...\n",false);
-			loadRound();
+			game.loadRound();
 		});
 	}
 }
 
-function newRound()
+game.newRound = function()
 {
 	engine.roundCommencing = true;
 	/////////////LIGHTS
@@ -163,15 +173,14 @@ function newRound()
 	{
 		var mapfile = settings.RESOURCE_REPOSITORY_SERVER+(settings.MAP_FILE.replace(/\(.+\)/,""));
 		engine.console.print("Downloading map from "+mapfile+"...\n",false);
-		httpGetAsync(mapfile,loadRound,revertMap);
-		//loadRound(httpGet(mapfile));
+		httpGetAsync(mapfile,game.loadRound,revertMap);
 	}
 	else
 	{
-		loadRound();
+		game.loadRound();
 	}
 }
-function teamColor(id)
+game.teamColor = function(id)
 {
 	id += 1;
 	if(settings["TEAM_NAME_"+id])
@@ -320,7 +329,7 @@ function processPlayer(x,cfg)
 		cycle.team.members.push(cycle);
 	}
 }
-function ensurePlayersSane(removeAIs=true)
+game.processPlayers = function(removeAIs=true)
 {
 	var numAIs = 0, numPlay = 0, numSpec = 0, numWantPlay = 0;
 	for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x])
@@ -433,7 +442,7 @@ function ensurePlayersSane(removeAIs=true)
 	}
 }//*/
 
-function loadRound(dlmap)
+game.loadRound = function(dlmap)
 {
 	if(typeof(dlmap) != "undefined")
 	{
@@ -480,7 +489,7 @@ function loadRound(dlmap)
 	//CYCLE
 	if(!engine.network)
 	{
-		ensurePlayersSane();ensurePlayersSane();
+		game.processPlayers();game.processPlayers();
 		if(engine.round == 0)
 		{
 			engine.console.print("Resetting scores...\n");
@@ -503,7 +512,7 @@ function loadRound(dlmap)
 	try{engine.camera.lookAt( new THREE.Vector3(engine.players[engine.viewTarget].position.x,engine.players[engine.viewTarget].position.y,engine.player[engine.viewTarget].position.z) );}
 	catch(e){engine.camera.lookAt( new THREE.Vector3(engine.logicalBox.center.x*engine.REAL_ARENA_SIZE_FACTOR,engine.logicalBox.center.y*engine.REAL_ARENA_SIZE_FACTOR,0) );}
 	
-	updateScoreBoard();
+	game.updateScoreBoard();
 	
 	engine.lastGameTime = engine.lastRenderTime = engine.fpsTime = engine.timeStart = performance.now();
 	engine.totalPauseTime = 0;
@@ -513,26 +522,16 @@ function loadRound(dlmap)
 	engine.winner = undefined;
 	engine.roundCommencing = false;
 	
-	getGoing();
+	game.start();
 
 }//end of init main
 
-function game(oneoff=false)
+game.run = function(oneoff=false)
 {
 	if(!engine.roundCommencing && !engine.paused) 
 	{
-		if(engine.network)
-		{
-			var cycle = engine.players[engine.activePlayer],data={},len=0;
-			if(cycle.braking != cycle.brakingPrev) {data.braking=cycle.braking; cycle.brakingPrev=cycle.braking; ++len;}
-			if(cycle.boosting != cycle.boostingPrev) {data.boosting=cycle.boosting; cycle.boostingPrev=cycle.boosting; ++len;}
-			
-			if(len > 0)
-			{
-				engine.connection.send(JSON.stringify({type:"playdata",data:data}));
-			}
-		}
-		if(!oneoff && settings.GAME_LOOP != 1) {setTimeout(game,1000/settings.DEDICATED_FPS); engine.gameRunning = true;}
+		if(engine.network) engine.network.syncPlayData();
+		if(!oneoff && settings.GAME_LOOP != 1) {setTimeout(game.run,1000/settings.DEDICATED_FPS); engine.gameRunning = true;}
 		//time handlers and delta
 		var timenow = performance.now()/settings.TIME_FACTOR;
 		var rDelta = (timenow-engine.lastGameTime);
@@ -708,7 +707,7 @@ function game(oneoff=false)
 		}
 		else if(!engine.network && typeof(engine.winner) == "undefined")
 		{
-			checkForWinner();
+			game.checkForWinner();
 		}
 		
 		if(!engine.network)
@@ -773,7 +772,7 @@ function game(oneoff=false)
 									zone.lastHitCycle.addScore(1);
 								}
 							}
-							engine.winner = false; startNewRound();
+							engine.winner = false; game.reqNewRound();
 						}
 						else
 						{
@@ -942,7 +941,7 @@ function game(oneoff=false)
 	}
 }
 
-function doDeath(cycle,escape=false)
+game.killBlame = function(cycle,escape=false)
 {
 	if(escape || (cycle.sensor.nearestobj == "rim" && !cycle.sensor.lastnonselfobj))
 	{
@@ -980,26 +979,20 @@ function doDeath(cycle,escape=false)
 	cycle.kill();
 }
 
-function simulatePlayer(cycle,timestep)
+game.start = function()
 {
-	console.warn("Deprecated call to simulatePlayer");
-	cycle.update(timestep);
-}
-
-function getGoing()
-{
-	if(!engine.gameRunning) game();
+	if(!engine.gameRunning) game.run();
 	if(!engine.renderRunning) render();
 }
 
-function pauseRender()
+game.pause = function()
 {
 	engine.paused = true;//cuts off the loop
 	engine.startOfPause = performance.now();
 	audioStop();
 }
 
-function unpauseRender()
+game.unpause = function()
 {
 	for(var ctrl in engine.controls)
 	{
@@ -1013,11 +1006,11 @@ function unpauseRender()
 		engine.lastGameTime = engine.lastRenderTime = engine.fpsTime = performance.now();//resets delta so we don't pretend the game should have been playing the entire time we were paused
 		var endOfPause = performance.now();
 		engine.totalPauseTime += (endOfPause - engine.startOfPause);
-		getGoing();//starts the loop again
+		game.start();//starts the loop again
 	}
 }
 
-function changeViewTarget(a=1,forcechange=false) 
+game.changeViewTarget = function(a=1,forcechange=false) 
 {
 	if(engine.dedicated) return;
 	if(a != 0)
@@ -1071,7 +1064,7 @@ function changeViewTarget(a=1,forcechange=false)
 	engine.console.print("Watching "+engine.players[engine.viewTarget].name+"...\n");
 }
 
-function checkForWinner()
+game.checkForWinner = function()
 {
 	var alivecount = aliveaicount = 0;
 	var numPlay = 0;
@@ -1115,17 +1108,11 @@ function checkForWinner()
 		}
 		if(engine.asendtm > 0) {engine.asendtm = 0; engine.timemult = 1; centerMessage("Time Warp!",0);}
 		setTimeout(function(){centerMessage("Winner: "+engine.winner.name)},1000);
-		if(!window.svr || window.svr.clients.size != 0) startNewRound();
-	}//*/
-	/*if(aliveaicount == alivecount)
-	{
-		engine.console.print("Vroom!");
-		engine.timemult = 2;
-		engine.asendtm = 1.1;
-	}//*/
+		if(!window.svr || window.svr.clients.size != 0) game.reqNewRound();
+	}
 }
 
-function startNewRound()
+game.reqNewRound = function()
 {
 	if(typeof(engine.winner) == "undefined") engine.winner = null;
 	var endin = 4000;
@@ -1152,10 +1139,10 @@ function startNewRound()
 		engine.round = 0;
 		endin += 4000;
 	}
-	if(!settings.ROUND_WAIT) engine.uRound = setTimeout(doNewRound,endin);
+	if(!settings.ROUND_WAIT) engine.uRound = setTimeout(game.doNewRound,endin);
 }
 
-function updateScoreBoard()
+game.updateScoreBoard = function()
 {
 	if(window.svr)
 	{
@@ -1182,13 +1169,5 @@ function updateScoreBoard()
 	}
 	playersSB.innerHTML = tmp;
 }
-/*function updateScoreBoard()
-{
-	var scoreboard = "";
-	for(var x=engine.players.length-1;x>=0;--x) if(typeof(engine.players[x]) != "undefined")
-	{
-		var cycle = engine.players[x];
-		scoreboard += (cycle.chatting?"*":" ")+removeColors(cycle.name)+" "+cycle.alive?"Yes":"No"+" "+cycle.score+" "+cycle.ping+" ";
-	}
-}*/
 
+}(typeof(exports) === 'undefined' ? this.game = {} : exports));

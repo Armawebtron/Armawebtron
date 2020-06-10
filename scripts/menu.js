@@ -389,7 +389,7 @@ function menu(act,from=false)
 			return eval(arg);
 			break;
 		case "leave"://return to main menu from pause state
-			endGame(); disconnectFromGame();
+			game.end(); disconnectFromGame();
 			engine.menus = []; menu("menu:main");
 			document.getElementById('menu').className = "noselect mainbg_"+settings.MENU_RENDER;
 			aamenurender(); showMenu();
@@ -419,7 +419,7 @@ function pauseMenuToggle()
 		}
 		else
 		{
-			pauseRender();
+			game.pause();
 		}
 		menuSetup(true);
 		menu('menu:pause'); showMenu();
@@ -430,7 +430,7 @@ function pauseMenuToggle()
 		{
 			engine.players[engine.activePlayer].chatting=false;
 		}
-		unpauseRender();
+		game.unpause();
 		hideMenu(); engine.inputState = 'game';
 	}
 }

@@ -24,7 +24,7 @@ function render()
 	if(!engine.roundCommencing && !engine.paused)
 	{
 		engine.renderRunning = true;
-		if(settings.GAME_LOOP > 0) game(true); //update game right before render
+		if(settings.GAME_LOOP > 0) game.run(true); //update game right before render
 		if(settings.REDRAW_MODE == 0) requestAnimationFrame(render); 
 		else setTimeout(render,1000/settings.TARGET_FPS);
 		draw(); //actual 3d draw

@@ -17,6 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+if(typeof(global) == undefined)
+	global = window;
+
 //resize window listener function
 var resizeWindow = function()
 {
@@ -32,14 +35,21 @@ var resizeWindow = function()
 	}
 };
 
-function init() 
+global.init = function() 
 {
-	//set renderer after detecting available renderer
-	if (Detector.webgl) { engine.renderer = new THREE.WebGLRenderer({ antialias: true });}
-	else { engine.renderer = new THREE.SoftwareRenderer(); engine.usingWebgl = false; }
-	engine.renderer.setSize(window.innerWidth, window.innerHeight);
-	document.body.appendChild(engine.renderer.domElement);
+	//let's load settings first.
+	loadsettingcfgs();
+	window.onbeforeunload = saveusercfg;
+	if(!engine.dedicated)
+	{
+		//set renderer after detecting available renderer
+		if (Detector.webgl) { engine.renderer = new THREE.WebGLRenderer({ antialias: settings.ANTIALIAS });}
+		else { engine.renderer = new THREE.SoftwareRenderer(); engine.usingWebgl = false; }
+		engine.renderer.setSize(window.innerWidth, window.innerHeight);
+		document.body.appendChild(engine.renderer.domElement);
+	}
 	engine.scene = new THREE.Scene();
+	if(engine.dedicated) return;
 	loadTextures();
 	window.addEventListener('touchstart',touchControl);
 	window.addEventListener('resize',resizeWindow);
@@ -53,11 +63,11 @@ function gameLostTab()
 
 function gameLostFocus()
 {
-	if(engine.inputState == 'game') { engine.players[engine.activePlayer].chatting = true; updateScoreBoard() }
+	if(engine.inputState == 'game') { engine.players[engine.activePlayer].chatting = true; game.updateScoreBoard() }
 }
 function gameGainedFocus()
 {
-	if(engine.inputState == 'game') { engine.players[engine.activePlayer].chatting = false; updateScoreBoard() }
+	if(engine.inputState == 'game') { engine.players[engine.activePlayer].chatting = false; game.updateScoreBoard() }
 }
 
 window.onblur = gameLostFocus;

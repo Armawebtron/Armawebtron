@@ -17,9 +17,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+if(typeof(global) === "undefined")
+	global = window;
 
-
-function getPlayer(name)
+global.getPlayer = function(name)
 {
 	name = removeColors(name).filter();
 	var matches = [];
@@ -102,7 +103,7 @@ function retToLastSafe(cycle,w1x,w1y,w2x,w2y)
 	}
 	if(engine.haswall) recalcCurrWall(cycle);
 }
-function getCycleSensors(full=false)
+global.getCycleSensors = function(full=false)
 {
 	var oneline = "";
 	var range = settings.CYCLE_SENSORS_RANGE;
@@ -360,7 +361,7 @@ function getCycleSensors(full=false)
 	}
 }
 
-function maxSpeed()
+global.maxSpeed = function()
 {
 	if(settings.CYCLE_SPEED_DECAY_ABOVE > 0 )
 		var max_cs = settings.CYCLE_SPEED / settings.CYCLE_SPEED_DECAY_ABOVE;
@@ -370,32 +371,9 @@ function maxSpeed()
 	return Math.max(max_cs,max_fastest);
 }
 
-function handleChat(cycle,output)
+global.handleChat = function(cycle,output)
 {
 	var split = output.split(" ");
-	/*if(split[0][0] == "/")
-	{
-		switch(split[0])
-		{
-			case "/console": case "/admin":
-				if(!engine.dedicated || split[0] != "/console")
-				{
-					split.shift();
-					loadcfg(split.join(" "));
-					break;
-				}
-			default:
-				if(engine.network) 
-				{
-					
-				}
-				else
-				{
-					engine.console.print('Unknown chat command "'+split[0]+'".\n');
-				}
-				break;
-		}
-	}*/
 	if(split[0] == "/console" && !engine.dedicated)
 	{
 		split.shift();
@@ -440,7 +418,7 @@ function handleChat(cycle,output)
 
 if(typeof(document) == "undefined")
 {
-	function centerMessage(msg,time=5000)
+	global.centerMessage = function(msg,time=5000)
 	{
 		console.log(msg);
 		if(window.svr)
@@ -453,7 +431,7 @@ if(typeof(document) == "undefined")
 }
 else
 {
-	function centerMessage(msg,time=5000)
+	global.centerMessage = function(msg,time=5000)
 	{
 		var cm = document.getElementById("centerMessage");
 		cm.innerHTML = replaceColors(htmlEntities(msg));
@@ -463,7 +441,7 @@ else
 	}
 }
 
-function toLadderLog(event,params)
+global.toLadderLog = function(event,params)
 {
 	if(settings["LADDERLOG_WRITE_"+event])
 	{

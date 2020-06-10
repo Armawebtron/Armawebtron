@@ -31,7 +31,7 @@
 	</Menu>
 	<!-- General game configuration -->
 	<Menu id="game" title="Play Game">
-		<Item type="js" onenter="playGame()" style="display:inline-block;" text="Locally"/>
+		<Item type="js" onenter="game.play()" style="display:inline-block;" text="Locally"/>
 		<Item type="submenu" onenter="game_setup" style="font-size:16pt;" text="(config)"/>
 		<Item type="submenu" onenter="network" text="Network"/>
 		<Item type="exitmenu" text="&lt;- Go Back"/>
@@ -328,7 +328,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA."
 		<Item type="exitmenu" text="&lt;- Go Back"/>
 	</Menu>
 	<Menu id="preset_loaded" title="Preset Loaded">
-		<Item type="js" onenter="playGame()" text="Play"/>
+		<Item type="js" onenter="game.play()" text="Play"/>
 		<Item type="submenu" onenter="input_conf" text="Set Controls"/>
 		<Item type="exitmenu" text="Back to main menu"/>
 	</Menu>

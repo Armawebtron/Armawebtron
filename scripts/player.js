@@ -25,7 +25,7 @@ class Player extends THREE.Object3D
 	{
 		this.score = (x*1)||0;
 		engine.playersByScore.sort(function(a,b){return b.score-a.score});
-		if(engine.playersByScore.indexOf(this) > -1) updateScoreBoard();
+		if(engine.playersByScore.indexOf(this) > -1) game.updateScoreBoard();
 	}
 	addScore(x)
 	{
@@ -224,7 +224,7 @@ class Player extends THREE.Object3D
 		if(this.audio) this.audio.panner.connect(ctx.destination);
 		
 		engine.scene.add(this);
-		if(update) updateScoreBoard();
+		if(update) game.updateScoreBoard();
 		
 		if(this == engine.players[engine.activePlayer]) engine.viewTarget = engine.activePlayer;
 	}
@@ -234,14 +234,14 @@ class Player extends THREE.Object3D
 		this.alive = false; this.dedtime = performance.now();
 		engine.scene.remove(this);
 		if(this == engine.players[engine.viewTarget] && !engine.dedicated)
-			setTimeout(function(){if(!engine.players[engine.viewTarget].alive)changeViewTarget()},3000);
+			setTimeout(function(){if(!engine.players[engine.viewTarget].alive)game.changeViewTarget()},3000);
 		if(this.audio)
 		{
 			this.audio.panner.disconnect();
 			playSound(bufferLoader.bufferList[this.engineType+6],0.5,1,false,ctx.destination);
 			spawnExplosion(this.position,this.cycleColor,this.tailColor);
 		}
-		updateScoreBoard();
+		game.updateScoreBoard();
 		
 		if(this.hasFlag)
 		{
@@ -261,7 +261,7 @@ class Player extends THREE.Object3D
 					if(engine.players[x].AI) aliveAI++;
 				}
 			}
-			if(alive==aliveAI) changeViewTarget(0); //this will handle the finish type stuff
+			if(alive==aliveAI) game.changeViewTarget(0); //this will handle the finish type stuff
 		}
 	}
 	killAt(position,y=false,z=false)
@@ -463,7 +463,7 @@ class Player extends THREE.Object3D
 				{
 					if(!engine.network)
 					{
-						doDeath(this,escape);
+						game.killBlame(this,escape);
 					}
 				}
 				else if(

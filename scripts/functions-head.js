@@ -1,6 +1,9 @@
 ﻿//FUNC
 
-function gafd(a,b) //! returns angle from xdir, ydir
+if(typeof(global) === "undefined")
+	global = window;
+
+global.gafd = function(a,b) //! returns angle from xdir, ydir
 {
 	var c = 180 * Math.atan2(b,a) / Math.PI;
 	0 > c && (c += 360);
@@ -8,14 +11,14 @@ function gafd(a,b) //! returns angle from xdir, ydir
 	return c
 }
 
-function cdir(theta) //! Gets [xdir, ydir] from angle
+global.cdir = function(theta) //! Gets [xdir, ydir] from angle
 {
 	var x = Math.cos(theta);
 	var y = Math.sin(theta);
 	return [x,y];
 }
 
-function fileOpen(callback,type="plain/text")
+global.fileOpen = function(callback,type="plain/text")
 {
 	if(window.FileReader)
 	{
@@ -53,7 +56,7 @@ function fileOpen(callback,type="plain/text")
 	}
 }
 
-function fileSave(filename,data,type="plain/text") //Based on https://stackoverflow.com/a/30832210
+global.fileSave = function(filename,data,type="plain/text") //Based on https://stackoverflow.com/a/30832210
 {
 	//TODO: get type from filename / data ?
 	var file = new Blob([data],{type:type});
@@ -73,7 +76,7 @@ function fileSave(filename,data,type="plain/text") //Based on https://stackoverf
 	}
 }
 
-function httpGet(url) //! gets HTTP requests synchroniously. DEPRECATED and wont work in nodejs
+global.httpGet = function(url) //! gets HTTP requests synchroniously. DEPRECATED and wont work in nodejs
 {
 	var xmlHttp = new XMLHttpRequest();
 	xmlHttp.open("GET",url,false);
@@ -81,7 +84,7 @@ function httpGet(url) //! gets HTTP requests synchroniously. DEPRECATED and wont
 	return xmlHttp.responseText;
 }
 
-function httpGetAsync(url,callback,errcb=false) //! gets HTTP requests asynchronously
+global.httpGetAsync = function(url,callback,errcb=false) //! gets HTTP requests asynchronously
 {
 	if(window.XMLHttpRequest)
 	{
@@ -149,7 +152,7 @@ function httpGetAsync(url,callback,errcb=false) //! gets HTTP requests asynchron
 	}
 }
 
-function xmlify(string) //! Gets XML object from string.
+global.xmlify = function(string) //! Gets XML object from string.
 {
 	var val;
 	if (window.DOMParser) { val = (new DOMParser).parseFromString(string, "text/xml"); } 
@@ -157,7 +160,7 @@ function xmlify(string) //! Gets XML object from string.
 	return val;
 }
 
-function getVarFromString(string) //! Find variable parameters from string, used in parsing menus
+global.getVarFromString = function(string) //! Find variable parameters from string, used in parsing menus
 {
 	var splice = string.split(".");
 	var variable = settings, var2 = commands;
@@ -169,12 +172,12 @@ function getVarFromString(string) //! Find variable parameters from string, used
 	return [variable,splice[splice.length-1],var2];
 }
 
-function htmlEntities(str) //! Get HTML entities for some characters.
+global.htmlEntities = function(str) //! Get HTML entities for some characters.
 {
 	return (""+str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-function colorIsDark(r,g,b)
+global.colorIsDark = function(r,g,b)
 {
 	return (
 		(	r < 255*settings.FONT_MIN_R && 
@@ -184,7 +187,7 @@ function colorIsDark(r,g,b)
 	);
 }
 
-function getDarkBGFromHex(hex)
+global.getDarkBGFromHex = function(hex)
 {
 	var c = new THREE.Color(hex);
 	if(colorIsDark(c.r,c.g,c.b))
@@ -193,7 +196,7 @@ function getDarkBGFromHex(hex)
 		return "none";
 }
 
-function replaceColors(str)
+global.replaceColors = function(str)
 {
 	if(typeof(str) == "undefined") return typeof(str);
 	var dark = "class=darktext";
@@ -239,7 +242,7 @@ function replaceColors(str)
 	return str;
 }
 
-function removeColors(str)
+global.removeColors = function(str)
 {
 	return str.replace(settings.VERIFY_COLOR_STRICT?/0x([0-9A-Fa-f]{6}|RESETT)(.*?)(?=0x(?:[0-9A-Fa-f]{6}|RESETT)|$)/gm : /0x(.{6})(.*?)(?=0x(?:.{6})|$)/gm,function(x){return x.substr(8)});
 }
@@ -313,7 +316,7 @@ String.prototype.filter = function() //! Filter illegal player characters. Heavi
 	return out;
 }
 
-function tStringify(str) //! 
+global.tStringify = function(str) //! 
 {
 	str = str.replace(/\$\w*/g,function(i){console.log(i.replace("\$",""));});
 	str = str.replace(new RegExp("@progtitle@",'g'),"3DCycles Web");
@@ -322,9 +325,9 @@ function tStringify(str) //!
 	return str;
 }
 
-function pi(a=1) {return Math.PI*a} //! Finds multiples of PI.
+global.pi = function(a=1) {return Math.PI*a} //! Finds multiples of PI.
 
-function setNewFont(input) //! Gets font from user input. Not used anywhere anymore.
+global.setNewFont = function(input) //! Gets font from user input. Not used anywhere anymore.
 {
 	input = input.toLowerCase();
 	var output = "";
@@ -353,13 +356,13 @@ function setNewFont(input) //! Gets font from user input. Not used anywhere anym
 	return output;
 }
 
-function pointDistance(x1,y1,x2,y2)
+global.pointDistance = function(x1,y1,x2,y2)
 {
   var xs = x2 - x1, ys = y2 - y1;
   return Math.sqrt( xs*xs + ys*ys );
 }
 
-function getLogicalBox(string) //! Parses map file and returns [x, y, minx, miny, maxx, maxy] or false on failure.
+global.getLogicalBox = function(string) //! Parses map file and returns [x, y, minx, miny, maxx, maxy] or false on failure.
 {
 	var re = /(x|y)\=.-?(\d*.)?\d+/gi;
 	var matches = string.match(re);
@@ -395,11 +398,11 @@ function getLogicalBox(string) //! Parses map file and returns [x, y, minx, miny
 	}
 }
 
-function hasClass(element, cls) {//checks if element has classname, returns true | false
+global.hasClass = function(element, cls) {//checks if element has classname, returns true | false
     return (' ' + element.className + ' ').indexOf(' ' + cls + ' ') > -1;
 }
 
-function relPath(path,rel="/")
+global.relPath = function(path,rel="/")
 {
 	//if(rel.indexOf("/") != 0) rel = "/"+rel;
 	if(rel.indexOf("/",rel.length-1) == -1) rel += "/";
@@ -408,12 +411,12 @@ function relPath(path,rel="/")
 	else return rel+path;
 }
 
-function inround() //! Tries to determine if we're in a round or not.
+global.inround = function() //! Tries to determine if we're in a round or not.
 {
 	return !engine.roundCommencing && engine.gtime >= -4000;
 }
 
-function deg2rad(angle)
+global.deg2rad = function(angle)
 {
 	if(!isFinite(angle)) return angle;
 	angle %= 360;
@@ -421,7 +424,7 @@ function deg2rad(angle)
 	var radians = angle * Math.PI / 180;
 	return radians;
 }
-function rad2deg(radians)
+global.rad2deg = function(radians)
 {
 	if(!isFinite(radians)) return radians;
 	var angle = radians * 180 / Math.PI;
@@ -430,7 +433,7 @@ function rad2deg(radians)
 	return angle;
 }
 
-function normalizeRad(radians)
+global.normalizeRad = function(radians)
 {
 	var pi2 = Math.PI*2;
 	radians = radians%pi2;
@@ -448,7 +451,7 @@ function normalizeRad(radians)
 // Users of this code must verify correctness for their application.
 var dot = function(ux,uy,vx,vy) { return ((ux*vx)+(uy*vy)); };
 var SMALL_NUM = 0.00000001; // anything that avoids division overflow
-function distanceoflines(x1,y1, x2,y2, x3,y3, x4,y4)
+global.distanceoflines = function(x1,y1, x2,y2, x3,y3, x4,y4)
 {
 	var ux=x2-x1,uy=y2-y1;
 	var vx=x4-x3,vy=y4-y3
@@ -521,12 +524,12 @@ function distanceoflines(x1,y1, x2,y2, x3,y3, x4,y4)
 }
 // END
 
-function is_in_circle(p1x, p1y, r1, p2x, p2y, r2=0)
+global.is_in_circle = function(p1x, p1y, r1, p2x, p2y, r2=0)
 {
 	return(r1+r2 > Math.sqrt(Math.pow((p1x-p2x),2)+Math.pow((p1y-p2y),2)))
 }
 
-function lineIntersect(p0_x, p0_y, p1_x, p1_y, p2_x, p2_y, p3_x, p3_y)
+global.lineIntersect = function(p0_x, p0_y, p1_x, p1_y, p2_x, p2_y, p3_x, p3_y)
 {
 	var s1_x = p1_x - p0_x, s1_y = p1_y - p0_y, s2_x = p3_x - p2_x, s2_y = p3_y - p2_y;
 	var s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y),
@@ -585,7 +588,7 @@ encrypt1 = ""+encrypt1;//##############...
 //var str3 = str2.fromEncodedString();
 /**/
 
-function getSuperString() {
+global.getSuperString = function() {
 var superstring = encrypt1.toEncodedString();
 superstring = "lightcycle"+superstring;
 return superstring;

@@ -44,7 +44,7 @@ var keyboardKeyDown = function(e)
 		engine.inputStatePrev = engine.inputState;
 		engine.inputState = "input:console";
 		if(engine.players[engine.activePlayer]) engine.players[engine.activePlayer].chatting = true;
-		updateScoreBoard();
+		game.updateScoreBoard();
 		input.children[0].innerText = "Con:";
 		input.children[1].focus();
 		stopPropagation(e);
@@ -140,7 +140,7 @@ var keyboardKeyDown = function(e)
 				input.style.display = "none";
 				if(engine.players[engine.activePlayer]) engine.players[engine.activePlayer].chatting = false;
 				engine.inputState = engine.inputStatePrev; 
-				updateScoreBoard();
+				game.updateScoreBoard();
 				if(keyCode == 13) //return
 				{
 					switch(specificState[1])
@@ -361,7 +361,7 @@ function gameControl(keycode)
 		engine.inputStatePrev = engine.inputState;
 		engine.inputState = "input:chat";
 		engine.players[engine.activePlayer].chatting = true;
-		updateScoreBoard();
+		game.updateScoreBoard();
 		input.children[0].innerText = "Say:";
 		input.children[1].focus();
 	}
@@ -387,7 +387,7 @@ function gameControl(keycode)
 	{
 		var scoreboard = document.getElementById("scoreboard");
 		scoreboard.style.display = scoreboard.style.display=="none"?"block":"none";
-		updateScoreBoard();
+		game.updateScoreBoard();
 	}
 	if(settings.controls.esc.indexOf(keycode) > -1)
 	{
