@@ -154,6 +154,13 @@ global.getCycleSensors = function(full=false)
 				{
 					var cycle = engine.players[x];
 					var posx = cycle.position.x, posy = cycle.position.y, posz = cycle.position.z;
+					if(cycle.newPos && lineIntersect(posx,posy,cycle.newPos.x,cycle.newPos.y,w1x,w1y,w2x,w2y))
+					{
+						cycle.position.x = cycle.lastpos.x = cycle.newPos.x;
+						cycle.position.y = cycle.lastpos.y = cycle.newPos.y;
+						delete cycle.newPos;
+						return getCycleSensors(full);
+					}
 					if(lineIntersect(posx,posy,cycle.lastpos.x,cycle.lastpos.y,w1x,w1y,w2x,w2y))
 					{
 						retToLastSafe(cycle,w1x,w1y,w2x,w2y);
@@ -253,6 +260,14 @@ global.getCycleSensors = function(full=false)
 						//var posx = engine.players[x].position.x, posy = engine.players[x].position.y, posz = engine.players[x].position.z;
 						if(p1[2]||0 <= engine.players[x].position.z && (p1[2]||0)+1 >= engine.players[x].position.z)
 						{
+						
+							if(engine.players[x].newPos && lineIntersect(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].newPos.x,engine.players[x].newPos.y,p1[0],p1[1],p2[0],p2[1]))
+							{
+								engine.players[x].position.x = engine.players[x].lastpos.x = engine.players[x].newPos.x;
+								engine.players[x].position.y = engine.players[x].lastpos.y = engine.players[x].newPos.y;
+								delete engine.players[x].newPos;
+								return getCycleSensors(full);
+							}
 							if(lineIntersect(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].lastpos.x,engine.players[x].lastpos.y,p1[0],p1[1],p2[0],p2[1]))
 							{
 								retToLastSafe(engine.players[x],p1[0],p1[1],p2[0],p2[1]);
