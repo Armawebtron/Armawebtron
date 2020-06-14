@@ -1,11 +1,12 @@
 {
-	"name": "3dc-web",
-	"description": "A lightcycle game.",
+	"name": "armawebtron",
+	"version": "1.0.0",
+	"description": "A lightcycle game in 3D.",
 	"author": "Glen Harpring",
 	"license": "GPL-2.0-or-later",
 	"main": "electron.js",
 	"scripts": {
-		"start": "electron ."
+		"start": "electron --ignore-gpu-blacklist ."
 	},
 	"devDependencies": {
 		"electron": "^7.0.0"

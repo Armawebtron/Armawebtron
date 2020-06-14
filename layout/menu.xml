@@ -19,11 +19,11 @@
 		<Item type="str" var="player.name" text="Name"/>
 		<Item type="exitmenu" text="Let's go!"/>
 	</Menu>
-	<Menu id="main" title="@progtitle@ Alpha">
+	<Menu id="main" title="@progtitle@ @version@">
 		<Item type="submenu" onenter="game" text="Play"/>
 		<Item type="submenu" onenter="player" text="Customize Player"/>
 		<Item type="submenu" onenter="input" text="Configure Input"/>
-		<Item type="submenu" onenter="system" text="Configure 3DCycles"/>
+		<Item type="submenu" onenter="system" text="Configure @progtitleshort@"/>
 		<Item type="submenu" onenter="about" text="About"/>
 		<!-- <Item type="submenu" onenter="egg" text="&lt;- Go Back"/> -->
 		<!-- alt: <Item type="text" text="" /> <!- - no exit game function, escape will do nothing -->

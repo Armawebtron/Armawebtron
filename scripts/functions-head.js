@@ -319,8 +319,8 @@ String.prototype.filter = function() //! Filter illegal player characters. Heavi
 global.tStringify = function(str) //! 
 {
 	str = str.replace(/\$\w*/g,function(i){console.log(i.replace("\$",""));});
-	str = str.replace(new RegExp("@progtitle@",'g'),"3DCycles Web");
-	str = str.replace(new RegExp("@progtitleshort@",'g'),"3DCycles");
+	str = str.replace(new RegExp("@progtitle@",'g'),"Armawebtron");
+	str = str.replace(new RegExp("@progtitleshort@",'g'),"Armawebtron");
 	str = str.replace(new RegExp("@progname@",'g'),"webtron");
 	return str;
 }
