@@ -1,5 +1,5 @@
 /*
- * 3DCycles - A lightcycle game.
+ * Armawebtron - A lightcycle game.
  * Copyright (C) 2019 Glen Harpring
  *
  * This program is free software; you can redistribute it and/or
