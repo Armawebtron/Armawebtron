@@ -17,9 +17,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-if(typeof(global) == undefined)
-	global = window;
-
 //resize window listener function
 var resizeWindow = function()
 {
@@ -35,7 +32,7 @@ var resizeWindow = function()
 	}
 };
 
-global.init = function() 
+window.init = function() 
 {
 	//let's load settings first.
 	loadsettingcfgs();

@@ -427,7 +427,7 @@ game_settings_default = {
 	BALL_SPEED_HIT_DECAY: 0,
 };
 
-var sets = Object.keys(game_settings_default);
+sets = Object.keys(game_settings_default);
 for(var i=0;i<sets.length;i++)
 {
 	settings[sets[i]] = game_settings_default[sets[i]];
@@ -1013,7 +1013,7 @@ function exportUsrSets()
 	{
 		txt += "INSTANT_CHAT_STRING_1_"+(i+1)+" "+settings.instantchats[i].text+"\n";
 	}
-	txt += "\n# Native 3DCycles user.cfg settings. Most, but not all, also work with Armagetron.\n";
+	txt += "\n# Native Armawebtron user.cfg settings. Most, but not all, also work with Armagetron.\n";
 	for(var i=0;i<uservars.length;i++)
 	{
 		if(typeof(settings[uservars[i]]) == "object")
@@ -1066,7 +1066,7 @@ function netcfg(setting,value)
 	return false;
 }
 
-function saveusercfg()
+window.saveusercfg = function()
 {
 	var usercfg = "";
 	for(var i=0;i<uservars.length;i++)

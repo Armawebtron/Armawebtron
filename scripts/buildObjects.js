@@ -36,7 +36,7 @@ function loadTextures()
 }
 
 //GRID
-function buildGrid()
+window.buildGrid = function()
 {
 	//floor texture stuff
 	engine.grid = new THREE.Object3D();//initialize global object
@@ -150,7 +150,7 @@ function buildGrid()
 
 ///////////////////////////////
 //WALLS
-function buildWalls() {//builds all walls in map and returns object to add to scene
+window.buildWalls = function() {//builds all walls in map and returns object to add to scene
 engine.walls = new THREE.Object3D();
 	var allWalls = engine.mapXML.getElementsByTagName("Wall");
 	for (var r = 0; r < allWalls.length; r++) {
@@ -265,7 +265,7 @@ function buildWall(pointArray, height) {//builds a single <Wall> tag
 
 /////////////////////////////
 //ZONES
-function buildZones()
+window.buildZones = function()
 {
 	engine.zones = new THREE.Object3D();
 	var mapsZones = engine.mapXML.getElementsByTagName("Zone");
@@ -378,7 +378,7 @@ function llll(zone)
 /////////////////////////////
 //CYCLE (TODO:split into cycle model chooser file)
 
-var cycleModel = function(colorCode) {//builds a single cycle
+cycleModel = function(colorCode) {//builds a single cycle
 	var model = new THREE.Object3D();
 
 	if(!engine.dedicated)
@@ -1678,7 +1678,8 @@ var cycleModel = function(colorCode) {//builds a single cycle
 };
 
 
-function newChatArrow()
+//function newChatArrow()
+newChatArrow = function()
 {
 	var mat = new THREE.MeshBasicMaterial({
 			side: THREE.DoubleSide, color: new THREE.Color("yellow"),
@@ -1713,7 +1714,7 @@ var createLightcycle = function(cfg) //DEPRECATED
 
 /*—––––––––––––wall–constructor—–––––––––––*/	
 
-function newWall(tailColor,x,y,z=0)
+window.newWall = function(tailColor,x,y,z=0)
 {
 	var xy = 0.001;
 	
@@ -1776,7 +1777,7 @@ function newWall(tailColor,x,y,z=0)
 	return wall;
 }
 
-var createWall = function(cycle,x,y)
+createWall = function(cycle,x,y)
 {
 
 	var group = new THREE.Group();
@@ -1791,6 +1792,18 @@ var createWall = function(cycle,x,y)
 
 	return group;
 };
+
+/*–––––––––––––––––––––––––––––––––––––––––*/
+
+class cycleWall
+{
+	constructor()
+	{
+		this.geo = new THREE.Geometry();
+		this.geo.vertices.push(new THREE.Vector3(0,0,0));
+		this.geo.faces = [new THREE.Face3(0,1,2)];
+	}
+}
 
 /*–––––––––––––––––––––––––––––––––––––––––*/
 

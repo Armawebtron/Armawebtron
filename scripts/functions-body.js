@@ -85,7 +85,7 @@ function retToLastSafe(cycle,w1x,w1y,w2x,w2y)
 				}
 				else
 				{
-					doDeath(cycle);
+					game.killBlame(cycle);
 					engine.console.print(cycle.name+" phased through a wall and has been terminated.\n");
 				}
 			}

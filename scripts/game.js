@@ -19,14 +19,6 @@
 
 (function(game){
 
-/*if(this.require)
-{
-	if(typeof(THREE) === "undefined")
-		var THREE = require('./lib/Three.js');
-	if(typeof(Zone) === "undefined")
-		var Zone = require("./zone.js");
-}*/
-
 game.doNewRound = function()
 {
 	if(engine.uRound !== false) { clearTimeout(engine.uRound); engine.uRound = false; }
