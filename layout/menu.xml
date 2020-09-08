@@ -153,6 +153,7 @@
 	<Menu id="input" title="Configure Input">
 		<Item type="submenu" onenter="input_conf" text="Player Control"/>
 		<Item type="submenu" onenter="global_input_conf" text="Global Input"/>
+		<Item type="submenu" onenter="macro" text="Chat Macros"/>
 		<Item type="exitmenu" text="&lt;- Go Back"/>
 	</Menu>
 		<Menu id="input_conf" title="Player Input">
@@ -177,7 +178,7 @@
 		</Menu>
 	
 	<!-- Configuration -->
-	<Menu id="system" title="System Setup">
+	<Menu id="system" title="Configure Game">
 		<Item type="submenu" onenter="screen" text="Configure Display"/>
 		<Item type="submenu" onenter="display" text="Configure Visuals"/>
 		<Item type="submenu" onenter="sound" text="Configure the Sound"/>
@@ -259,6 +260,7 @@
 		<Item type="text" style="font-size:15pt" text="0xff8800Title: 0xRESETT@progtitle@" />
 		<Item type="text" style="font-size:15pt" text="Draws heavy inspiration from the excellent lightcycle game Armagetron Advanced." />
 		<Item type="text" style="font-size:15pt" text="0xff8800Version: 0xRESETT@version@" />
+		<Item type="text" style="font-size:15pt" text="0xff8800NetVersion: 0xRESETT@netversion@" />
 		<Item type="text" style="font-size:15pt" text="This is a development version. It's a heavy work in progress. Anything could change at any time, and there may be a lot of bugs." />
 		<Item type="submenu" onenter="about_dev" text="Credits"/>
 		<Item type="submenu" onenter="license" text="Legal Stuff"/>
