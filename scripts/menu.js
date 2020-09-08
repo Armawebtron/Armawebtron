@@ -352,7 +352,7 @@ function menu(act,from=false)
 									element.setAttribute("href","javascript:void(0);");
 								}
 							}
-							element.setAttribute("onmouseover","hoverSelect(this.parentNode)");
+							element.setAttribute("onmousemove","hoverSelect(this.parentNode)");
 							element.setAttribute("onclick","menu(this.parentNode.id)");
 							element.appendChild(text);
 							if(input !== false) element.appendChild(input);
