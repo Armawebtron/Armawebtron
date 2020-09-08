@@ -114,6 +114,8 @@ function revertMap()
 
 function newRound()
 {
+	if(engine.newRound) return;
+	engine.newRound = true;
 	engine.roundCommencing = true;
 	/////////////LIGHTS
 	var light1 = new THREE.AmbientLight( 0x666666 ); // soft white light
@@ -229,6 +231,34 @@ function calculateSpawn(x)
 function processPlayer(x,cfg)
 {
 	var spawns = calculateSpawn(x);
+	cfg.name = cfg.name.replace(/\n/g," ");
+	if(removeColors(cfg.name).length > 15) 
+	{
+		var str = ""+cfg.name;
+		cfg.name = "";
+		var len = 0;
+		console.log(str,str.length);
+		for(var i=0;len<15||i<str.length;++i)
+		{
+			if(str[i] == "0" && str[i+1] == "x")
+			{
+				var color = str.slice(i,i+8);
+				if(removeColors(color) != color)
+				{
+					cfg.name += color;
+					i += 7;
+					continue;
+				}
+			}
+			cfg.name += str[i];
+			++len;
+		}
+		if(removeColors(cfg.name).length > 15) 
+		{
+			// in case there's a bug in here somewhere
+			cfg.name = removeColors(cfg.name).slice(0,15);
+		}
+	}
 	if(engine.players[x])
 	{
 		var cycle = engine.players[x];
@@ -512,6 +542,7 @@ function loadRound(dlmap)
 	engine.asendtm = 0;
 	engine.winner = undefined;
 	engine.roundCommencing = false;
+	engine.newRound = false;
 	
 	getGoing();
 
