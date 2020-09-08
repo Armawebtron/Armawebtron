@@ -448,9 +448,17 @@ else
 	global.centerMessage = function(msg,time=5000)
 	{
 		var cm = document.getElementById("centerMessage");
-		cm.innerHTML = replaceColors(htmlEntities(msg));
+		cm.innerHTML = replaceColors(htmlEntities(msg)).replace(/\n/g,"<br/>").replace(/\\n/g,"<br/>");
 		cm.style.opacity = 1;
 		cm.style.display = "block";
+		var lines = cm.innerText.split("\n");
+		var fontSize = 64;
+		for(var i=lines.length-1;i>=0;--i)
+		{
+			var tmpSize = (64*(document.body.clientWidth/(lines[i].length*64)));
+			if(fontSize > tmpSize) fontSize = tmpSize;
+		}
+		cm.style.fontSize = fontSize+"px";
 		engine.cMFadeOutAfter = performance.now()+time;
 	}
 }
