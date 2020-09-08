@@ -537,6 +537,28 @@ var commands = {
 	},
 	CONSOLE_MESSAGE: function(param) { engine.console.print(param+"\n") },
 	CENTER_MESSAGE: function(param) { centerMessage(param) },
+	RENAME: function(params)
+	{
+		var s = params.split(" ");
+		var p = getPlayer(s[0]);
+		if(p)
+		{
+			p.forcedName = s[1];
+			engine.console.print(p.getColoredName()+"0xRESETT will be renamed to "+p.forcedName+"0xRESETT.\n")
+		}
+	},
+	ALLOW_RENAME_PLAYER: function(param)
+	{ 
+		var p = getPlayer(param);
+		p.forceName = null;
+		engine.console.print(p.getColoredName()+"0x7fff7f is allowed to rename.\n")
+	},
+	DISALLOW_RENAME_PLAYER: function(param)
+	{ 
+		var p = getPlayer(param);
+		p.forceName = p.name;
+		engine.console.print(p.getColoredName()+"0xff7f7f is not allowed to rename.\n")
+	},
 	SET_CYCLE_SPEED: function(params)
 	{
 		var s = params.split(" ");

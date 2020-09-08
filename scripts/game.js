@@ -268,7 +268,23 @@ function processPlayer(x,cfg)
 		{
 			var cycleColor = cfg.cycleColor,tailColor = cfg.tailColor;
 			if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = teamColor(engine.teams.indexOf(engine.players[x].team)); }
-			if(cycle.name != cfg.name)
+			if(cycle.forcedName)
+			{
+				if(cycle.forcedName != cycle.name)
+				{
+					var out = cycle.getColoredName()+"0x7fff7f was renamed to ";
+					cycle.cycleColor = cycleColor;
+					cycle.tailColor = tailColor;
+					cycle.name = cycle.forcedName;
+					engine.console.print(out+cycle.getColoredName()+"\n");
+				}
+				else
+				{
+					var msg = cycle.getBoringName()+" wanted to change their name to "+removeColors(cfg.name)+" but was disallowed by admin.\n";
+					engine.console.print(msg);
+				}
+			}
+			else if(cycle.name != cfg.name)
 			{
 				var out = cycle.getColoredName()+"0x7fff7f renamed to ";
 				cycle.cycleColor = cycleColor;
