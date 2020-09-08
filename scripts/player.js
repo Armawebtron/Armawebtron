@@ -281,7 +281,7 @@ class Player extends THREE.Object3D
 	{
 		if(engine.network)
 		{
-			engine.network.doChat(msg,this);
+			engine.network.sendChat(msg,this);
 		}
 		else
 		{
