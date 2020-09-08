@@ -439,8 +439,7 @@ if(typeof(document) == "undefined")
 		if(window.svr)
 		{
 			if(time == Infinity) time = Number.MAX_VALUE;
-			var data = JSON.stringify({type:"cen",data:{msg:msg,time:time}});
-			window.svr.clients.forEach(function(ws){ws.send(data);});
+			window.svr.send({type:"cen",data:{msg:msg,time:time}});
 		}
 	}
 }

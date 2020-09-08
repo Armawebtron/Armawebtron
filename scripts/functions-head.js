@@ -322,6 +322,30 @@ global.tStringify = function(str) //!
 	str = str.replace(new RegExp("@progtitle@",'g'),"Armawebtron");
 	str = str.replace(new RegExp("@progtitleshort@",'g'),"Armawebtron");
 	str = str.replace(new RegExp("@progname@",'g'),"webtron");
+	str = str.replace(new RegExp("@version@",'g'),"1.0.0-beta8");
+	if(str.indexOf("@netversion@") >= 0)
+	{
+		var netvers;
+		var cli = new Connection3dc({
+			send:function(data)
+			{
+				var msg;
+				try
+				{
+					msg = JSON.parse(data);
+				}
+				catch(e)
+				{
+					msg = {type:data.charCodeAt(0)};
+					tdcConstructData(msg,data);
+					console.log(msg);
+				}
+				netvers = msg.data;
+			},
+		});
+		cli.handler({data:JSON.stringify({type:"version"})});
+		str = str.replace(new RegExp("@netversion@",'g'),netvers);
+	}
 	return str;
 }
 

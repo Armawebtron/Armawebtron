@@ -33,7 +33,7 @@
 	<Menu id="game" title="Play Game">
 		<Item type="js" onenter="game.play()" style="display:inline-block;" text="Locally"/>
 		<Item type="submenu" onenter="game_setup" style="font-size:16pt;" text="(config)"/>
-		<Item type="submenu" onenter="network" text="Network"/>
+		<Item type="submenu" onenter="network" text="Custom Connect"/>
 		<Item type="exitmenu" text="&lt;- Go Back"/>
 	</Menu>
 		<Menu id="network" title="Network Game">
@@ -258,7 +258,7 @@
 	<Menu id="about" title="About">
 		<Item type="text" style="font-size:15pt" text="0xff8800Title: 0xRESETT@progtitle@" />
 		<Item type="text" style="font-size:15pt" text="Draws heavy inspiration from the excellent lightcycle game Armagetron Advanced." />
-		<Item type="text" style="font-size:15pt" text="0xff8800Version: 0xRESETTv1.0-beta6" />
+		<Item type="text" style="font-size:15pt" text="0xff8800Version: 0xRESETT@version@" />
 		<Item type="text" style="font-size:15pt" text="This is a development version. It's a heavy work in progress. Anything could change at any time, and there may be a lot of bugs." />
 		<Item type="submenu" onenter="about_dev" text="Credits"/>
 		<Item type="submenu" onenter="license" text="Legal Stuff"/>

@@ -30,8 +30,8 @@ game.endRound = function()
 {
 	if(window.svr) 
 	{
-		window.svr.clients.forEach(function(ws){ws.send('{"type":"endRound"}')});
-		window.svr.clients.forEach(function(ws){ws.send('{"type":"syncdata","gtime":-4000}')});
+		window.svr.send({"type":"endRound"});
+		window.svr.send({"type":"syncdata","gtime":-4000});
 	}
 	
 	if(ctx)
@@ -100,7 +100,7 @@ function revertMap()
 	{
 		engine.console.print("Unable to load map file. Reverting...\n",true);
 		chsetting("MAP_FILE",engine.loadedMap);
-		loadRound();
+		game.loadRound();
 	}
 	else
 	{
@@ -391,8 +391,7 @@ game.processPlayers = function(removeAIs=true)
 						AIsToDealWith--;
 						if(window.svr)
 						{
-							var data = JSON.stringify({type:"leave",data:x});
-							window.svr.clients.forEach(function(ws){ws.send(data)});
+							window.svr.send({type:"leave",data:x});
 						}
 					}
 					if(AIsToDealWith == 0) break;
@@ -429,14 +428,14 @@ game.processPlayers = function(removeAIs=true)
 		{
 			teams.push({id:x,name:engine.teams[x].name,x:engine.teams[x].x,y:engine.teams[x].y,z:engine.teams[x].z});
 		}
-		teams=JSON.stringify({type:"team",data:teams});
+		teams={type:"team",data:teams};
 		window.svr.clients.forEach(function(ws){ws.send(teams);ws.senddata(0)});
 	}
 }//*/
 
 game.loadRound = function(dlmap)
 {
-	if(typeof(dlmap) != "undefined")
+	if(typeof(dlmap) !== "undefined")
 	{
 		engine.mapString = dlmap;
 		engine.loadedMap = settings.MAP_FILE;
@@ -446,7 +445,7 @@ game.loadRound = function(dlmap)
 
 	engine.console.print("Preparing grid...\n",false);
 	
-	if(window.svr) window.svr.clients.forEach(function(ws){ws.send('{"type":"newRound"}')});
+	if(window.svr) window.svr.send({"type":"newRound"});
 	
 	//virtual map data (used for positions, lines and stuff to calculate)
 	engine.map = {zones:[],spawns:[],walls:[]};
@@ -608,13 +607,15 @@ game.run = function(oneoff=false)
 								var olddir = cdir(cycle.rotation.z);
 								if(engine.network && settings.DEBUG_NETWORK_TURN_WAIT)
 								{
-									var rot = normalizeRad(cycle.rotation.z - (pi(2)/settings.ARENA_AXES)*dir);
+									/*var rot = normalizeRad(cycle.rotation.z - (pi(2)/settings.ARENA_AXES)*dir);
 									engine.connection.send(JSON.stringify({
 										type:"turn",data:rad2deg(rot),gtime:cycle.gameTime
-									}));
+									}));*/
+									engine.network.sendTurn(dir,cycle);
 									cycle.lastTurnTime = Infinity;
 									cycle.turnQueue.splice(0,1); continue;
 								}
+								if(engine.network) engine.network.sendTurn(dir,cycle);
 								cycle.dir.front = (dirmult = cdir(cycle.rotation.z -= (pi(2)/settings.ARENA_AXES)*dir));
 								//cycle.rotation.z = cycle.rotation.z%(Math.PI*2);
 								//if(cycle.rotation.z < 0) cycle.rotation.z += Math.PI*2;
@@ -631,17 +632,9 @@ game.run = function(oneoff=false)
 								cycle.minDistance.front = Math.max(0,Math.min(cycle.sensor.front*mult,settings.CYCLE_RUBBER_MINDISTANCE));
 								cycle.lastpos = cycle.position.clone(); //redundant, should be handled by getCycleSensors
 								if(cycle.haswall) cycle.newWallSegment();
-								if(engine.network)
-								{
-									engine.connection.send(JSON.stringify({
-										type:"turn",data:rad2deg(cycle.rotation.z),gtime:cycle.gameTime,
-										position:[cycle.position.x,cycle.position.y,cycle.position.z],
-										speed:cycle.speed, rubber:cycle.rubber, brakes:cycle.brakes
-									}));
-								}
 								if(window.svr) //force a player sync
 								{
-									var data = JSON.stringify({type:"griddata",data:[{
+									var data = ({type:"griddata",data:[{
 										position:[cycle.position.x,cycle.position.y,cycle.position.z],
 										direction:rad2deg(cycle.rotation.z), 
 										speed:cycle.speed, rubber:cycle.rubber,
@@ -649,7 +642,7 @@ game.run = function(oneoff=false)
 										netid:x, wall:cycle.walls.map,
 									}],gtime:engine.gtime});
 									if(cycle.speed > 1) cycle.update(0.01/cycle.speed);
-									var data2 = JSON.stringify({type:"griddata",data:[{
+									var data2 = ({type:"griddata",data:[{
 										position:[cycle.position.x,cycle.position.y,cycle.position.z],
 										direction:rad2deg(cycle.rotation.z), 
 										speed:cycle.speed, rubber:cycle.rubber,
@@ -1143,13 +1136,9 @@ game.updateScoreBoard = function()
 		{
 			tmp.push({netid:x,score:engine.players[x].score,ping:engine.players[x].ping,chatting:engine.players[x].chatting});
 		}
-		var data = JSON.stringify({type:"scoredata",data:tmp});
-		window.svr.clients.forEach(function(ws){ws.send(data);});
+		window.svr.send({type:"scoredata",data:tmp});
 	}
-	if(engine.network)
-	{
-		engine.connection.send(JSON.stringify({type:"playdata",data:{chatting:engine.players[engine.activePlayer].chatting}}));
-	}
+	if(engine.network) engine.network.syncPlayData();
 	if(engine.dedicated || scoreboard.style.display == "none") return;
 	var scoreBoard = document.getElementById("scoreboard").children[0];
 	var playersSB = scoreBoard.children[1];

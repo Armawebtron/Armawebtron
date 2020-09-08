@@ -223,6 +223,7 @@ settings = {
 	CONNECT_PORT: 5331,
 	CONNECT_HOST: "armagetron.kevinh.us",
 	CONNECT_SSL: true,
+	CONNECT_TYPE: "3dc",
 	
 	CYCLE_SMOOTH_TIME: 0.3,
 	CYCLE_SYNC_INTERVAL: 0.1,
@@ -722,7 +723,7 @@ var commands = {
 			{
 				engine.zones.children[x].position.x = args[1]*engine.REAL_ARENA_SIZE_FACTOR;
 				engine.zones.children[x].position.y = args[2]*engine.REAL_ARENA_SIZE_FACTOR;
-				engine.zones.children[x].netSync();
+				engine.zones.children[x].cfg.netSync();
 				return true;
 			}
 		}
@@ -970,7 +971,7 @@ function applysettings(array1)
 	}
 }
 
-function loadcfg(str,silent=false,dontforcecase=false)
+window.loadcfg = function(str,silent=false,dontforcecase=false)
 {
 	if(str == null) return false;
 	var lines = str.split("\n");
@@ -1143,8 +1144,7 @@ function chsetting(setting,value,silent=false,txt="",pretxt="")
 				if(window.svr && typeof(game_settings_default[event[1]]) !== "undefined")
 				{
 					if(to == Infinity) to = Number.MAX_VALUE;
-					var data = JSON.stringify({type:"setting",setting:event[1],data:to});
-					window.svr.clients.forEach(function(ws){ws.send(data);});
+					window.svr.send({type:"setting",setting:event[1],data:to});
 				}
 			}
 			ret = to;
@@ -1205,303 +1205,7 @@ if(typeof(_GET) == "undefined")
 	getargs();
 }
 
-//variables used by init and the engine - do not touch
-engine = {
-	dedicated: false,
-	
-	paused: false,//
-	inputState: '', inputStatePrev: '',
-	
-	lastRenderTime: 0,//used in rendering loop
-	lastGameTime: 0,
-	fpsTime: 0,	//render loop
-	timeStart: 0,
-	timeEnd: 0,//timer vars
-	totalPauseTime: 0,
-	startOfPause: 0,//used to prevent delta from offsetting due to pause
-	framesCount: 0,
-	avgTimeStep: 0,
-	gtime:-Infinity,
-	lastSyncTime:-Infinity,
-	lastScoreTime:-Infinity,
-	
-	cMFadeOutAfter: Infinity,
-	
-	//net
-	network: false,
-	activePlayer: 0,
-
-	//game stats	
-	fastestPlayer: 0, fastestSpeed: 0,
-	deaths: 0,
-
-	//render loop toggles
-	//hasplayed: false,//used for playing again, reinitializing the render for another go (after having gone back to menus from it first)
-	currrim3clr: 0,
-
-	//info
-	usingWebgl: true,//variable to toggle webgl features
-	usingPostProcessing: false,//toggle for post processing features
-	
-	concatch: undefined, msgcatch: undefined,
-	
-	//fonts
-	font: 'Armagetronad',//active font face
-	fonts: ['Armagetronad','Flynn','monospace','nicefont','sans-serif','serif'],
-	
-	textures: {},
-	
-	//map data
-	currrot: 0, //rotation
-	loadedMap: "Anonymous/polygon/regular/square-1.0.1.aamap.xml",
-	//default:
-	mapString: '\<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?\>\n\<!DOCTYPE Resource SYSTEM \"AATeam/map-0.2.8.0_rc4.dtd\"\>\n\<Resource type=\"aamap\" name=\"square\" version=\"1.0.1\" author=\"Anonymous\" category=\"polygon/regular\"\>\n\t\<Map version=\"2\"\>\n\t\t\<!-- The original square map, technically created by z-man.\n\t         Converted to XML by philippeqc.\n\t         License: Public Domain. Do with it what you want.\n        --\>\n\n\t\t\<World\>\n\t\t\t\<Field\>\n\t\t\t\t\<Spawn\tx=\"255\"\ty=\"50\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"245\"\ty=\"450\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"50\"\ty=\"245\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"450\"\ty=\"255\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Spawn\tx=\"305\"\ty=\"100\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"195\"\ty=\"400\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"100\"\ty=\"195\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"400\"\ty=\"305\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Spawn\tx=\"205\"\ty=\"100\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"295\"\ty=\"400\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"100\"\ty=\"295\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"400\"\ty=\"205\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Wall\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"0\"\t/\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"500\"\t/\>\n\t\t\t\t\t\<Point\tx=\"500\"\ty=\"500\"\t/\>\n\t\t\t\t\t\<Point\tx=\"500\"\ty=\"0\"\t/\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"0\"\t/\>\n\t\t\t\t\</Wall\>\n\t\t\t\</Field\>\n\t\t\</World\>\n\t\</Map\>\n\</Resource\>',
-	//mapString: '\<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?\>\n\<!DOCTYPE Resource SYSTEM \"AATeam/map-0.2.8.0_rc4.dtd\"\>\n\<Resource type=\"aamap\" name=\"square\" version=\"1.0.1\" author=\"Anonymous\" category=\"polygon/regular\"\>\n\t\<Map version=\"2\"\>\n\t\t\<!-- The original square map, technically created by z-man.\n\t         Converted to XML by philippeqc.\n\t         License: Public Domain. Do with it what you want.\n        --\>\n\n\t\t\<World\>\n\t\t\t\<Field\>\n\t\t\t\t\<Spawn\tx=\"255\"\ty=\"50\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"245\"\ty=\"450\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"50\"\ty=\"245\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"450\"\ty=\"255\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Spawn\tx=\"305\"\ty=\"100\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"195\"\ty=\"400\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"100\"\ty=\"195\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"400\"\ty=\"305\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Spawn\tx=\"205\"\ty=\"100\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"295\"\ty=\"400\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"100\"\ty=\"295\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"400\"\ty=\"205\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Wall\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"0\"\t/\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"500\"\t/\>\n\t\t\t\t\t\<Point\tx=\"500\"\ty=\"500\"\t/\>\n\t\t\t\t\t\<Point\tx=\"500\"\ty=\"0\"\t/\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"0\"\t/\>\n\t\t\t\t\</Wall\>\n\t\t\t\</Field\>\n\t\t\</World\>\n\t\</Map\>\n\</Resource\>',
-	//two zones:
-	//mapString: '\<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?\>\n\<!DOCTYPE Resource SYSTEM \"AATeam/map-0.2.8.0_rc4.dtd\"\>\n\<Resource type=\"aamap\" name=\"square\" version=\"1.0.1\" author=\"Anonymous\" category=\"polygon/regular\"\>\n\t\<Map version=\"2\"\>\n\t\t\<!-- The original square map, technically created by z-man.\n\t         Converted to XML by philippeqc.\n\t         License: Public Domain. Do with it what you want.\n        --\>\n\n\t\t\<World\>\n\t\t\t\<Field\>\n\t\t\t\t\<Spawn\tx=\"255\"\ty=\"50\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"245\"\ty=\"450\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"50\"\ty=\"245\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"450\"\ty=\"255\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Spawn\tx=\"305\"\ty=\"100\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"195\"\ty=\"400\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"100\"\ty=\"195\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"400\"\ty=\"305\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Spawn\tx=\"205\"\ty=\"100\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"295\"\ty=\"400\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"100\"\ty=\"295\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"400\"\ty=\"205\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Wall\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"0\"\t/\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"500\"\t/\>\n\t\t\t\t\t\<Point\tx=\"500\"\ty=\"500\"\t/\>\n\t\t\t\t\t\<Point\tx=\"500\"\ty=\"0\"\t/\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"0\"\t/\>\n\t\t\t\t\</Wall\>\n\t\t\t\<Zone effect=\"death\"\>\<ShapeCircle radius=\"20\"\>\<Point y=\"275\" x=\"275\"/\>\n\t\t\t\</ShapeCircle\>\n\t\t\t\</Zone\>\n\t\t\t\<Zone effect=\"win\"\>\n\t\t\t\t\<ShapeCircle radius=\"10\"\>\n\t\t\t\t\t\<Point y=\"240\" x=\"250\"/\>\n\t\t\t\t\</ShapeCircle\>\n\t\t\t\</Zone\>\t\t\t\</Field\>\n\t\t\</World\>\n\t\</Map\>\n\</Resource\>',
-	//one zone:
-	//mapString: '\<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?\>\n\<!DOCTYPE Resource SYSTEM \"AATeam/map-0.2.8.0_rc4.dtd\"\>\n\<Resource type=\"aamap\" name=\"square\" version=\"1.0.1\" author=\"Anonymous\" category=\"polygon/regular\"\>\n\t\<Map version=\"2\"\>\n\t\t\<!-- The original square map, technically created by z-man.\n\t         Converted to XML by philippeqc.\n\t         License: Public Domain. Do with it what you want.\n        --\>\n\n\t\t\<World\>\n\t\t\t\<Field\>\n\t\t\t\t\<Spawn\tx=\"255\"\ty=\"50\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"245\"\ty=\"450\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"50\"\ty=\"245\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"450\"\ty=\"255\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Spawn\tx=\"305\"\ty=\"100\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"195\"\ty=\"400\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"100\"\ty=\"195\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"400\"\ty=\"305\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Spawn\tx=\"205\"\ty=\"100\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"295\"\ty=\"400\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"100\"\ty=\"295\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"400\"\ty=\"205\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Wall\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"0\"\t/\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"500\"\t/\>\n\t\t\t\t\t\<Point\tx=\"500\"\ty=\"500\"\t/\>\n\t\t\t\t\t\<Point\tx=\"500\"\ty=\"0\"\t/\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"0\"\t/\>\n\t\t\t\t\</Wall\>\n\t\t\t\<Zone effect=\"win\"\>\n\t\t\t\t\<ShapeCircle radius=\"10\"\>\n\t\t\t\t\t\<Point y=\"240\" x=\"250\"/\>\n\t\t\t\t\</ShapeCircle\>\n\t\t\t\</Zone\>\t\t\t\</Field\>\n\t\t\</World\>\n\t\</Map\>\n\</Resource\>',
-	//two zones + two walls:
-	//mapString: '\<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?\>\n\<!DOCTYPE Resource SYSTEM \"AATeam/map-0.2.8.0_rc4.dtd\"\>\n\<Resource type=\"aamap\" name=\"square\" version=\"1.0.1\" author=\"Anonymous\" category=\"polygon/regular\"\>\n\t\<Map version=\"2\"\>\n\t\t\<!-- The original square map, technically created by z-man.\n\t         Converted to XML by philippeqc.\n\t         License: Public Domain. Do with it what you want.\n        --\>\n\n\t\t\<World\>\n\t\t\t\<Field\>\n\t\t\t\t\<Spawn\tx=\"255\"\ty=\"50\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"245\"\ty=\"450\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"50\"\ty=\"245\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"450\"\ty=\"255\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Spawn\tx=\"305\"\ty=\"100\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"195\"\ty=\"400\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"100\"\ty=\"195\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"400\"\ty=\"305\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Spawn\tx=\"205\"\ty=\"100\"\txdir=\"0\"\tydir=\"1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"295\"\ty=\"400\"\txdir=\"0\"\tydir=\"-1\"\t/\>\n\t\t\t\t\<Spawn\tx=\"100\"\ty=\"295\"\txdir=\"1\"\tydir=\"0\"\t/\>\n\t\t\t\t\<Spawn\tx=\"400\"\ty=\"205\"\txdir=\"-1\"\tydir=\"0\"\t/\>\n\n\t\t\t\t\<Wall\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"0\"\t/\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"500\"\t/\>\n\t\t\t\t\t\<Point\tx=\"500\"\ty=\"500\"\t/\>\n\t\t\t\t\t\<Point\tx=\"500\"\ty=\"0\"\t/\>\n\t\t\t\t\t\<Point\tx=\"0\"\ty=\"0\"\t/\>\n\t\t\t\t\</Wall\>\n<Wall height=\"1\"\>\n\t\t\t\t\t\<Point\tx=\"200\"\ty=\"200\"\t/\>\n\t\t\t\t\t\<Point\tx=\"200\"\ty=\"300\"\t/\>\n\t\t\t\t\t\<Point\tx=\"300\"\ty=\"300\"\t/\>\n\t\t\t\t\t\<Point\tx=\"300\"\ty=\"200\"\t/\>\n\t\t\t\t\t\<Point\tx=\"200\"\ty=\"200\"\t/\>\n\t\t\t\t\</Wall\>\n\t\t\t\<Zone effect=\"death\"\>\<ShapeCircle radius=\"20\"\>\<Point y=\"275\" x=\"275\"/\>\n\t\t\t\</ShapeCircle\>\n\t\t\t\</Zone\>\n\t\t\t\<Zone effect=\"win\"\>\n\t\t\t\t\<ShapeCircle radius=\"10\"\>\n\t\t\t\t\t\<Point y=\"240\" x=\"250\"/\>\n\t\t\t\t\</ShapeCircle\>\n\t\t\t\</Zone\>\t\t\t\</Field\>\n\t\t\</World\>\n\t\</Map\>\n\</Resource\>',
-
-
-	mapXML: false,//xmlify(mapString);
-	
-	//scene vars
-	renderer: false,
-	scene: false,
-	composer: false,//for post processing
-
-	//camera stuff
-	camera: false,//needed or any camera
-	cameraOrbit: false,//
-	view: 'smart',
-	views: ['smart','chase','stationary','track','topdown','birdseye','cockpit'],
-	cameraEase: 0.08,
-	viewTarget: 0,
-
-	menus: [],
-	
-	//sound
-	useSound: true,
-	retroSound: true,
-//
-	//scene objects (just used for render)
-	grid: false,
-	walls: false,
-	zones: {children:0},
-	//a_zone: [],//not needed with children?
-	
-	//is running
-	gameRunning: false,
-	renderRunning: false,
-	
-	uRound: false, //timeout ID for new round
-	
-	//FOR PLAYER OBJECTS
-	//game stuff
-	playersById: [],//array of player objects (info)
-	playersByScore: [],
-	
-	teams: [],//array of team objects
-	
-	round: 0,
-	delayedcommands: {},
-};
-
-if(window.Proxy)
-{
-	engine.players = new Proxy(engine.playersById,{
-		apply: function(t,arg,ls)
-		{
-			return arg[t].apply(this,ls);
-		},
-		deleteProperty: function(t,id)
-		{
-			if(!isNaN(id))
-			{
-				for(var x=engine.playersByScore.length-1;x>=0;--x)
-				{
-					if(t[id] == engine.playersByScore[x])
-					{
-						engine.playersByScore.splice(x,1);
-					}
-				}
-			}
-			return true;
-		},
-		set: function(t,id,val)
-		{
-			if(!isNaN(id))
-			{
-				for(var x=engine.playersByScore.length-1;x>=0;--x)
-				{
-					if(t[id] == engine.playersByScore[x])
-					{
-						engine.playersByScore[x] = val;
-						updateScoreBoard();
-						t[id] = val;
-						return true;
-					}
-				}
-				engine.playersByScore.push(val);
-			}
-			t[id] = val;
-			return true;
-		},
-	});
-}
-else
-{
-	//hacky workaround, only for browsers without Proxy support (very few)
-	engine.players = engine.playersById;
-	engine.players.prevLength = -1;
-	setInterval(function()
-	{
-		if(engine.players.length != engine.players.prevLength)
-		{
-			engine.players.prevLength = engine.players.length;
-			engine.playersByScore.splice(0);
-			for(var x=engine.playersById.length-1;x>=0;--x)
-			{
-				engine.playersByScore.push(engine.playersById[x]);
-			}
-			updateScoreBoard();
-		} 
-	},1000);
-}
-
-settings.engine = engine; //hack to allow menu to change engine config. (Potentially insecure?)
-
-//CONSOLE, HUD
-if(typeof(document) != "undefined")
-{
-	engine.console = document.getElementById("console");
-	engine.console.time = 0;
-	engine.console.time_manual = 0;
-	engine.console.print = function(str) 
-	{ 
-		//this.append("  "+str); 
-		if(engine.concatch) 
-		{
-			if(engine.concatch.type == "all") engine.concatch.to.append(str);
-			else if(engine.concatch.type == "list") engine.concatch.to.push(str);
-			else engine.concatch.to.innerText = str;
-		}
-		if(settings.TEXT_OUT_MODE == 1)
-		{
-			this.scrollback.push(str);
-		}
-		this.innerHTML += "  "+replaceColors(htmlEntities(str));
-		//console.log(replaceColors(str));
-		this.time = performance.now()+this.scrolltime; 
-		if(!inround()||!settings.TEXT_OUT()) console.log("[CON] "+str);
-	}
-	engine.console.scrollby = 0;
-	engine.console.scrolltime = 5000;
-	engine.console.scrolltime_manual = 30000;
-	engine.console.time_manual -= engine.console.scrolltime_manual;
-	engine.console.scroll = function(times=1)
-	{
-		if(settings.TEXT_OUT_MODE == 1)
-		{
-			this.scrollby+=times; this.innerHTML = "";
-			for(var i=this.scrollby;i<engine.console.scrollback.length;i++)
-			{
-				this.innerHTML += "  "+replaceColors(htmlEntities(this.scrollback[i]));
-			}
-		}
-		else
-		{
-			//this.scrollby = parseFloat(window.getComputedStyle(this).getPropertyValue('font-size'))+6;
-			//this.scrollby = this.children[0].offsetHeight;
-			var orig = parseFloat(this.style.top)/this.scrollby;
-			this.scrollby = this.offsetHeight/this.innerText.split("\n").length;
-			
-			if(this.style.top == '') this.style.top = 0;
-			//this.style.top = (parseFloat(this.style.top)-(this.scrollby*times))+"px";
-			this.style.top = ((this.scrollby*orig)-(this.scrollby*times))+"px";
-		}
-	}
-	if(settings.TEXT_OUT_MODE == 1)
-	{
-		engine.console.scrollback = [];
-		engine.console.style.top = "-16px";
-	}
-	engine.console.scroll();
-	
-	engine.hud = document.getElementById("HUD");
-	engine.hud.hide = function(){this.style.opacity=0;};
-	engine.hud.show = function(){this.style.opacity=1;};
-	engine.hud.basic = document.getElementById("gui_stats");
-	engine.hud.game = document.getElementById("game_stats");
-	engine.hud.fadein = true;
-}
-else
-{
-	engine.console = {style:{}};
-	engine.console.print = function(str,netSend=true) 
-	{ 
-		process.stdout.write(removeColors(str));
-		if(engine.concatch) 
-		{
-			if(engine.concatch.type == "all") engine.concatch.to.append(str);
-			else if(engine.concatch.type == "list") engine.concatch.to.push(str);
-			else engine.concatch.to.innerText = str;
-		}
-		if(netSend && global.svr) //send over network
-		{
-			var data = JSON.stringify({type:"con",data:str});
-			switch(typeof(netSend))
-			{
-				case "boolean":
-					global.svr.clients.forEach(function(ws) //I know this is slow, but I'm not aware of any other way
-					{
-						ws.send(data);
-					});
-					break;
-				case "object":
-					var lookForID = engine.players.indexOf(netSend);
-					global.svr.clients.forEach(function(ws)
-					{
-						if(ws.netid == lookForID)
-						{
-							ws.send(data);
-						}
-					});
-					break;
-			}
-		}
-	};
-}
-
-
-/*///team objects:
--name
--array of player IDs (order of shuffle)
--team score
-
-
-/**/
-
-
-//which controls are pressed down get added to arrays
-var temp_items = Object.keys(settings.controls);
-engine.controls = {pressed:[]};
-for(var i=0;i<temp_items.length;i++)
-{
-	engine.controls[temp_items[i]] = []; //array of keycodes that are pressed within a frame, removed when lifted
-}
-
-
-engine.map = { //virtual map data (used for positions, lines and stuff to calculate)
-	zones: [],
-	spawns: [],
-	walls: [],
-
-};
-
-function loadsettingcfgs()
+window.loadsettingcfgs = function()
 {
 	loadcfg(localStorage.getItem("user.cfg"),true,true);
 	if(settings.CFG_VERSION < 0.8) { if(Detector.webgl) {settings.HIGH_RIM = true;} settings.CFG_VERSION = 0.8;}
@@ -1509,5 +1213,3 @@ function loadsettingcfgs()
 	loadcfg(localStorage.getItem("settings_custom.cfg"),true);
 	loadcfg(localStorage.getItem("autoexec.cfg"),true);
 }
-loadsettingcfgs();
-window.onbeforeunload = saveusercfg;

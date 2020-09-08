@@ -50,6 +50,7 @@ class Player extends THREE.Object3D
 		this.lastTurnTime = 0;
 		this.gameTime = 0;
 		this.handleNetTurn = true;
+		this.actions = [];
 	}
 	hardReset() //! Same as soft reset but resets all varaibles
 	{
@@ -280,7 +281,7 @@ class Player extends THREE.Object3D
 	{
 		if(engine.network)
 		{
-			engine.connection.send(JSON.stringify({type:"chat",data:msg}));
+			engine.network.doChat(msg,this);
 		}
 		else
 		{

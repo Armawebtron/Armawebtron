@@ -239,8 +239,7 @@ class Zone
 					zone.points.push(geo.vertices[geo.faces[i].b].x,geo.vertices[geo.faces[i].b].y);
 				}
 			}
-			var data = JSON.stringify({type:"zone",data:[zone],gtime:engine.gtime});
-			window.svr.clients.forEach(function(ws){ws.send(data)});
+			window.svr.send({type:"zone",data:[zone],gtime:engine.gtime});
 		}
 		return this;
 	}
