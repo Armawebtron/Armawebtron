@@ -1177,7 +1177,7 @@ game.updateScoreBoard = function()
 	for(var x=0;x<engine.playersByScore.length;++x) if(typeof(engine.playersByScore[x]) != "undefined")
 	{
 		var cycle = engine.playersByScore[x];
-		tmp += "<tr class=\"player\"><td>"+(cycle.chatting?"*":"&nbsp;")+replaceColors(cycle.getColoredName())+"</td><td>"+replaceColors(cycle.alive?"0x00ff00Yes":"0xff0000No")+"</td><td>"+cycle.score+"</td><td>"+cycle.ping+"</td><td>"+(cycle.team?cycle.team.name:"")+"</td><tr>";
+		tmp += "<tr class=\"player\"><td>"+(cycle.chatting?"*":"&nbsp;")+replaceColors(cycle.getColoredName())+"</td><td>"+replaceColors(cycle.alive?"0x00ff00Yes":"0xff0000No")+"</td><td style='text-align:right'>"+cycle.score+"</td><td style='text-align:right'>"+cycle.ping+"</td><td>"+(cycle.team?cycle.team.name:"")+"</td><tr>";
 	}
 	playersSB.innerHTML = tmp;
 }
