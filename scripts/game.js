@@ -230,7 +230,6 @@ function calculateSpawn(x)
 }
 function processPlayer(x,cfg)
 {
-	var spawns = calculateSpawn(x);
 	cfg.name = cfg.name.replace(/\n/g," ");
 	if(removeColors(cfg.name).length > 15) 
 	{
@@ -312,7 +311,6 @@ function processPlayer(x,cfg)
 	}
 	else
 	{
-		cfg.x = spawns[0]; cfg.y = spawns[1]; cfg.z = spawns[2];
 		engine.players[x] = (new Player(cfg));
 		var cycle = engine.players[x];
 		if(cycle.spectating)
@@ -332,7 +330,7 @@ function processPlayer(x,cfg)
 	{
 		if(engine.teams.length < settings.TEAMS_MAX)
 		{
-			engine.teams.push(cycle.team = new Team({name:cfg.name,x:spawns[0], y:spawns[1], z:spawns[2], dir:deg2rad(spawns[3])}));
+			engine.teams.push(cycle.team = new Team({name:cfg.name}));
 		}
 		else
 		{
@@ -445,6 +443,7 @@ function ensurePlayersSane(removeAIs=true)
 			}
 		}
 		
+		var teamsByScore = [];
 		//clean up teams / remove ghost teams
 		for(var x=engine.teams.length-1;x>=0;--x) if(engine.teams[x])
 		{
@@ -461,8 +460,19 @@ function ensurePlayersSane(removeAIs=true)
 			}
 			else
 			{
-				engine.teams[x].spawn(false,false); //and finally spawn everyone
+				teamsByScore.push(engine.teams[x]);
 			}
+		}
+		
+		//and finally spawn everyone, sorted by score
+		teamsByScore.sort(function(a,b){return b.score-a.score});
+		for(var x=teamsByScore.length-1;x>=0;--x)
+		{
+			var pos = calculateSpawn(x);
+			engine.teams[x].x = pos[0]; engine.teams[x].y = pos[1]; engine.teams[x].z = pos[2];
+			engine.teams[x].dir = deg2rad(pos[3]);
+			
+			engine.teams[x].spawn(false,false);
 		}
 		if(!engine.dedicated && !engine.players[engine.activePlayer].alive) changeViewTarget(1);
 	}
