@@ -96,7 +96,7 @@ function connectionHandler(e)
 			engine.connection.timeSync = false;
 			break;
 		case "version": 
-			engine.connection.send(JSON.stringify({type:"version",data:0.71}));
+			engine.connection.send(JSON.stringify({type:"version",data:0.72}));
 		break;
 		case "endRound": if(inround()) endRound(); break;
 		case "newRound": 

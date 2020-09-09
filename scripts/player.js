@@ -322,7 +322,7 @@ class Player extends THREE.Object3D
 		}
 		if(this.sensor.left < settings.CYCLE_WALL_NEAR || this.sensor.right < settings.CYCLE_WALL_NEAR)
 		{
-			var wallAccel = settings.CYCLE_ACCEL;
+			var wallAccel = settings.CYCLE_ACCEL*0.3;
 			if(wallAccel != 0) //don't bother if there's no accel
 			{
 				var accelMult = [(settings.CYCLE_WALL_NEAR-this.sensor.left)/settings.CYCLE_WALL_NEAR,(settings.CYCLE_WALL_NEAR-this.sensor.right)/settings.CYCLE_WALL_NEAR];
