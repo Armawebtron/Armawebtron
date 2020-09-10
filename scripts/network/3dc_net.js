@@ -726,7 +726,13 @@ class Connection3dc
 						if(zone.x!==undefined) {myZone.position.x = zone.x; myZone.position.y = zone.y; myZone.position.z = zone.z;}
 						if(zone.xdir!==undefined) {myZone.cfg.xdir = zone.xdir; myZone.cfg.ydir = zone.ydir;}
 						if(zone.bounce!== undefined)myZone.cfg.bounce = zone.bounce;
-						if(zone.type == "flagHeld") myZone.cfg.heldBy = engine.players[zone.heldBy];
+						if(zone.type == "flagHeld")
+						{
+							myZone.cfg.heldBy = engine.players[zone.heldBy];
+							myZone.cfg.heldBy.hasFlag = myZone.cfg;
+						}
+						else if(myZone.cfg.heldBy)
+							myZone.cfg.heldBy.hasFlag = null;
 						myZone.cfg.netObject = true;
 					}
 					else

@@ -198,7 +198,7 @@ function createAIsettings()
 	}
 	else
 	{
-		cycleColor = tailColor = teamColor(1);
+		cycleColor = tailColor = game.teamColor(1);
 		colorcode = cycleColor.getHexString();
 	}
 	var cycleinfo = { ai:true,
@@ -267,7 +267,7 @@ function processPlayer(x,cfg)
 		//if(x == engine.activePlayer && !engine.dedicated)
 		{
 			var cycleColor = cfg.cycleColor,tailColor = cfg.tailColor;
-			if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = teamColor(engine.teams.indexOf(engine.players[x].team)); }
+			if(!settings.ALLOW_TEAM_NAME_COLOR) { cycleColor = tailColor = game.teamColor(engine.teams.indexOf(engine.players[x].team)); }
 			if(cycle.forcedName)
 			{
 				if(cycle.forcedName != cycle.name)
@@ -1204,7 +1204,20 @@ game.updateScoreBoard = function()
 	for(var x=0;x<engine.playersByScore.length;++x) if(typeof(engine.playersByScore[x]) != "undefined")
 	{
 		var cycle = engine.playersByScore[x];
-		tmp += "<tr class=\"player\"><td>"+(cycle.chatting?"*":"&nbsp;")+replaceColors(cycle.getColoredName())+"</td><td>"+replaceColors(cycle.alive?"0x00ff00Yes":"0xff0000No")+"</td><td style='text-align:right'>"+cycle.score+"</td><td style='text-align:right'>"+cycle.ping+"</td><td>"+(cycle.team?cycle.team.name:"")+"</td><tr>";
+		tmp += "<tr class=\"player\">\
+		<td>"+
+			(cycle.hasFlag?replaceColors((engine.teams[cycle.hasFlag.team]==engine.players[engine.activePlayer].team?"0xff7fff":"0xff7f00")+"F"):'')+
+			(cycle.chatting?"*":"&nbsp;")+
+			replaceColors(cycle.getColoredName())+
+		"</td><td>"+
+			replaceColors(cycle.alive?"0x00ff00Yes":"0xff0000No")+
+		"</td><td style='text-align:right'>"+
+			cycle.score+
+		"</td><td style='text-align:right'>"+
+			cycle.ping+
+		"</td><td>"+
+			(cycle.team?cycle.team.name:"")+
+		"</td><tr>";
 	}
 	playersSB.innerHTML = tmp;
 }

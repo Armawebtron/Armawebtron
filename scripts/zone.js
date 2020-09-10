@@ -218,6 +218,8 @@ class Zone
 	}
 	netSync()
 	{
+		if(this.type.indexOf("flag") == 0)
+			game.updateScoreBoard();
 		if(window.svr)
 		{
 			var zone = {
