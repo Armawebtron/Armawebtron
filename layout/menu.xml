@@ -225,7 +225,12 @@
 				<Item type="exitmenu" text="&lt;- Go Back"/>
 			</Menu>
 		<Menu id="sound" title="Sound Configuration">
-			<Item type="list" var="player.engineType" text="Sound set">
+			<Item type="list" var="SOUND_QUALITY" text="Sound Quality">
+					<Option value="0" text="Off" />
+					<Option value="1" text="Low" />
+					<Option value="3" text="High" />
+				</Item>
+			<Item type="list" var="player.engineType" text="Engine Type">
 				<Option value="5" text="ArmagetronAd" />
 				<Option value="3" text="Tr2n Origins" />
 				<Option value="4" text="glTron" />

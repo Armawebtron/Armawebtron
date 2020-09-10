@@ -139,7 +139,7 @@ function draw()
 		}
 		
 		//sound
-		if(window.mixCycle) mixCycle(cycle);
+		if(engine.audio) engine.audio.mixCycle(cycle);
 	}
 	
 	if(settings.WALLS_STAY_UP_DELAY >= 0)
@@ -282,7 +282,7 @@ function draw()
 	
 	/*if(engine.players[engine.viewTarget].alive)*/ cameraView(engine.players[engine.viewTarget],frametime*engine.timemult);
 	
-	if(ctx) audioMixing();
+	if(engine.audio) engine.audio.audioMixing();
 	
 	//renderer switch for post processing
 	if (engine.usingPostProcessing) {
@@ -547,7 +547,7 @@ var cameraView = function(cycle, timestep) {
 		 	engine.camera.lookAt(cameraOffset);
 			//engine.camera.rotation.z = cycle.rotation.x+cycle.rotation.y;
 
-//		 	cycle.audio.gain.setTargetAtTime(0.2, ctx.currentTime, 0.02);
+//		 	cycle.audio.gain.setTargetAtTime(0.2, engine.audio.currentTime, 0.02);
 			//cycle.textLabel.style.visibility = 'hidden';
 			//cycle.model.visible = false;
 

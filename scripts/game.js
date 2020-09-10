@@ -34,16 +34,17 @@ game.endRound = function()
 		window.svr.send({"type":"syncdata","gtime":-4000});
 	}
 	
-	if(ctx)
-	{
-		audioStop(); 
-		if(settings.SOUNDS_EXTRO) playSound(bufferLoader.bufferList[bufferLoader.other+2],0.5,1,false,ctx.destination);
-	}
 	engine.roundCommencing = true;
 	//engine.hud.hide();
 	if(engine.hud) engine.hud.game.style.opacity = 0;
 	engine.console.print("Clearing grid...\n",false);
 	if(engine.renderer) engine.renderer.clear();
+	if(engine.audio) 
+	{
+		engine.audio.stopCycles();
+		if(settings.SOUNDS_EXTRO)
+			engine.audio.playSound({buffer:engine.audio.bLoader.other+2,vol:0.5});
+	}
 	if(!engine.network)
 	{
 		//if(settings.ROUND_CENTER_MESSAGE != "")
@@ -520,8 +521,8 @@ game.loadRound = function(dlmap)
 	buildZones();
 	engine.scene.add(engine.zones);
 	
-	if(settings.SOUNDS_INTRO)
-		playSound(bufferLoader.bufferList[bufferLoader.other+1],0.5,1,false,ctx.destination);
+	if(engine.audio && settings.SOUNDS_INTRO)
+		engine.audio.playSound({buffer:engine.audio.bLoader.other+1,vol:0.5});
 	
 	if(settings.ROUND_CONSOLE_MESSAGE != "")
 	{
@@ -1031,7 +1032,7 @@ game.pause = function()
 {
 	engine.paused = true;//cuts off the loop
 	engine.startOfPause = performance.now();
-	audioStop();
+	engine.audio.stopCycles();
 }
 
 game.unpause = function()
@@ -1044,7 +1045,7 @@ game.unpause = function()
 	if(engine.paused)
 	{
 		engine.paused = false;
-		audioStart();
+		if(engine.audio) engine.audio.startCycles();
 		engine.lastGameTime = engine.lastRenderTime = engine.fpsTime = performance.now();//resets delta so we don't pretend the game should have been playing the entire time we were paused
 		var endOfPause = performance.now();
 		engine.totalPauseTime += (endOfPause - engine.startOfPause);
@@ -1071,14 +1072,14 @@ game.changeViewTarget = function(a=1,forcechange=false)
 			//console.log(engine.viewTarget);
 		}
 	}
-	if(engine.view == 'cockpit')
+	if(engine.audio)
 	{
 		for(var x=0;x>engine.players.length;x++)
 		{
-			if(x == engine.viewTarget)
-				engine.players[x].audio.gain.setTargetAtTime(0.2, ctx.currentTime, 0.02);
+			if(x == engine.viewTarget && engine.view == "cockpit")
+				engine.players[x].audio.gain.setTargetAtTime(0.2, engine.audio.currentTime, 0.02);
 			else
-				engine.players[x].audio.gain.setTargetAtTime(6, ctx.currentTime, 1);
+				engine.players[x].audio.gain.setTargetAtTime(6, engine.audio.currentTime, 1);
 		}
 	}
 	if(!engine.network && !engine.players[engine.activePlayer].spectating && typeof(engine.winner) == "undefined")

@@ -47,6 +47,8 @@ window.init = function()
 	}
 	engine.scene = new THREE.Scene();
 	if(engine.dedicated) return;
+	if(!engine.audio && settings.SOUND_QUALITY > 0) try { initSound(); }
+	catch(e) { console.error(e); alert("Sound could not be initialized!"); }
 	loadTextures();
 	window.addEventListener('touchstart',touchControl);
 	window.addEventListener('resize',resizeWindow);

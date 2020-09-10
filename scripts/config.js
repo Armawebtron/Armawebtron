@@ -185,6 +185,8 @@ settings = {
 	ADMIN_KILL_MESSAGE: true,
 	
 	//SOUNDS
+	SOUND_QUALITY: 3,
+	
 	SOUNDS_INTRO: false,
 	SOUNDS_EXTRO: false,
 	SOUNDS_COUNTDOWN: true,
@@ -525,6 +527,38 @@ var commands = {
 	CAMERA_FOV: function() {if(engine.camera){engine.camera.fov=settings.CAMERA_FOV;engine.camera.updateProjectionMatrix()}},
 	CAMERA_NEAR_RENDER: function() {if(engine.camera){engine.camera.near=settings.CAMERA_NEAR_RENDER;engine.camera.updateProjectionMatrix()}},
 	CAMERA_FAR_RENDER: function() {if(engine.camera){engine.camera.far=settings.CAMERA_FAR_RENDER;engine.camera.updateProjectionMatrix()}},
+	SOUND_QUALITY: function()
+	{
+		settings.SOUND_QUALITY = parseInt(settings.SOUND_QUALITY);
+		if(settings.SOUND_QUALITY > 3) settings.SOUND_QUALITY = 3;
+		if(!engine.audio && settings.SOUND_QUALITY > 0)
+		{
+			try { initSound(); }
+			catch(e)
+			{
+				console.error(e);
+				engine.console.print("An error occurred while enabling sound. If your browser supports it, this may be a bug.\n",false);
+			}
+		}
+		if(settings.SOUND_QUALITY < 0) settings.SOUND_QUALITY = 0;
+		if(engine.audio && settings.SOUND_QUALITY == 0)
+		{
+			engine.audio.stopCycles();
+			
+			return;
+		}
+		switch(settings.SOUND_QUALITY)
+		{
+			case 1: p="HRTF"; engine.retroSound = true; break;
+			case 2: p="HRTF"; engine.retroSound = true; break;
+			case 3: p="equalpower"; engine.retroSound = false; break;
+		}
+		for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x])
+		{
+			engine.players[x].audio.panner.panningMode = p;
+		}
+		
+	},
 	HUD_MAP: function()
 	{
 		document.getElementById("canvas").style.display = settings.HUD_MAP?"block":"none";
@@ -1019,6 +1053,7 @@ var _aacompatvars = ["PLAYER_1","COLOR_R_1","COLOR_G_1","COLOR_B_1"];
 var uservars = [
 	"CFG_VERSION",
 //	"GRID_SIZE","FLOOR_RED","FLOOR_GREEN","FLOOR_BLUE",
+	"SOUND_QUALITY",
 	"EXPLOSIONS","HIGH_RIM","FLOOR_DETAIL",
 	/*"MENU_RENDER",*/"REDRAW_MODE","MAX_TARGET_FPS",//"GAME_LOOP",
 	"ZONE_HEIGHT","ZONE_SEGMENTS","ZONE_SEG_LENGTH","ZONE_ALPHA","ZONE_SPIN_SPEED","ZONE_RENDER_TYPE",

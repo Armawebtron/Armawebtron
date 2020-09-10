@@ -222,7 +222,7 @@ class Player extends THREE.Object3D
 			engine.scene.add(this.walls);
 		}
 		
-		if(this.audio) this.audio.panner.connect(ctx.destination);
+		if(this.audio) this.audio.panner.connect(engine.audio.destination);
 		
 		engine.scene.add(this);
 		if(update) game.updateScoreBoard();
@@ -239,9 +239,9 @@ class Player extends THREE.Object3D
 		if(this.audio)
 		{
 			this.audio.panner.disconnect();
-			playSound(bufferLoader.bufferList[this.engineType+6],0.5,1,false,ctx.destination);
-			spawnExplosion(this.position,this.cycleColor,this.tailColor);
+			engine.audio.playSound({buffer:this.engineType+6,vol:0.5});
 		}
+		spawnExplosion(this.position,this.cycleColor,this.tailColor);
 		game.updateScoreBoard();
 		
 		if(this.hasFlag)
@@ -617,21 +617,21 @@ class Player extends THREE.Object3D
 		
 		//audio creation
 		this.engineType = cfg.engineType;
-		if(ctx)
+		if(engine.audio)
 		{
-			this.audio = ctx.createGain();
+			this.audio = engine.audio.createGain();
 			this.audio.gain.value = 0.01;
-			this.audio.panner = ctx.createPanner();
+			this.audio.panner = engine.audio.createPanner();
 			if(engine.retroSound)
 				this.audio.panner.panningModel = "HRTF";
 			else
 				this.audio.panner.panningModel = "equalpower";
 			this.audio.connect(this.audio.panner);
-			this.audio.panner.connect(ctx.destination);
+			this.audio.panner.connect(engine.audio.destination);
 
 			//audio initialization
-			this.engineSound = playSound(bufferLoader.bufferList[this.engineType], 0.5, 0, true, this.audio);
-			this.audio.gain.setTargetAtTime(6, ctx.currentTime, 1.0);
+			this.engineSound = playSound(engine.audio.bLoader.bufferList[this.engineType], 0.1, 0, true, this.audio);
+			this.audio.gain.setTargetAtTime(6, engine.audio.currentTime, 1.0);
 		}
 	}
 	

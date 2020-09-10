@@ -86,6 +86,7 @@ engine = {
 	menus: [],
 	
 	//sound
+	sound: false,
 	useSound: true,
 	retroSound: true,
 //
