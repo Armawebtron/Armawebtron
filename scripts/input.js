@@ -254,7 +254,7 @@ function touchControl(e)
 				if(engine.players[engine.activePlayer].alive)
 					engine.players[engine.activePlayer].turn(dir);
 				else if(engine.players[engine.activePlayer].dedtime+1000 > performance.now())
-					changeViewTarget(dir);
+					game.changeViewTarget(dir);
 			}
 		}
 	}
@@ -272,7 +272,7 @@ function gameControl(keycode)
 				if(engine.players[engine.activePlayer].alive)
 					engine.players[engine.activePlayer].turn(-1);
 				else if(engine.players[engine.activePlayer].dedtime+1000 < performance.now())
-					changeViewTarget(-1);
+					game.changeViewTarget(-1);
 				engine.controls.pressed.push(keycode);
 			}
 			if(settings.controls.right.indexOf(keycode) > -1)
@@ -280,7 +280,7 @@ function gameControl(keycode)
 				if(engine.players[engine.activePlayer].alive)
 					engine.players[engine.activePlayer].turn(1);
 				else if(engine.players[engine.activePlayer].dedtime+1000 < performance.now())
-					changeViewTarget(1);
+					game.changeViewTarget(1);
 				engine.controls.pressed.push(keycode);
 			}
 			if(settings.controls.north.indexOf(keycode) > -1)
@@ -376,10 +376,13 @@ function gameControl(keycode)
 			}
 		engine.controls.pressed.push(keycode);//add only if not added already to pressed keys
 		}
-		if(engine.view == 'cockpit')
-			engine.players[engine.viewTarget].audio.gain.setTargetAtTime(0.2, ctx.currentTime, 0.02);
-		else
-			engine.players[engine.viewTarget].audio.gain.setTargetAtTime(6, ctx.currentTime, 1);
+		if(engine.audio)
+		{
+			if(engine.view == 'cockpit')
+				engine.players[engine.viewTarget].audio.gain.setTargetAtTime(0.2, engine.audio.currentTime, 0.02);
+			else
+				engine.players[engine.viewTarget].audio.gain.setTargetAtTime(6, engine.audio.currentTime, 1);
+		}
 		console.log('CHANGE_CAMERA to '+engine.view);
 
 	}
