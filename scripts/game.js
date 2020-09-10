@@ -313,6 +313,11 @@ function processPlayer(x,cfg)
 	{
 		engine.players[x] = (new Player(cfg));
 		var cycle = engine.players[x];
+		if(window.svr && !cycle.AI)
+		{
+			engine.console.print("\n\n",cycle,false);
+			engine.console.print("Welcome, "+cycle.getBoringName()+"! This server is running version "+tStringify("@version@")+".\n\n",cycle,false);
+		}
 		if(cycle.spectating)
 		{
 			engine.console.print(cycle.getColoredName()+"0xff7f7f entered as spectator.\n");
