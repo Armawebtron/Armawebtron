@@ -126,8 +126,11 @@ function tdcDeconstructData(data,con) //! prepares network data to be sent
 	if(data.JSON)
 	{
 		// JSON forced flag? well, we don't want to actually send the flag
+		var json = data.JSON;
 		delete data.JSON;
-		return JSON.stringify(data);
+		var newdata = JSON.stringify(data);
+		data.JSON = json;
+		return newdata;
 	}
 	var buf = "", desc=123;
 	switch(typeof(data.type))
