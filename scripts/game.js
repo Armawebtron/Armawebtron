@@ -1032,7 +1032,7 @@ game.pause = function()
 {
 	engine.paused = true;//cuts off the loop
 	engine.startOfPause = performance.now();
-	engine.audio.stopCycles();
+	if(engine.audio) engine.audio.stopCycles();
 }
 
 game.unpause = function()
