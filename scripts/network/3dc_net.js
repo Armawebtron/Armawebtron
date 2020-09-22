@@ -507,7 +507,7 @@ class Connection3dc
 			case "newRound": 
 				if(game.loading) break;
 				if(!engine.playGame) game.play();
-				else if(!inround()) game.loadRound();
+				else if(!inround()) game.newRound();
 				break;
 			case _3dc_config: case "setting":
 				console.log(e);
