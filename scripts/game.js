@@ -22,6 +22,7 @@
 game.doNewRound = function()
 {
 	if(engine.uRound !== false) { clearTimeout(engine.uRound); engine.uRound = false; }
+	if(engine.roundCommencing) return;
 	game.endRound();
 	setTimeout(game.newRound,engine.dedicated?300:0); //give clients an opportunity to sync their data
 }
