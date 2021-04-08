@@ -49,6 +49,7 @@ window.init = function()
 	if(engine.dedicated) return;
 	if(!engine.audio && settings.SOUND_QUALITY > 0) try { initSound(); }
 	catch(e) { console.error(e); alert("Sound could not be initialized!"); }
+	engine.players[0] = new Player(settings.player);
 	loadTextures();
 	window.addEventListener('touchstart',touchControl);
 	window.addEventListener('resize',resizeWindow);
