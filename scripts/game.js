@@ -476,7 +476,7 @@ game.processPlayers = function(removeAIs=true)
 			
 			engine.teams[x].spawn(false,false);
 		}
-		if(!engine.dedicated && !engine.players[engine.activePlayer].alive) changeViewTarget(1);
+		if(!engine.dedicated && !engine.players[engine.activePlayer].alive) game.changeViewTarget(1);
 	}
 	
 	if(window.svr) 
