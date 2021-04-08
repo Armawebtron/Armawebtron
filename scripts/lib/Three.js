@@ -20142,8 +20142,10 @@
 
 					var floor = needsPowerOfTwo ? _Math.floorPowerOfTwo : Math.floor;
 
-					var width = floor( scale * image.width );
-					var height = floor( scale * image.height );
+					//var width = floor( scale * image.width );
+					var width = Math.min(maxSize,image.width);
+					//var height = floor( scale * image.height );
+					var height = Math.min(maxSize,image.height);
 
 					if ( _canvas === undefined ) _canvas = createCanvas( width, height );
 
