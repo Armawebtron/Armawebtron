@@ -626,7 +626,12 @@ class Connection3dc
 							delete cycle.newPos;
 						}
 						
-						cycle.speed = data.speed; cycle.rubber = data.rubber;
+						//if(cycle.lastTurnTime > msg.gtime) continue;
+						
+						if(data.speed !== undefined) cycle.speed = 1*data.speed;
+						if(data.rubber !== undefined) cycle.rubber = 1*data.rubber;
+						if(data.braking !== undefined) cycle.braking = !!data.braking;
+						if(data.brakes !== undefined) cycle.brakes = 1*data.brakes;
 						
 						if(cycle.alive)
 						{
@@ -635,7 +640,8 @@ class Connection3dc
 							if(!data.wall && normalizeRad(olddir) == normalizeRad(newdir) && isFinite(data.position[0]) && isFinite(data.position[1])) //slide to position
 							{
 								if(!cycle.newPos) cycle.newPos = new THREE.Vector2(cycle.position.x,cycle.position.y);
-								cycle.newPos.x = data.position[0]; cycle.newPos.y = data.position[1];
+								cycle.newPos.x = 1*data.position[0]; cycle.newPos.y = 1*data.position[1];
+								cycle.gameTime = Math.max(0,msg.gtime);
 								
 								if(!cycle.handleNetTurn) 
 								{
@@ -645,8 +651,8 @@ class Connection3dc
 							}
 							else if(cycle.handleNetTurn) //jump straight to the position, we're doing a turn
 							{ //also, don't handle updates until our last turn has been sent by the server
-								cycle.lastpos.x = cycle.position.x = data.position[0]||0; 
-								cycle.lastpos.y = cycle.position.y = data.position[1]||0;
+								cycle.lastpos.x = cycle.position.x = 1*data.position[0]||0; 
+								cycle.lastpos.y = cycle.position.y = 1*data.position[1]||0;
 								delete cycle.newPos;
 								
 								cycle.gameTime = Math.max(0,msg.gtime);
@@ -664,7 +670,7 @@ class Connection3dc
 							}
 							if(data.wall) { cycle.walls.map = data.wall; cycle.resetWall(false); }
 								
-							cycle.lastpos.z = cycle.position.z = data.position[2]||0;
+							cycle.lastpos.z = cycle.position.z = 1*data.position[2]||0;
 							
 							
 							if(cycle.haswall)
@@ -692,6 +698,7 @@ class Connection3dc
 				break;
 			case "scoredata":
 				for(var i=msg.data.length-1;i>=0;--i) 
+				{
 					if(typeof(msg.data[i]) != "undefined")
 					{
 						var data = msg.data[i];
@@ -701,10 +708,14 @@ class Connection3dc
 						cycle.score = data.score||0;
 						engine.lastPingTime = performance.now();
 					}
+				}
+				engine.playersByScore.sort(function(a,b){return b.score-a.score});
 				game.updateScoreBoard();
 				break;
 			case "team":
 				engine.teams.splice(0);
+				//[[FALLTHROUGH]]
+			case _3dc_newTeam:
 				for(var i=msg.data.length-1;i>=0;--i) if(msg.data[i])
 				{
 					engine.teams[msg.data[i].id] = new Team(msg.data[i]);
