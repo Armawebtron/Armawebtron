@@ -501,11 +501,10 @@ class Connection3dc
 			case _3dc_loginDenial:
 				connectionAborted({reason:msg.data});
 				break;
-			
-			default:
-				if(!this.isGameServer) break;
-				//[[FALLTHROUGH]]
-			
+		}
+		if(!this.isGameServer) return;
+		switch(msg.type)
+		{
 			case "endRound": if(inround()) game.endRound(); break;
 			case "newRound": 
 				if(game.loading) break;
