@@ -641,7 +641,7 @@ class Connection3dc
 							{
 								if(!cycle.newPos) cycle.newPos = new THREE.Vector2(cycle.position.x,cycle.position.y);
 								cycle.newPos.x = 1*data.position[0]; cycle.newPos.y = 1*data.position[1];
-								cycle.gameTime = Math.max(0,msg.gtime);
+								//cycle.gameTime = Math.max(0,msg.gtime);
 								
 								if(!cycle.handleNetTurn) 
 								{
