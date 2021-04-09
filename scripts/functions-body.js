@@ -235,7 +235,11 @@ global.getCycleSensors = function(full=false)
 				if(!engine.dedicated && !lookThroughWall) lookThroughWall = (engine.walls.children[y]&&engine.walls.children[y].geometry.vertices[engine.walls.children[y].geometry.vertices.length-1].z) > campos.z && lineIntersect(campos.x,campos.y,ppos.x,ppos.y,w1x,w1y,w2x,w2y);
 			}
 		}
-		if(!engine.dedicated && engine.walls.children[y]) engine.walls.children[y].visible = !lookThroughWall;
+		if(!engine.dedicated && engine.walls.children[y])
+		{
+			//engine.walls.children[y].visible = !lookThroughWall;
+			engine.walls.children[y].material.depthWrite = !lookThroughWall;
+		}
 	}
 	for(var a=engine.players.length-1;a>=0;--a) if(engine.players[a] !== undefined)
 	{
