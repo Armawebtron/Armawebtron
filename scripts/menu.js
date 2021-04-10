@@ -413,7 +413,7 @@ function pauseMenuToggle()
 {
 	if(engine.inputState == "game")
 	{
-		if(engine.network) 
+		if(engine.network && engine.players[engine.activePlayer]) 
 		{
 			engine.players[engine.activePlayer].chatting=true;
 		}
@@ -426,7 +426,7 @@ function pauseMenuToggle()
 	}
 	else
 	{
-		if(engine.network) 
+		if(engine.network && engine.players[engine.activePlayer]) 
 		{
 			engine.players[engine.activePlayer].chatting=false;
 		}
