@@ -23,20 +23,24 @@ engine.audio = new AudioContext();
 engine.audio.bLoader = new BufferLoader(
 	engine.audio,
 	[
+		// Cycle run sounds
 		"",//0
 		"",//1
 		"",//2
 		"sounds/tr2n_origins/cyclrun.wav",//3
 		"sounds/gltron/game_engine.ogg",//4
 		"sounds/arma/cyclrun.wav",//5
+		
+		// Cycle crash sounds
 		"",//0
 		"",//1
 		"",//2
 		"sounds/tr2n_origins/expl.ogg",//3
-		"sounds/tr2n_origins/expl.ogg",//3
-		"sounds/tr2n_origins/expl.ogg",//3
+		"sounds/bikecrash.ogg",//5
+		"sounds/bikecrash.ogg",//5
 		//"sounds/gltron/game_crash.ogg",//4
 		//"sounds/arma/expl.ogg",//5
+		
 		//other sounds:
 		"sounds/gltron/game_recognizer.wav",
 		"sounds/tr2n_origins/intro.wav",
