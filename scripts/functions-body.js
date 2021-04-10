@@ -137,7 +137,8 @@ global.getCycleSensors = function(full=false)
 		engine.zones.children[x].walldist = Infinity;
 		engine.zones.children[x].wall = [0,0,0,0];
 	}
-	if(!engine.dedicated) var campos = engine.camera.position, ppos = engine.players[engine.viewTarget].position;
+	var campos = engine.camera.position, ppos;
+	if(!engine.dedicated) ppos = engine.players[engine.viewTarget]?engine.players[engine.viewTarget].position:(new THREE.Vector3());
 	for(var y=engine.map.walls.length-1;y>=0;--y)
 	{
 		//console.log("ohi");

@@ -246,6 +246,8 @@ function draw()
 	
 	//update HUD (needs to be done for cycle being viewed)
 	var cycle = engine.players[engine.viewTarget];
+	if(!cycle) cycle = new Player({});
+	
 	updateHUD("player_rubber",cycle.rubber,0,settings.CYCLE_RUBBER);
 	var maxspeed = maxSpeed();
 	updateHUD("player_speed",cycle.speed,0,maxspeed);
@@ -280,7 +282,8 @@ function draw()
 	
 	//actual drawing
 	
-	/*if(engine.players[engine.viewTarget].alive)*/ cameraView(engine.players[engine.viewTarget],frametime*engine.timemult);
+	/*if(engine.players[engine.viewTarget].alive)*/ 
+	cameraView(cycle,frametime*engine.timemult);
 	
 	if(engine.audio) engine.audio.audioMixing();
 	

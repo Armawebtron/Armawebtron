@@ -69,7 +69,6 @@ game.end = function()
 {
 	game.endRound();
 	engine.players.splice(0);
-	engine.players[0] = new Player(settings.player);
 	engine.round = 0;
 }
 

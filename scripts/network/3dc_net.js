@@ -386,6 +386,8 @@ class Connection3dc
 	{
 		var data={},len=0;
 		
+		if(!cycle) return;
+		
 		if(cycle.chatting != cycle.chattingPrev) {data.chatting=cycle.chatting; cycle.chattingPrev=cycle.chatting; ++len;} 
 		if(cycle.alive)
 		{

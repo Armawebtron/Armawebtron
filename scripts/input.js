@@ -146,7 +146,7 @@ var keyboardKeyDown = function(e)
 					switch(specificState[1])
 					{
 						case "chat":
-							handleChat(engine.players[engine.activePlayer],output);
+							handleChat(engine.players[engine.activePlayer]||(new Player({})),output);
 							break;
 						case "console":
 							engine.console.print("0x7f7fff> "+output+"\n");
@@ -224,7 +224,7 @@ function touchControl(e)
 	{
 		//console.log(e);
 		var sepX = document.body.offsetWidth/3, sepY = document.body.offsetHeight/2;
-		if(engine.gtime > 0)
+		if(engine.players[engine.activePlayer] && engine.gtime > 0)
 		{
 			/*engine.console.print(e.touches.length+" touches");
 			for(var x=e.touches.length-1;x>=0;x--)*/
@@ -265,7 +265,7 @@ function gameControl(keycode)
 {
 	if(engine.controls.pressed.indexOf(keycode) == -1)
 	{
-		if(engine.gtime > 0)
+		if(engine.players[engine.activePlayer] && engine.gtime > 0)
 		{
 			if(settings.controls.left.indexOf(keycode) > -1)
 			{
@@ -360,7 +360,7 @@ function gameControl(keycode)
 		input.style.display = "block";
 		engine.inputStatePrev = engine.inputState;
 		engine.inputState = "input:chat";
-		engine.players[engine.activePlayer].chatting = true;
+		if(engine.players[engine.activePlayer]) engine.players[engine.activePlayer].chatting = true;
 		game.updateScoreBoard();
 		input.children[0].innerText = "Say:";
 		input.children[1].focus();
