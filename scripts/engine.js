@@ -61,6 +61,7 @@ engine = {
 	fonts: ['Armagetronad','Flynn','monospace','nicefont','sans-serif','serif'],
 	
 	textures: {},
+	models: {},
 	
 	//map data
 	currrot: 0, //rotation

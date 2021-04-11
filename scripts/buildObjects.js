@@ -19,7 +19,6 @@
 
 
 //TODO: neaten up this file, make it so the map isn't parsed a bunch of times
-//TODO: use an object for the cycles?
 //lots of Durf code around these parts...
 
 //NOTE: these functions depend on the presence of mapSTRING and/or mapXML
@@ -372,1254 +371,132 @@ function llll(zone)
 	
 }
 
-
-
-
-/////////////////////////////
-//CYCLE (TODO:split into cycle model chooser file)
-
-cycleModel = function(colorCode) {//builds a single cycle
-	var model = new THREE.Object3D();
-
-	if(!engine.dedicated)
+/*—–––––––––––cycle model—–––––––––––*/
+modelByName = function(model)
+{
+	switch(model)
 	{
-		var geo_body = new THREE.Geometry();
-		var geo_front = new THREE.Geometry();
-		var geo_back = new THREE.Geometry();
-		/*____________armagetron cycle______________*/
-		geo_body.vertices.push( 
-			new THREE.Vector3(  0.787148,	 0.394117,	0.964472),
-			new THREE.Vector3(  1.982280,	 0.145382,	1.00079),
-			new THREE.Vector3(  1.685360,	 0.169418,	1.21508),
-			new THREE.Vector3(  1.179990,	 0.197158,	1.43881),
-			new THREE.Vector3(  0.586153,	 0.197158,	1.54688),
-			new THREE.Vector3( -0.340365,	 0.164937,	1.54215),
-			new THREE.Vector3( -0.476320,	 0.145253,	1.44595),
-			new THREE.Vector3( -0.508108,	 0.135410,	1.30398),
-			new THREE.Vector3(  0.531900,	 0.197158,	0.234183),
-			new THREE.Vector3(  1.482190,	 0.197158,	0.232375),
-			new THREE.Vector3(  2.049060,	 0.141480,	0.847465),
-			new THREE.Vector3(  1.982280,	-0.143510,	1.00079),
-			new THREE.Vector3(  1.685360,	-0.171200,	1.21508),
-			new THREE.Vector3(  1.179990,	-0.199500,	1.43881),
-			new THREE.Vector3(  0.586153,	-0.199500,	1.54688),
-			new THREE.Vector3( -0.340450,	-0.168183,	1.54215),
-			new THREE.Vector3( -0.476405,	-0.138655,	1.44595),
-			new THREE.Vector3( -0.508192,	-0.128813,	1.30398),
-			new THREE.Vector3(  0.531900,	-0.199500,	0.234183),
-			new THREE.Vector3(  1.482190,	-0.199500,	0.232375),
-			new THREE.Vector3(  2.046890,	-0.134012,	0.847465),
-			new THREE.Vector3(  0.785515,	-0.393152,	0.964472) 
-		);
+		case 5: return "arma"; break;
+	}
+};
 
-	//minx = -0.508192
-	//maxx =  2.049060
-	//miny = -0.393152
-	//maxy =  0.394117
-	//minz =  0.232375
-	//maxz =  1.54688
+getModel = function(model,immediate)
+{
+	if(engine.dedicated) return;
+	
+	var name = modelByName(model);
+	
+	//if(immediate)
+	{
+		try
+		{
+			engine.models[name] = {};
+			var dir = "./models/"+name;
+			engine.models[name].body = (""+httpGet(dir+"/cycle_body.MDL")).split("\n");
+			engine.models[name].front = (""+httpGet(dir+"/cycle_front.MDL")).split("\n");
+			engine.models[name].rear = (""+httpGet(dir+"/cycle_rear.MDL")).split("\n");
+		}
+		catch(e)
+		{
+			console.error(e);
+			engine.models[name] = false;
+		}
+	}
+};
 
-	//0 , 0  -  1 , 1
-	//-0.508192 , 0.232375
-	//2.049060 , 1.54688
+parseModel = function(txtmdl)
+{
+	var geo = new THREE.Geometry();
+	
+	var min_x = Infinity, max_x = -Infinity, min_y = Infinity, max_y = -Infinity, min_z = Infinity, max_z = -Infinity;
+	
+	var bodyrangex, bodyoffsetx, bodyrangez, bodyoffsetz;
+	
+	var txt = "";
+	for(var i=0;i<txtmdl.length;++i)
+	{
+		if(txtmdl[i] == "") continue;
+		txt = txtmdl[i].split("\t");
+		if(txt[0][0] == 'v')
+		{
+			var vec = (geo.vertices[txt[0].slice(2)-1] = new THREE.Vector3(1*(txt[1]),1*(txt[2]),1*(txt[3])));
+			
+			if(vec.x < min_x) min_x = vec.x;
+			if(vec.x > max_x) max_x = vec.x;
+			
+			if(vec.y < min_y) min_y = vec.y;
+			if(vec.y > max_y) max_y = vec.y;
+			
+			if(vec.z < min_z) min_z = vec.z;
+			if(vec.z > max_z) max_z = vec.z;
+		}
+	}
+	for(var i=0;i<txtmdl.length;++i)
+	{
+		if(txtmdl[i] == "") continue;
+		txt = txtmdl[i].split("\t");
+		if(txt[0][0] == 'f')
+		{
+			if(bodyrangex === undefined)
+			{
+				bodyrangex = (min_x - max_x) * -1; 	//range = (lowest - highest) * -1
+				bodyoffsetx = 0 - min_x;						//offset = 0 - lowest
+				bodyrangez = (min_z - max_z) * -1;
+				bodyoffsetz = 0 - min_z;
+			}
+			
+			geo.faces.push(new THREE.Face3(txt[1]-1, txt[2]-1, txt[3]-1));
+			//console.log(txt);
+			geo.faceVertexUvs[0].push([
+				new THREE.Vector2( ((geo.vertices[txt[1]-1].x + bodyoffsetx) / bodyrangex ), ((geo.vertices[txt[1]-1].z + bodyoffsetz) / bodyrangez)),
+				new THREE.Vector2( ((geo.vertices[txt[2]-1].x + bodyoffsetx) / bodyrangex ), ((geo.vertices[txt[2]-1].z + bodyoffsetz) / bodyrangez)),
+				new THREE.Vector2( ((geo.vertices[txt[3]-1].x + bodyoffsetx) / bodyrangex ), ((geo.vertices[txt[3]-1].z + bodyoffsetz) / bodyrangez)),
+			]);
+		}
+	}
+	
+	return geo;
+};
 
+function mFailSafe(model)
+{
+	model.add(new THREE.Mesh(new THREE.Geometry()));
+	model.add(new THREE.Mesh(new THREE.Geometry()));
+	model.add(new THREE.Mesh(new THREE.Geometry()));
+	model.rotaon = {front: 0, back: 0};
+	return model;
+}
 
-	//x & z
-	var bodyrangex = (-0.508192 - 2.049060) * -1; 	//range = (lowest - highest) * -1
-	var bodyoffsetx = 0 - -0.508192;						//offset = 0 - lowest
-	var bodyrangez = (0.232375 - 1.54688) * -1;
-	var bodyoffsetz = 0 - 0.232375;
-
-		geo_body.faces.push( 
-			new THREE.Face3( 0, 2, 1 ),
-			new THREE.Face3( 0, 3, 2 ),
-			new THREE.Face3( 0, 4, 3 ),
-			new THREE.Face3( 0, 5, 4 ),
-			new THREE.Face3( 0, 6, 5 ),
-			new THREE.Face3( 0, 7, 6 ),
-			new THREE.Face3( 0, 8, 7 ),
-			new THREE.Face3( 0, 9, 8 ),
-			new THREE.Face3( 0, 10, 9 ),
-			new THREE.Face3( 0, 1, 10 ),
-			new THREE.Face3( 1, 12, 11 ),
-			new THREE.Face3( 1, 2, 12 ),
-			new THREE.Face3( 2, 13, 12 ),
-			new THREE.Face3( 2, 3, 13 ),
-			new THREE.Face3( 3, 14, 13 ),
-			new THREE.Face3( 3, 4, 14 ),
-			new THREE.Face3( 4, 15, 14 ),
-			new THREE.Face3( 4, 5, 15 ),
-			new THREE.Face3( 5, 16, 15 ),
-			new THREE.Face3( 5, 6, 16 ),
-			new THREE.Face3( 6, 17, 16 ),
-			new THREE.Face3( 6, 7, 17 ),
-			new THREE.Face3( 7, 18, 17 ),
-			new THREE.Face3( 7, 8, 18 ),
-			new THREE.Face3( 8, 19, 18 ),
-			new THREE.Face3( 8, 9, 19 ),
-			new THREE.Face3( 9, 20, 19 ),
-			new THREE.Face3( 9, 10, 20 ),
-			new THREE.Face3( 10, 11, 20 ),
-			new THREE.Face3( 10, 1, 11 ),
-			new THREE.Face3( 21, 11, 12 ),
-			new THREE.Face3( 21, 12, 13 ),
-			new THREE.Face3( 21, 13, 14 ),
-			new THREE.Face3( 21, 14, 15 ),
-			new THREE.Face3( 21, 15, 16 ),
-			new THREE.Face3( 21, 16, 17 ),
-			new THREE.Face3( 21, 17, 18 ),
-			new THREE.Face3( 21, 18, 19 ),
-			new THREE.Face3( 21, 19, 20 ),
-			new THREE.Face3( 21, 20, 11 )
-		);
-
-		geo_body.faceVertexUvs[0].push(
-			[
-				new THREE.Vector2( ((geo_body.vertices[0].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[0].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[2].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[2].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[1].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[1].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[0].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[0].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[3].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[3].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[2].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[2].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[0].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[0].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[4].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[4].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[3].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[3].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[0].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[0].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[5].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[5].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[4].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[4].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[0].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[0].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[6].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[6].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[5].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[5].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[0].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[0].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[7].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[7].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[6].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[6].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[0].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[0].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[8].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[8].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[7].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[7].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[0].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[0].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[9].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[9].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[8].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[8].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[0].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[0].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[10].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[10].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[9].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[9].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[0].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[0].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[1].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[1].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[10].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[10].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[1].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[1].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[12].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[12].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[11].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[11].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[1].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[1].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[2].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[2].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[12].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[12].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[2].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[2].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[13].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[13].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[12].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[12].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[2].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[2].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[3].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[3].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[13].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[13].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[3].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[3].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[14].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[14].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[13].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[13].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[3].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[3].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[4].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[4].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[14].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[14].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[4].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[4].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[15].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[15].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[14].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[14].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[4].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[4].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[5].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[5].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[15].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[15].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[5].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[5].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[16].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[16].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[15].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[15].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[5].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[5].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[6].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[6].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[16].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[16].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[6].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[6].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[17].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[17].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[16].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[16].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[6].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[6].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[7].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[7].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[17].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[17].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[7].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[7].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[18].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[18].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[17].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[17].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[7].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[7].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[8].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[8].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[18].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[18].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[8].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[8].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[19].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[19].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[18].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[18].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[8].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[8].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[9].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[9].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[19].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[19].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[9].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[9].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[20].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[20].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[19].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[19].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[9].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[9].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[10].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[10].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[20].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[20].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[10].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[10].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[11].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[11].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[20].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[20].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[10].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[10].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[1].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[1].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[11].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[11].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[21].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[21].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[11].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[11].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[12].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[12].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[21].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[21].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[12].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[12].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[13].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[13].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[21].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[21].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[13].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[13].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[14].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[14].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[21].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[21].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[14].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[14].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[15].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[15].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[21].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[21].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[15].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[15].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[16].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[16].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[21].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[21].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[16].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[16].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[17].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[17].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[21].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[21].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[17].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[17].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[18].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[18].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[21].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[21].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[18].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[18].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[19].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[19].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[21].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[21].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[19].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[19].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[20].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[20].z + bodyoffsetz) / bodyrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_body.vertices[21].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[21].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[20].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[20].z + bodyoffsetz) / bodyrangez)),
-				new THREE.Vector2( ((geo_body.vertices[11].x + bodyoffsetx) / bodyrangex ), ((geo_body.vertices[11].z + bodyoffsetz) / bodyrangez))
-			]
-		);
-
-		geo_front.vertices.push( 
-			new THREE.Vector3( -0.439773,	 0.00019,	 0				),
-			new THREE.Vector3( -0.355783,	 0.00019,	 0.258492	),
-			new THREE.Vector3( -0.135898,	 0.00019,	 0.418248	),
-			new THREE.Vector3(  0.135898,	 0.00019,	 0.418248	),
-			new THREE.Vector3(  0.355783,	 0.00019,	 0.258492	),
-			new THREE.Vector3(  0.439770,	 0.00019,	 0				),
-			new THREE.Vector3(  0.355783,	 0.00019,	-0.25849		),
-			new THREE.Vector3(  0.135898,	 0.00019,	-0.418248	),
-			new THREE.Vector3( -0.135898,	 0.00019,	-0.418248	),
-			new THREE.Vector3( -0.355783,	 0.00019,	-0.25849		),
-			new THREE.Vector3( -0.336475,	 0.29717,	 0				),
-			new THREE.Vector3( -0.272215,	 0.29717,	 0.197775	),
-			new THREE.Vector3( -0.103978,	 0.29717,	 0.320007	),
-			new THREE.Vector3(  0.103975,	 0.29717,	 0.320007	),
-			new THREE.Vector3(  0.272213,	 0.29717,	 0.197775	),
-			new THREE.Vector3(  0.336475,	 0.29717,	 0				),
-			new THREE.Vector3(  0.272213,	 0.29717,	-0.197775	),
-			new THREE.Vector3(  0.103975,	 0.29717,	-0.320005	),
-			new THREE.Vector3( -0.103978,	 0.29717,	-0.320005	),
-			new THREE.Vector3( -0.272215,	 0.29717,	-0.197775	),
-			new THREE.Vector3(  0.000000,	 0.29717,	 0				),
-			new THREE.Vector3( -0.336475,	-0.29679,	 0				),
-			new THREE.Vector3( -0.272215,	-0.29679,	 0.197775	),
-			new THREE.Vector3( -0.103978,	-0.29679,	 0.320007	),
-			new THREE.Vector3(  0.103975,	-0.29679,	 0.320007	),
-			new THREE.Vector3(  0.272213,	-0.29679,	 0.197775	),
-			new THREE.Vector3(  0.336475,	-0.29679,	 0				),
-			new THREE.Vector3(  0.272213,	-0.29679,	-0.197775	),
-			new THREE.Vector3(  0.103975,	-0.29679,	-0.320005	),
-			new THREE.Vector3( -0.103978,	-0.29679,	-0.320005	),
-			new THREE.Vector3( -0.272215,	-0.29679,	-0.197775	),
-			new THREE.Vector3(  0.000000,	-0.29679,	 0				)
-		);
-
-	//x & z
-	var frontrangex = (-0.439773 - 0.439770) * -1; 	//range = (lowest - highest) * -1
-	var frontoffsetx = 0 - -0.439773;						//offset = 0 - lowest
-	var frontrangez = (-0.418248 - 0.418248) * -1;
-	var frontoffsetz = 0 - -0.418248;
-
-
-		geo_front.faces.push( 
-			new THREE.Face3( 	 0,	11,	10	),
-			new THREE.Face3( 	 0,	 1,	11	),
-			new THREE.Face3( 	 1,	12,	11	),
-			new THREE.Face3( 	 1,	 2,	12	),
-			new THREE.Face3( 	 2,	13,	12	),
-			new THREE.Face3( 	 2,	 3,	13	),
-			new THREE.Face3( 	 3,	14,	13	),
-			new THREE.Face3( 	 3,	 4,	14	),
-			new THREE.Face3( 	 4,	15,	14	),
-			new THREE.Face3( 	 4,	 5,	15	),
-			new THREE.Face3( 	 5,	16,	15	),
-			new THREE.Face3( 	 5,	 6,	16	),
-			new THREE.Face3( 	 6,	17,	16	),
-			new THREE.Face3( 	 6,	 7,	17	),
-			new THREE.Face3( 	 7,	18,	17	),
-			new THREE.Face3( 	 7,	 8,	18	),
-			new THREE.Face3( 	 8,	19,	18	),
-			new THREE.Face3( 	 8,	 9,	19	),
-			new THREE.Face3( 	 9,	10,	19	),
-			new THREE.Face3( 	 9,	 0,	10	),
-			new THREE.Face3( 	20,	10,	11	),
-			new THREE.Face3( 	20,	11,	12	),
-			new THREE.Face3( 	20,	12,	13	),
-			new THREE.Face3( 	20,	13,	14	),
-			new THREE.Face3( 	20,	14,	15	),
-			new THREE.Face3( 	20,	15,	16	),
-			new THREE.Face3( 	20,	16,	17	),
-			new THREE.Face3( 	20,	17,	18	),
-			new THREE.Face3( 	20,	18,	19	),
-			new THREE.Face3( 	20,	19,	10	),
-			new THREE.Face3( 	21,	22,	0	),
-			new THREE.Face3( 	22,	 1,	0	),
-			new THREE.Face3( 	22,	23,	1	),
-			new THREE.Face3( 	23,	 2,	1	),
-			new THREE.Face3( 	23,	24,	2	),
-			new THREE.Face3( 	24,	 3,	2	),
-			new THREE.Face3( 	24,	25,	3	),
-			new THREE.Face3( 	25,	 4,	3	),
-			new THREE.Face3( 	25,	26,	4	),
-			new THREE.Face3( 	26,	 5,	4	),
-			new THREE.Face3( 	26,	27,	5	),
-			new THREE.Face3( 	27,	 6,	5	),
-			new THREE.Face3( 	27,	28,	6	),
-			new THREE.Face3( 	28,	 7,	6	),
-			new THREE.Face3( 	28,	29,	7	),
-			new THREE.Face3( 	29,	 8,	7	),
-			new THREE.Face3( 	29,	30,	8	),
-			new THREE.Face3( 	30,	 9,	8	),
-			new THREE.Face3( 	30,	21,	9	),
-			new THREE.Face3( 	21,	 0,	9	),
-			new THREE.Face3( 	22,	21,	31	),
-			new THREE.Face3( 	23,	22,	31	),
-			new THREE.Face3( 	24,	23,	31	),
-			new THREE.Face3( 	25,	24,	31	),
-			new THREE.Face3( 	26,	25,	31	),
-			new THREE.Face3( 	27,	26,	31	),
-			new THREE.Face3( 	28,	27,	31	),
-			new THREE.Face3( 	29,	28,	31	),
-			new THREE.Face3( 	30,	29,	31	),
-			new THREE.Face3( 	21,	30,	31	)
-		);
-		
-		geo_front.faceVertexUvs[0].push(
-			[
-				new THREE.Vector2( ((geo_front.vertices[0].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[0].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[11].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[11].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[10].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[10].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[0].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[0].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[1].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[1].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[11].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[11].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[1].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[1].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[12].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[12].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[11].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[11].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[1].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[1].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[2].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[2].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[12].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[12].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[2].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[2].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[13].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[13].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[12].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[12].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[2].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[2].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[3].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[3].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[13].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[13].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[3].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[3].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[14].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[14].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[13].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[13].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[3].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[3].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[4].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[4].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[14].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[14].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[4].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[4].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[15].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[15].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[14].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[14].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[4].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[4].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[5].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[5].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[15].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[15].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[5].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[5].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[16].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[16].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[15].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[15].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[5].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[5].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[6].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[6].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[16].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[16].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[6].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[6].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[17].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[17].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[16].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[16].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[6].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[6].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[7].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[7].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[17].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[17].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[7].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[7].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[18].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[18].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[17].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[17].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[7].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[7].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[8].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[8].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[18].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[18].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[8].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[8].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[19].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[19].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[18].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[18].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[8].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[8].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[9].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[9].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[19].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[19].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[9].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[9].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[10].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[10].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[19].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[19].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[9].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[9].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[0].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[0].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[10].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[10].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[20].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[20].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[10].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[10].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[11].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[11].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[20].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[20].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[11].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[11].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[12].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[12].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[20].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[20].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[12].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[12].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[13].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[13].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[20].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[20].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[13].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[13].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[14].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[14].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[20].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[20].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[14].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[14].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[15].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[15].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[20].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[20].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[15].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[15].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[16].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[16].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[20].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[20].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[16].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[16].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[17].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[17].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[20].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[20].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[17].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[17].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[18].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[18].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[20].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[20].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[18].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[18].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[19].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[19].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[20].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[20].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[19].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[19].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[10].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[10].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[21].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[21].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[22].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[22].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[0].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[0].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[22].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[22].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[1].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[1].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[0].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[0].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[22].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[22].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[23].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[23].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[1].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[1].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[23].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[23].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[2].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[2].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[1].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[1].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[23].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[23].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[24].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[24].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[2].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[2].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[24].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[24].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[3].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[3].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[2].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[2].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[24].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[24].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[25].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[25].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[3].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[3].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[25].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[25].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[4].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[4].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[3].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[3].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[25].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[25].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[26].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[26].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[4].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[4].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[26].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[26].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[5].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[5].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[4].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[4].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[26].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[26].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[27].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[27].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[5].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[5].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[27].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[27].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[6].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[6].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[5].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[5].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[27].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[27].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[28].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[28].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[6].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[6].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[28].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[28].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[7].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[7].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[6].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[6].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[28].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[28].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[29].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[29].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[7].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[7].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[29].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[29].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[8].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[8].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[7].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[7].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[29].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[29].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[30].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[30].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[8].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[8].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[30].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[30].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[9].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[9].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[8].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[8].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[30].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[30].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[21].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[21].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[9].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[9].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[21].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[21].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[0].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[0].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[9].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[9].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[22].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[22].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[21].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[21].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[31].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[31].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[23].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[23].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[22].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[22].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[31].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[31].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[24].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[24].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[23].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[23].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[31].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[31].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[25].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[25].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[24].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[24].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[31].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[31].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[26].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[26].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[25].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[25].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[31].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[31].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[27].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[27].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[26].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[26].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[31].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[31].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[28].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[28].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[27].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[27].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[31].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[31].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[29].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[29].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[28].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[28].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[31].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[31].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[30].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[30].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[29].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[29].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[31].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[31].z + frontoffsetz) / frontrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_front.vertices[21].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[21].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[30].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[30].z + frontoffsetz) / frontrangez)),
-				new THREE.Vector2( ((geo_front.vertices[31].x + frontoffsetx) / frontrangex ), ((geo_front.vertices[31].z + frontoffsetz) / frontrangez))
-			]
-		);
-
-		geo_back.vertices.push( 
-			new THREE.Vector3( 	0.0004475,		0.00019,		0.0002975	),
-			new THREE.Vector3(  -0.7435,			0.00019,		0.0002975	),
-			new THREE.Vector3(  -0.601417,		0.00019,		0.43758	),
-			new THREE.Vector3(  -0.229445,		0.00019,		0.707835	),
-			new THREE.Vector3( 	0.230340,		0.00019,		0.707835	),
-			new THREE.Vector3( 	0.602315,		0.00019,		0.43758	),
-			new THREE.Vector3( 	0.744397,		0.00019,		0.0002975	),
-			new THREE.Vector3( 	0.602315,		0.00019,		-0.436985	),
-			new THREE.Vector3( 	0.23034,			0.00019,		-0.70724	),
-			new THREE.Vector3(  -0.229445,		0.00019,		-0.70724	),
-			new THREE.Vector3(  -0.601417,		0.00019,		-0.436985	),
-			new THREE.Vector3(  -0.568755,		0.29717,		0.0002975	),
-			new THREE.Vector3(  -0.460047,		0.29717,		0.334868	),
-			new THREE.Vector3(  -0.175445,		0.29717,		0.541643	),
-			new THREE.Vector3( 	0.176342,		0.29717,		0.541643	),
-			new THREE.Vector3( 	0.460945,		0.29717,		0.334868	),
-			new THREE.Vector3( 	0.569653,		0.29717,		0.0002975	),
-			new THREE.Vector3( 	0.460945,		0.29717,		-0.334273	),
-			new THREE.Vector3( 	0.176342,		0.29717,		-0.541047	),
-			new THREE.Vector3(  -0.175445,		0.29717,		-0.541047	),
-			new THREE.Vector3(  -0.460047,		0.29717,		-0.334273	),
-			new THREE.Vector3( 	0.0004475,		0.29717,		0.0002975	),
-			new THREE.Vector3(  -0.568755,		-0.29679,		0.0002975	),
-			new THREE.Vector3(  -0.460047,		-0.29679,		0.334868	),
-			new THREE.Vector3(  -0.175445,		-0.29679,		0.541643	),
-			new THREE.Vector3( 	0.176342,		-0.29679,		0.541643	),
-			new THREE.Vector3( 	0.460945,		-0.29679,		0.334868	),
-			new THREE.Vector3( 	0.569653,		-0.29679,		0.0002975	),
-			new THREE.Vector3( 	0.460945,		-0.29679,		-0.334273	),
-			new THREE.Vector3( 	0.176342,		-0.29679,		-0.541047	),
-			new THREE.Vector3(  -0.175445,		-0.29679,		-0.541047	),
-			new THREE.Vector3(  -0.460047,		-0.29679,		-0.334273	),
-			new THREE.Vector3( 	0.0004475,		-0.29679,		0.0002975	)
-		);
-
-	//x & z
-	var backrangex = (-0.7435 - 0.744397) * -1; 	//range = (lowest - highest) * -1
-	var backoffsetx = 0 - -0.7435;						//offset = 0 - lowest
-	var backrangez = (-0.70724 - 0.707835) * -1;
-	var backoffsetz = 0 - -0.70724;
-
-		geo_back.faces.push( 
-			new THREE.Face3( 	  0,		 2,		 1	),
-			new THREE.Face3( 	  0,		 3,		 2	),
-			new THREE.Face3( 	  0,		 4,		 3	),
-			new THREE.Face3( 	  0,		 5,		 4	),
-			new THREE.Face3( 	  0,		 6,		 5	),
-			new THREE.Face3( 	  0,		 7,		 6	),
-			new THREE.Face3( 	  0,		 8,		 7	),
-			new THREE.Face3( 	  0,		 9,		 8	),
-			new THREE.Face3( 	  0,		10,		 9	),
-			new THREE.Face3( 	  0,		 1,		10	),
-			new THREE.Face3( 	  1,		12,		11	),
-			new THREE.Face3( 	  1,		 2,		12	),
-			new THREE.Face3( 	  2,		13,		12	),
-			new THREE.Face3( 	  2,		 3,		13	),
-			new THREE.Face3( 	  3,		14,		13	),
-			new THREE.Face3( 	  3,		 4,		14	),
-			new THREE.Face3( 	  4,		15,		14	),
-			new THREE.Face3( 	  4,		 5,		15	),
-			new THREE.Face3( 	  5,		16,		15	),
-			new THREE.Face3( 	  5,		 6,		16	),
-			new THREE.Face3( 	  6,		17,		16	),
-			new THREE.Face3( 	  6,		 7,		17	),
-			new THREE.Face3( 	  7,		18,		17	),
-			new THREE.Face3( 	  7,		 8,		18	),
-			new THREE.Face3( 	  8,		19,		18	),
-			new THREE.Face3( 	  8,		 9,		19	),
-			new THREE.Face3( 	  9,		20,		19	),
-			new THREE.Face3( 	  9,		10,		20	),
-			new THREE.Face3( 	 10,		11,		20	),
-			new THREE.Face3( 	 10,		 1,		11	),
-			new THREE.Face3( 	 21,		11,		12	),
-			new THREE.Face3( 	 21,		12,		13	),
-			new THREE.Face3( 	 21,		13,		14	),
-			new THREE.Face3( 	 21,		14,		15	),
-			new THREE.Face3( 	 21,		15,		16	),
-			new THREE.Face3( 	 21,		16,		17	),
-			new THREE.Face3( 	 21,		17,		18	),
-			new THREE.Face3( 	 21,		18,		19	),
-			new THREE.Face3( 	 21,		19,		20	),
-			new THREE.Face3( 	 21,		20,		11	),
-			new THREE.Face3( 	  1,		 2,		 0	),
-			new THREE.Face3( 	  2,		 3,		 0	),
-			new THREE.Face3( 	  3,		 4,		 0	),
-			new THREE.Face3( 	  4,		 5,		 0	),		
-			new THREE.Face3( 	  5,		 6,		 0	),
-			new THREE.Face3( 	  6,		 7,		 0	),
-			new THREE.Face3( 	  7,		 8,		 0	),
-			new THREE.Face3( 	  8,		 9,		 0	),
-			new THREE.Face3( 	  9,		10,		 0	),
-			new THREE.Face3( 	 10,		 1,		 0	),
-			new THREE.Face3( 	 22,		23,		 1	),
-			new THREE.Face3( 	 23,		 2,		 1	),
-			new THREE.Face3( 	 23,		24,		 2	),
-			new THREE.Face3( 	 24,		 3,		 2	),
-			new THREE.Face3( 	 24,		25,		 3	),
-			new THREE.Face3( 	 25,		 4,		 3	),
-			new THREE.Face3( 	 25,		26,		 4	),
-			new THREE.Face3( 	 26,		 5,		 4	),
-			new THREE.Face3( 	 26,		27,	 	 5	),
-			new THREE.Face3( 	 27,		 6, 		 5	),
-			new THREE.Face3( 	 27,		28,		 6	),
-			new THREE.Face3( 	 28,		 7,		 6	),
-			new THREE.Face3( 	 28,		29,		 7	),
-			new THREE.Face3( 	 29,		 8,		 7	),
-			new THREE.Face3( 	 29,		30,		 8	),
-			new THREE.Face3( 	 30,		 9,		 8	),
-			new THREE.Face3( 	 30,		31,		 9	),
-			new THREE.Face3( 	 31,		10,		 9	),
-			new THREE.Face3( 	 31,		22,		10	),
-			new THREE.Face3( 	 22,		 1,		10	),
-			new THREE.Face3( 	 23,		22,		32	),
-			new THREE.Face3( 	 24,		23,		32	),
-			new THREE.Face3( 	 25,		24,		32	),
-			new THREE.Face3( 	 26,		25,		32	),
-			new THREE.Face3( 	 27,		26,		32	),
-			new THREE.Face3( 	 28,		27,		32	),
-			new THREE.Face3( 	 29,		28,		32	),
-			new THREE.Face3( 	 30,		29,		32	),
-			new THREE.Face3( 	 31,		30,		32	),
-			new THREE.Face3( 	 22,		31,		32	)
-		);
-
-		geo_back.faceVertexUvs[0].push(
-			[
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[2].x + backoffsetx) / backrangex ), 		((geo_back.vertices[2].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[1].x + backoffsetx) / backrangex ), 		((geo_back.vertices[1].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[3].x + backoffsetx) / backrangex ), 		((geo_back.vertices[3].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[2].x + backoffsetx) / backrangex ), 		((geo_back.vertices[3].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[4].x + backoffsetx) / backrangex ), 		((geo_back.vertices[4].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[3].x + backoffsetx) / backrangex ), 		((geo_back.vertices[3].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[5].x + backoffsetx) / backrangex ), 		((geo_back.vertices[5].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[4].x + backoffsetx) / backrangex ), 		((geo_back.vertices[4].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[6].x + backoffsetx) / backrangex ), 		((geo_back.vertices[6].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[5].x + backoffsetx) / backrangex ), 		((geo_back.vertices[5].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[7].x + backoffsetx) / backrangex ), 		((geo_back.vertices[7].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[6].x + backoffsetx) / backrangex ), 		((geo_back.vertices[6].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[8].x + backoffsetx) / backrangex ), 		((geo_back.vertices[8].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[7].x + backoffsetx) / backrangex ), 		((geo_back.vertices[7].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[9].x + backoffsetx) / backrangex ), 		((geo_back.vertices[9].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[8].x + backoffsetx) / backrangex ), 		((geo_back.vertices[8].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[10].x + backoffsetx) / backrangex ), 		((geo_back.vertices[10].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[9].x + backoffsetx) / backrangex ), 		((geo_back.vertices[9].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[1].x + backoffsetx) / backrangex ), 		((geo_back.vertices[1].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[10].x + backoffsetx) / backrangex ), 		((geo_back.vertices[10].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[1].x + backoffsetx) / backrangex ), 		((geo_back.vertices[1].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[12].x + backoffsetx) / backrangex ), 		((geo_back.vertices[12].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[11].x + backoffsetx) / backrangex ), 		((geo_back.vertices[11].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[1].x + backoffsetx) / backrangex ), 		((geo_back.vertices[1].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[2].x + backoffsetx) / backrangex ), 		((geo_back.vertices[2].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[12].x + backoffsetx) / backrangex ), 		((geo_back.vertices[12].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[2].x + backoffsetx) / backrangex ), 		((geo_back.vertices[2].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[13].x + backoffsetx) / backrangex ), 		((geo_back.vertices[13].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[12].x + backoffsetx) / backrangex ), 		((geo_back.vertices[12].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[2].x + backoffsetx) / backrangex ), 		((geo_back.vertices[2].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[3].x + backoffsetx) / backrangex ), 		((geo_back.vertices[3].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[13].x + backoffsetx) / backrangex ), 		((geo_back.vertices[13].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[3].x + backoffsetx) / backrangex ), 		((geo_back.vertices[3].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[14].x + backoffsetx) / backrangex ), 		((geo_back.vertices[14].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[13].x + backoffsetx) / backrangex ), 		((geo_back.vertices[13].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[3].x + backoffsetx) / backrangex ), 		((geo_back.vertices[3].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[4].x + backoffsetx) / backrangex ), 		((geo_back.vertices[4].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[14].x + backoffsetx) / backrangex ), 		((geo_back.vertices[14].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[4].x + backoffsetx) / backrangex ), 		((geo_back.vertices[4].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[15].x + backoffsetx) / backrangex ), 		((geo_back.vertices[15].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[14].x + backoffsetx) / backrangex ), 		((geo_back.vertices[14].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[4].x + backoffsetx) / backrangex ), 		((geo_back.vertices[4].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[5].x + backoffsetx) / backrangex ), 		((geo_back.vertices[5].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[15].x + backoffsetx) / backrangex ), 		((geo_back.vertices[15].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[5].x + backoffsetx) / backrangex ), 		((geo_back.vertices[5].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[16].x + backoffsetx) / backrangex ), 		((geo_back.vertices[16].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[15].x + backoffsetx) / backrangex ), 		((geo_back.vertices[15].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[5].x + backoffsetx) / backrangex ), 		((geo_back.vertices[5].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[6].x + backoffsetx) / backrangex ), 		((geo_back.vertices[6].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[16].x + backoffsetx) / backrangex ), 		((geo_back.vertices[16].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[6].x + backoffsetx) / backrangex ), 		((geo_back.vertices[6].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[17].x + backoffsetx) / backrangex ), 		((geo_back.vertices[17].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[16].x + backoffsetx) / backrangex ), 		((geo_back.vertices[16].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[6].x + backoffsetx) / backrangex ), 		((geo_back.vertices[6].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[7].x + backoffsetx) / backrangex ), 		((geo_back.vertices[7].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[17].x + backoffsetx) / backrangex ), 		((geo_back.vertices[17].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[7].x + backoffsetx) / backrangex ), 		((geo_back.vertices[7].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[18].x + backoffsetx) / backrangex ), 		((geo_back.vertices[18].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[17].x + backoffsetx) / backrangex ), 		((geo_back.vertices[17].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[7].x + backoffsetx) / backrangex ), 		((geo_back.vertices[7].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[8].x + backoffsetx) / backrangex ), 		((geo_back.vertices[8].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[18].x + backoffsetx) / backrangex ), 		((geo_back.vertices[18].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[8].x + backoffsetx) / backrangex ), 		((geo_back.vertices[8].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[19].x + backoffsetx) / backrangex ), 		((geo_back.vertices[19].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[18].x + backoffsetx) / backrangex ), 		((geo_back.vertices[18].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[8].x + backoffsetx) / backrangex ), 		((geo_back.vertices[8].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[9].x + backoffsetx) / backrangex ), 		((geo_back.vertices[9].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[19].x + backoffsetx) / backrangex ), 		((geo_back.vertices[19].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[9].x + backoffsetx) / backrangex ), 		((geo_back.vertices[9].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[20].x + backoffsetx) / backrangex ), 		((geo_back.vertices[20].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[19].x + backoffsetx) / backrangex ), 		((geo_back.vertices[19].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[9].x + backoffsetx) / backrangex ), 		((geo_back.vertices[9].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[10].x + backoffsetx) / backrangex ), 		((geo_back.vertices[10].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[20].x + backoffsetx) / backrangex ), 		((geo_back.vertices[20].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[10].x + backoffsetx) / backrangex ), 		((geo_back.vertices[10].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[11].x + backoffsetx) / backrangex ), 		((geo_back.vertices[11].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[20].x + backoffsetx) / backrangex ), 		((geo_back.vertices[20].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[10].x + backoffsetx) / backrangex ), 		((geo_back.vertices[10].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[1].x + backoffsetx) / backrangex ), 		((geo_back.vertices[1].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[11].x + backoffsetx) / backrangex ), 		((geo_back.vertices[11].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[21].x + backoffsetx) / backrangex ), 		((geo_back.vertices[21].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[11].x + backoffsetx) / backrangex ), 		((geo_back.vertices[11].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[12].x + backoffsetx) / backrangex ), 		((geo_back.vertices[12].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[21].x + backoffsetx) / backrangex ), 		((geo_back.vertices[21].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[12].x + backoffsetx) / backrangex ), 		((geo_back.vertices[12].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[13].x + backoffsetx) / backrangex ), 		((geo_back.vertices[13].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[21].x + backoffsetx) / backrangex ), 		((geo_back.vertices[21].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[13].x + backoffsetx) / backrangex ), 		((geo_back.vertices[13].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[14].x + backoffsetx) / backrangex ), 		((geo_back.vertices[14].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[21].x + backoffsetx) / backrangex ), 		((geo_back.vertices[21].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[14].x + backoffsetx) / backrangex ), 		((geo_back.vertices[14].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[15].x + backoffsetx) / backrangex ), 		((geo_back.vertices[15].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[21].x + backoffsetx) / backrangex ), 		((geo_back.vertices[21].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[15].x + backoffsetx) / backrangex ), 		((geo_back.vertices[15].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[16].x + backoffsetx) / backrangex ), 		((geo_back.vertices[16].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[21].x + backoffsetx) / backrangex ), 		((geo_back.vertices[21].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[16].x + backoffsetx) / backrangex ), 		((geo_back.vertices[16].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[17].x + backoffsetx) / backrangex ), 		((geo_back.vertices[17].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[21].x + backoffsetx) / backrangex ), 		((geo_back.vertices[21].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[17].x + backoffsetx) / backrangex ), 		((geo_back.vertices[17].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[18].x + backoffsetx) / backrangex ), 		((geo_back.vertices[18].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[21].x + backoffsetx) / backrangex ), 		((geo_back.vertices[21].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[18].x + backoffsetx) / backrangex ), 		((geo_back.vertices[18].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[19].x + backoffsetx) / backrangex ), 		((geo_back.vertices[19].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[21].x + backoffsetx) / backrangex ), 		((geo_back.vertices[21].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[19].x + backoffsetx) / backrangex ), 		((geo_back.vertices[19].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[20].x + backoffsetx) / backrangex ), 		((geo_back.vertices[20].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[21].x + backoffsetx) / backrangex ), 		((geo_back.vertices[21].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[20].x + backoffsetx) / backrangex ), 		((geo_back.vertices[20].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[11].x + backoffsetx) / backrangex ), 		((geo_back.vertices[11].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[1].x + backoffsetx) / backrangex ), 		((geo_back.vertices[1].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[2].x + backoffsetx) / backrangex ), 		((geo_back.vertices[2].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[2].x + backoffsetx) / backrangex ), 		((geo_back.vertices[2].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[3].x + backoffsetx) / backrangex ), 		((geo_back.vertices[3].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[3].x + backoffsetx) / backrangex ), 		((geo_back.vertices[3].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[4].x + backoffsetx) / backrangex ), 		((geo_back.vertices[4].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[4].x + backoffsetx) / backrangex ), 		((geo_back.vertices[4].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[5].x + backoffsetx) / backrangex ), 		((geo_back.vertices[5].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[5].x + backoffsetx) / backrangex ), 		((geo_back.vertices[5].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[6].x + backoffsetx) / backrangex ), 		((geo_back.vertices[6].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[6].x + backoffsetx) / backrangex ), 		((geo_back.vertices[6].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[7].x + backoffsetx) / backrangex ), 		((geo_back.vertices[7].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[7].x + backoffsetx) / backrangex ), 		((geo_back.vertices[7].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[8].x + backoffsetx) / backrangex ), 		((geo_back.vertices[8].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[8].x + backoffsetx) / backrangex ), 		((geo_back.vertices[8].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[9].x + backoffsetx) / backrangex ), 		((geo_back.vertices[9].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[9].x + backoffsetx) / backrangex ), 		((geo_back.vertices[9].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[10].x + backoffsetx) / backrangex ), 		((geo_back.vertices[10].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[10].x + backoffsetx) / backrangex ), 		((geo_back.vertices[10].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[1].x + backoffsetx) / backrangex ), 		((geo_back.vertices[1].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[0].x + backoffsetx) / backrangex ), 		((geo_back.vertices[0].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[22].x + backoffsetx) / backrangex ), 		((geo_back.vertices[22].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[23].x + backoffsetx) / backrangex ), 		((geo_back.vertices[23].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[1].x + backoffsetx) / backrangex ), 		((geo_back.vertices[1].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[23].x + backoffsetx) / backrangex ), 		((geo_back.vertices[23].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[2].x + backoffsetx) / backrangex ), 		((geo_back.vertices[2].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[1].x + backoffsetx) / backrangex ), 		((geo_back.vertices[1].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[23].x + backoffsetx) / backrangex ), 		((geo_back.vertices[23].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[24].x + backoffsetx) / backrangex ), 		((geo_back.vertices[24].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[2].x + backoffsetx) / backrangex ), 		((geo_back.vertices[2].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[24].x + backoffsetx) / backrangex ), 		((geo_back.vertices[24].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[3].x + backoffsetx) / backrangex ), 		((geo_back.vertices[3].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[2].x + backoffsetx) / backrangex ), 		((geo_back.vertices[2].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[24].x + backoffsetx) / backrangex ), 		((geo_back.vertices[24].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[25].x + backoffsetx) / backrangex ), 		((geo_back.vertices[25].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[3].x + backoffsetx) / backrangex ), 		((geo_back.vertices[3].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[25].x + backoffsetx) / backrangex ), 		((geo_back.vertices[25].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[4].x + backoffsetx) / backrangex ), 		((geo_back.vertices[4].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[3].x + backoffsetx) / backrangex ), 		((geo_back.vertices[3].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[25].x + backoffsetx) / backrangex ), 		((geo_back.vertices[25].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[26].x + backoffsetx) / backrangex ), 		((geo_back.vertices[26].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[4].x + backoffsetx) / backrangex ), 		((geo_back.vertices[4].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[26].x + backoffsetx) / backrangex ), 		((geo_back.vertices[26].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[5].x + backoffsetx) / backrangex ), 		((geo_back.vertices[5].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[4].x + backoffsetx) / backrangex ), 		((geo_back.vertices[4].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[26].x + backoffsetx) / backrangex ), 		((geo_back.vertices[26].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[27].x + backoffsetx) / backrangex ), 		((geo_back.vertices[27].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[5].x + backoffsetx) / backrangex ), 		((geo_back.vertices[5].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[27].x + backoffsetx) / backrangex ), 		((geo_back.vertices[27].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[6].x + backoffsetx) / backrangex ), 		((geo_back.vertices[6].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[5].x + backoffsetx) / backrangex ), 		((geo_back.vertices[5].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[27].x + backoffsetx) / backrangex ), 		((geo_back.vertices[27].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[28].x + backoffsetx) / backrangex ), 		((geo_back.vertices[28].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[6].x + backoffsetx) / backrangex ), 		((geo_back.vertices[6].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[28].x + backoffsetx) / backrangex ), 		((geo_back.vertices[28].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[7].x + backoffsetx) / backrangex ), 		((geo_back.vertices[7].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[6].x + backoffsetx) / backrangex ), 		((geo_back.vertices[6].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[28].x + backoffsetx) / backrangex ), 		((geo_back.vertices[28].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[29].x + backoffsetx) / backrangex ), 		((geo_back.vertices[29].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[7].x + backoffsetx) / backrangex ), 		((geo_back.vertices[7].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[29].x + backoffsetx) / backrangex ), 		((geo_back.vertices[29].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[8].x + backoffsetx) / backrangex ), 		((geo_back.vertices[8].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[7].x + backoffsetx) / backrangex ), 		((geo_back.vertices[7].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[29].x + backoffsetx) / backrangex ), 		((geo_back.vertices[29].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[30].x + backoffsetx) / backrangex ), 		((geo_back.vertices[30].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[8].x + backoffsetx) / backrangex ), 		((geo_back.vertices[8].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[30].x + backoffsetx) / backrangex ), 		((geo_back.vertices[30].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[9].x + backoffsetx) / backrangex ), 		((geo_back.vertices[9].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[8].x + backoffsetx) / backrangex ), 		((geo_back.vertices[8].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[30].x + backoffsetx) / backrangex ), 		((geo_back.vertices[30].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[31].x + backoffsetx) / backrangex ), 		((geo_back.vertices[31].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[9].x + backoffsetx) / backrangex ), 		((geo_back.vertices[9].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[31].x + backoffsetx) / backrangex ), 		((geo_back.vertices[31].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[10].x + backoffsetx) / backrangex ), 		((geo_back.vertices[10].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[9].x + backoffsetx) / backrangex ), 		((geo_back.vertices[9].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[31].x + backoffsetx) / backrangex ), 		((geo_back.vertices[31].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[22].x + backoffsetx) / backrangex ), 		((geo_back.vertices[22].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[10].x + backoffsetx) / backrangex ), 		((geo_back.vertices[10].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[22].x + backoffsetx) / backrangex ), 		((geo_back.vertices[22].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[1].x + backoffsetx) / backrangex ), 		((geo_back.vertices[1].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[10].x + backoffsetx) / backrangex ), 		((geo_back.vertices[10].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[23].x + backoffsetx) / backrangex ), 		((geo_back.vertices[23].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[22].x + backoffsetx) / backrangex ), 		((geo_back.vertices[22].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[32].x + backoffsetx) / backrangex ), 		((geo_back.vertices[32].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[24].x + backoffsetx) / backrangex ), 		((geo_back.vertices[24].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[23].x + backoffsetx) / backrangex ), 		((geo_back.vertices[23].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[32].x + backoffsetx) / backrangex ), 		((geo_back.vertices[32].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[25].x + backoffsetx) / backrangex ), 		((geo_back.vertices[25].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[24].x + backoffsetx) / backrangex ), 		((geo_back.vertices[24].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[32].x + backoffsetx) / backrangex ), 		((geo_back.vertices[32].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[26].x + backoffsetx) / backrangex ), 		((geo_back.vertices[26].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[25].x + backoffsetx) / backrangex ), 		((geo_back.vertices[25].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[32].x + backoffsetx) / backrangex ), 		((geo_back.vertices[32].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[27].x + backoffsetx) / backrangex ), 		((geo_back.vertices[27].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[26].x + backoffsetx) / backrangex ), 		((geo_back.vertices[26].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[32].x + backoffsetx) / backrangex ), 		((geo_back.vertices[32].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[28].x + backoffsetx) / backrangex ), 		((geo_back.vertices[28].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[27].x + backoffsetx) / backrangex ), 		((geo_back.vertices[27].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[32].x + backoffsetx) / backrangex ), 		((geo_back.vertices[32].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[29].x + backoffsetx) / backrangex ), 		((geo_back.vertices[29].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[28].x + backoffsetx) / backrangex ), 		((geo_back.vertices[28].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[32].x + backoffsetx) / backrangex ), 		((geo_back.vertices[32].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[30].x + backoffsetx) / backrangex ), 		((geo_back.vertices[30].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[29].x + backoffsetx) / backrangex ), 		((geo_back.vertices[29].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[32].x + backoffsetx) / backrangex ), 		((geo_back.vertices[32].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[31].x + backoffsetx) / backrangex ), 		((geo_back.vertices[31].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[30].x + backoffsetx) / backrangex ), 		((geo_back.vertices[30].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[32].x + backoffsetx) / backrangex ), 		((geo_back.vertices[32].z + backoffsetz) / backrangez))
-			],
-			[
-				new THREE.Vector2( ((geo_back.vertices[22].x + backoffsetx) / backrangex ), 		((geo_back.vertices[22].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[31].x + backoffsetx) / backrangex ), 		((geo_back.vertices[31].z + backoffsetz) / backrangez)),
-				new THREE.Vector2( ((geo_back.vertices[32].x + backoffsetx) / backrangex ), 		((geo_back.vertices[32].z + backoffsetz) / backrangez))
-			]
-		);
-
-		/*____________armagetron cycle______________*/
-
-
-		geo_body.computeFaceNormals();//for lighting
-		geo_front.computeFaceNormals();//for lighting
-		geo_back.computeFaceNormals();//for lighting
-
-
+cycleModel = function(colorCode,modelType=5)
+{
+	var model = new THREE.Object3D();
+	
+	if(engine.dedicated) return model;
+	
+	var name = modelByName(modelType);
+	
+	if(!engine.models[name])
+	{
+		getModel(modelType,true);
+	}
+	
+	var txtmdl = engine.models[name];
+	if(!txtmdl) return mFailSafe(model);
+	
+	try
+	{
+		var geo_body = parseModel(txtmdl.body);
+		var geo_front = parseModel(txtmdl.front);
+		var geo_back = parseModel(txtmdl.rear);
+	}
+	catch(e)
+	{
+		console.error(e);
+		return mFailSafe(model);
+	}
+	
+	
+	
 	//UV MAPS NEEDED OR ERRORS for mapping
 	//materials
 	var bodyMaterial = [
@@ -1644,39 +521,35 @@ cycleModel = function(colorCode) {//builds a single cycle
 				transparent: settings.ALPHA_BLEND, 
 				opacity: 1.0,
 			})];
-
-
-
-
-	//	var cycleBody = new THREE.Mesh( geo_body, bodyMaterial );
-		var cycleBody = new THREE.SceneUtils.createMultiMaterialObject( geo_body, bodyMaterial );
-		
-	//	var cycleFront = new THREE.Mesh( geo_front, wheelMaterial );
-	//	var cycleBack = new THREE.Mesh( geo_back, wheelMaterial );
-		var cycleFront = new THREE.SceneUtils.createMultiMaterialObject( geo_front, wheelMaterial );
-		var cycleBack = new THREE.SceneUtils.createMultiMaterialObject( geo_back, wheelMaterial );
-
-
-		cycleFront.position.x = 1.9;//push front wheel to front
-		cycleFront.position.z = 0.418248;//raise front wheel
-		cycleBack.position.z += 0.70724;//raise back wheel
-		
-		cycleBody.position.x -= 1.5;//move back 1.5
-		cycleFront.position.x -= 1.5;
-		cycleBack.position.x -= 1.5;
-		model.add(cycleBody);
-		model.add(cycleFront);
-		model.add(cycleBack);
-	}
 	
-		model.scale.set(0.5,0.5,0.5);//half size
-		model.rotaon = {
-			front: 133.55356,
-			back: 78.947758
-		};
+	
+//	var cycleBody = new THREE.Mesh( geo_body, bodyMaterial );
+	var cycleBody = new THREE.SceneUtils.createMultiMaterialObject( geo_body, bodyMaterial );
+	
+//	var cycleFront = new THREE.Mesh( geo_front, wheelMaterial );
+//	var cycleBack = new THREE.Mesh( geo_back, wheelMaterial );
+	var cycleFront = new THREE.SceneUtils.createMultiMaterialObject( geo_front, wheelMaterial );
+	var cycleBack = new THREE.SceneUtils.createMultiMaterialObject( geo_back, wheelMaterial )
+	
+	// FIXME: where did Durf get these values from?
+	cycleFront.position.x = 1.9;//push front wheel to front
+	cycleFront.position.z = 0.418248;//raise front wheel
+	cycleBack.position.z += 0.70724;//raise back wheel
+	
+	cycleBody.position.x -= 1.5;//move back 1.5
+	cycleFront.position.x -= 1.5;
+	cycleBack.position.x -= 1.5;
+	model.add(cycleBody);
+	model.add(cycleFront);
+	model.add(cycleBack);
+
+	model.scale.set(0.5,0.5,0.5);//half size
+	model.rotaon = {
+		front: 133.55356,
+		back: 78.947758
+	};
 	return model;
 };
-
 
 //function newChatArrow()
 newChatArrow = function()
