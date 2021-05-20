@@ -213,6 +213,21 @@ var keyboardKeyUp = function(e)
 	{
 		gameControlUp(typeof(keyCodeRemap[e.keyCode]) == "undefined"?e.keyCode:keyCodeRemap[e.keyCode]);
 	}
+	
+	var specificState = engine.inputState.split(':');
+	if(specificState[0] == "input")
+	{
+		var input = document.getElementById("input");
+		var textbox = input.children[1];
+		var output = textbox.value;
+		
+		// save history
+		var history = engine.inputHistory[specificState[1]];
+		history[1*history.pos] = output;
+		
+		// output preview
+		(input.getElementsByClassName("input_preview")[0]).innerHTML = "Preview: "+replaceColors(output);
+	}
 }
 //GAME
 
