@@ -367,14 +367,23 @@ class Connection3dc
 		else
 			var rot = normalizeRad(cycle.rotation.z - (pi(2)/settings.ARENA_AXES)*dir);
 		this.send({type:"turn",data:rad2deg(rot),gtime:cycle.gameTime});
+		cycle.handleNetTurn = settings.DEBUG_NETWORK_TURN_WAIT;
+	}
+	syncTurn(cycle=engine.players[engine.activePlayer])
+	{
+		this.send({JSON:true,
+			type:"turn",gtime:cycle.gameTime,
+			position:[cycle.position.x,cycle.position.y,cycle.position.z],
+			turns:cycle.turns,data:rad2deg(cycle.rotation.z),
+		});
 	}
 	sendTurn_hack(cycle=engine.players[engine.activePlayer])
 	{
-		this.connection.send(JSON.stringify({
+		this.send({JSON:true,
 			type:"turn",data:rad2deg(cycle.rotation.z),gtime:cycle.gameTime,
 			position:[cycle.position.x,cycle.position.y,cycle.position.z],
 			speed:cycle.speed, rubber:cycle.rubber, brakes:cycle.brakes
-		}));
+		});
 	}
 	
 	sendChat(msg,cycle=engine.players[engine.activePlayer])
@@ -684,8 +693,8 @@ class Connection3dc
 								else
 								{
 									cycle.rotation.z = newdir;
-									var wallmod = cycle.walls.children[cycle.walls.children.length-1];
-									cycle.newWallSegment();
+									cycle.afterTurn(0);
+									if(cycle.turns !== undefined) cycle.turns = data.turns;
 								}
 							}
 							else

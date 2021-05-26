@@ -36,6 +36,7 @@ class Player extends THREE.Object3D
 		this.speed = 0;
 		this.lastSpeed = this.speed;
 		this.rubber = 0;
+		this.sentRubber = false;
 		this.brakes = 1;
 		this.braking = false;
 		this.boosting = false;
@@ -46,6 +47,8 @@ class Player extends THREE.Object3D
 		this.sensor = {left:Infinity,right:Infinity,front:Infinity};
 		this.dir = {front:[0,0],left:[0,0],right:[0,0]};
 		this.minDistance = {front:settings.CYCLE_RUBBER_MINDISTANCE};
+		this.turns = 0;
+		this.turnsSynced = 0;
 		this.turnQueue = [];
 		this.lastTurnTime = 0;
 		this.gameTime = 0;
@@ -236,11 +239,12 @@ class Player extends THREE.Object3D
 		engine.scene.remove(this);
 		if(this == engine.players[engine.viewTarget] && !engine.dedicated)
 			setTimeout(function(){if(!engine.players[engine.viewTarget].alive)game.changeViewTarget()},3000);
-		if(this.audio)
+		if(this.audio) this.audio.panner.disconnect();
+		if(engine.audio) try
 		{
-			this.audio.panner.disconnect();
-			engine.audio.playSound({buffer:this.engineType+6,vol:0.5});
+			engine.audio.playSound({buffer:this.engineType+6,vol:Math.log(60/pointDistance(this.position.x,this.position.y,engine.camera.position.x,engine.camera.position.y))*0.4 });
 		}
+		catch(e) { console.error(e); }
 		spawnExplosion(this.position,this.cycleColor,this.tailColor);
 		game.updateScoreBoard();
 		
@@ -264,6 +268,8 @@ class Player extends THREE.Object3D
 			}
 			if(alive==aliveAI) game.changeViewTarget(0); //this will handle the finish type stuff
 		}
+		
+		if(window.svr) window.svr.syncDeath(this);
 	}
 	killAt(position,y=false,z=false)
 	{
@@ -288,6 +294,40 @@ class Player extends THREE.Object3D
 			engine.console.print(this.getColoredName()+"0xffff7f: "+msg+"\n");
 			if(engine.dedicated) {}
 		}
+	}
+	handleTurn(dir)
+	{
+		var dirmult;
+		this.dir.front = (dirmult = cdir(this.rotation.z -= (pi(2)/settings.ARENA_AXES)*dir));
+		//this.rotation.z = this.rotation.z%(Math.PI*2);
+		//if(this.rotation.z < 0) this.rotation.z += Math.PI*2;
+		this.speed *= settings.CYCLE_TURN_SPEED_FACTOR;
+		this.afterTurn(dir);
+	}
+	afterTurn(dir)
+	{
+		this.rotation.z = normalizeRad(this.rotation.z);
+		
+		//tilt the cycle
+		this.rotation.x = Math.cos(this.rotation.z)*0.4*dir;
+		this.rotation.y = Math.sin(this.rotation.z)*0.4*dir;
+		//if(settings.GRAB_SENSORS_ON_TURN)
+		{
+			getCycleSensors(true);
+		}
+		this.collidetime = engine.gtime+(((this.sensor.front)/this.speed)*1000);
+		var mult = (1-settings.CYCLE_RUBBER_MINADJUST);
+		this.minDistance.front = Math.max(0,Math.min(this.sensor.front*mult,settings.CYCLE_RUBBER_MINDISTANCE));
+		this.lastpos = this.position.clone(); //redundant, should be handled by getCycleSensors
+		if(this.haswall) this.newWallSegment();
+		
+		this.turns++;
+		
+		if(engine.audio) try
+		{
+			engine.audio.playSound({buffer:engine.audio.bLoader.other+4,vol:Math.log(80/pointDistance(this.position.x,this.position.y,engine.camera.position.x,engine.camera.position.y))*0.3||0 });
+		}
+		catch(e) { console.error(e); }
 	}
 	update(timestep=false) //! Simulates game movement on cycles
 	{
@@ -435,7 +475,7 @@ class Player extends THREE.Object3D
 			//var newx = dir[0]*this.speed*timestep, newy = dir[1]*this.speed*timestep;
 			var dist = this.speed*timestep, radj = dist;
 			if(dist < 0) dist = 0;
-			if(this.collidetime <= timeElapsed)
+			if(this.collidetime <= timeElapsed+timestep)
 			{
 				//this.rubber += timestep*(this.lastSpeed);
 				collided = true; 
@@ -474,6 +514,19 @@ class Player extends THREE.Object3D
 				)
 				{
 					this.rubber += radj;
+					
+					if(window.svr && !this.sendRubber)
+					{
+						var id = engine.players.indexOf(this);
+						for(var i=window.svr.clients.length-1;i>=0;--i)
+						{
+							if(window.svr.clients[i].netid == id)
+							{
+								window.svr.clients[i].syncOurCycleNow();
+							}
+						}
+						this.sentRubber = true;
+					}
 				}
 			}
 			var move2d = Math.cos(this.model.rotation.y), movez = -this.model.rotation.y;

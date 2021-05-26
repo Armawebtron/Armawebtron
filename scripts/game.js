@@ -674,23 +674,8 @@ game.run = function(oneoff=false)
 									cycle.lastTurnTime = Infinity;
 									cycle.turnQueue.splice(0,1); continue;
 								}
-								if(engine.network) engine.network.sendTurn(dir,cycle);
-								cycle.dir.front = (dirmult = cdir(cycle.rotation.z -= (pi(2)/settings.ARENA_AXES)*dir));
-								//cycle.rotation.z = cycle.rotation.z%(Math.PI*2);
-								//if(cycle.rotation.z < 0) cycle.rotation.z += Math.PI*2;
-								cycle.rotation.z = normalizeRad(cycle.rotation.z);
-								cycle.speed *= settings.CYCLE_TURN_SPEED_FACTOR;
-								cycle.rotation.x = Math.cos(cycle.rotation.z)*0.4*dir; //tilts the cycle
-								cycle.rotation.y = Math.sin(cycle.rotation.z)*0.4*dir;
-								//if(settings.GRAB_SENSORS_ON_TURN)
-								{
-									getCycleSensors(true);
-								}
-								cycle.collidetime = timeElapsed+(((cycle.sensor.front)/cycle.speed)*1000);
-								var mult = (1-settings.CYCLE_RUBBER_MINADJUST);
-								cycle.minDistance.front = Math.max(0,Math.min(cycle.sensor.front*mult,settings.CYCLE_RUBBER_MINDISTANCE));
-								cycle.lastpos = cycle.position.clone(); //redundant, should be handled by getCycleSensors
-								if(cycle.haswall) cycle.newWallSegment();
+								cycle.handleTurn(dir);
+								if(engine.network) engine.network.syncTurn(cycle);
 								if(window.svr) //force a player sync
 								{
 									var data = ({type:"griddata",data:[{
@@ -719,7 +704,10 @@ game.run = function(oneoff=false)
 				if(cycle.rubber > settings.CYCLE_RUBBER+0.0001)
 					cycle.rubber = settings.CYCLE_RUBBER+0.0001;
 				else if(cycle.rubber > 0)
+				{
 					cycle.rubber -= (timestep/settings.CYCLE_RUBBER_TIME)*cycle.rubber;
+					if(cycle.sentRubber) cycle.sentRubber = false;
+				}
 				else
 					cycle.rubber = 0;
 				//if(timeElapsed/1000 > -3 && cycle.alive)
