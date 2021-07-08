@@ -313,6 +313,7 @@ class Zone
 				{
 					if(settings.BASE_RESPAWN)
 					{
+						if(engine.teams[this.team])
 						engine.teams[this.team].spawn(true,true,false);
 					}
 					if(this.team == engine.teams.indexOf(cycle.team))
