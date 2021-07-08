@@ -79,8 +79,17 @@ engine = {
 	//camera stuff
 	camera: false,//needed or any camera
 	cameraOrbit: false,//
-	view: 'smart',
-	views: ['smart','chase','stationary','track','topdown','birdseye','cockpit'],
+	view: 'custom',
+	views: [
+		'smart',
+		'custom',
+		'chase',
+		'stationary',
+		'track',
+		'topdown',
+		'birdseye',
+		'cockpit',
+	],
 	cameraEase: 0.08,
 	viewTarget: 0,
 

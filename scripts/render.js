@@ -467,6 +467,30 @@ function draw2d_canvas() //TODO: have an svg output option
 }
 
 
+var cameraCustom = function(cycle, timestep, backOffset, riseOffset, lookOffset, turnSpeed)
+{
+	if(engine.camera.testrot === undefined) engine.camera.testrot = cycle.rotation.z;
+	engine.camera.testrot = normalizeRad(engine.camera.testrot);
+	
+	var test = cycle.rotation.z - engine.camera.testrot;
+	while(test < -Math.PI) test += Math.PI+Math.PI;
+	while(test > Math.PI) test -= Math.PI+Math.PI;
+	
+	engine.camera.testrot += test*turnSpeed*timestep;
+	
+	engine.camera.position.set(
+		cycle.position.x-Math.cos(engine.camera.testrot)*backOffset,
+		cycle.position.y-Math.sin(engine.camera.testrot)*backOffset,
+		riseOffset
+	);
+	
+	engine.camera.lookAt(
+		cycle.position.x+Math.cos(engine.camera.testrot)*lookOffset,
+		cycle.position.y+Math.sin(engine.camera.testrot)*lookOffset,
+		cycle.position.z
+	);
+}
+
 //camera view function (handles all views for view target)
 var cameraView = function(cycle, timestep) {
 	var relativeCameraOffset, cameraOffset;
@@ -509,8 +533,14 @@ var cameraView = function(cycle, timestep) {
 			engine.camera.lookAt(cycle.position);
 			break;
 		case 'custom':
-			engine.camera.position.set(0,0,0);
-			engine.camera.rotation.z = settings.CAMERA_CUSTOM_PITCH;
+			
+			cameraCustom(cycle, timestep, 
+				settings.CAMERA_CUSTOM_BACK+cycle.speed*settings.CAMERA_CUSTOM_BACK_FROMSPEED,
+				settings.CAMERA_CUSTOM_RISE+cycle.speed*settings.CAMERA_CUSTOM_RISE_FROMSPEED,
+				settings.CAMERA_CUSTOM_OFFSET+cycle.speed*settings.CAMERA_CUSTOM_OFFSET_FROMSPEED,
+				settings.CAMERA_CUSTOM_TURN_SPEED,
+			);
+			
 			break;
 		case 'stationary':
 			break;
