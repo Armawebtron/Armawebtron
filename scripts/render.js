@@ -248,6 +248,8 @@ function draw()
 	var cycle = engine.players[engine.viewTarget];
 	if(!cycle) cycle = new Player({});
 	
+	if( engine.framesCount%2 == 0 )
+	{
 	updateHUD("player_rubber",cycle.rubber,0,settings.CYCLE_RUBBER);
 	var maxspeed = maxSpeed();
 	updateHUD("player_speed",cycle.speed,0,maxspeed);
@@ -270,7 +272,10 @@ function draw()
 	updateHUD("current_angle_y",dir[1]);
 	
 	updateHUD("current_time",Math.round(timeElapsed)/1000);
+	}
 	
+	if( engine.framesCount%5 == 0 )
+	{
 	//settings test
 	var setnames = Object.keys(settings);
 	for(var i=setnames.length;i--;)
@@ -279,6 +284,7 @@ function draw()
 		updateHUD(setting.toLowerCase(),settings[setting]);
 	}
 	
+	}
 	
 	//actual drawing
 	
@@ -299,8 +305,29 @@ function draw()
 
 function updateHUD(celement,thevalue,min=false,max=false)
 {
-	var elements = document.getElementsByName(celement);
-	for(var i=elements.length;i--;)
+	if( updateHUD.failed[celement] && updateHUD.failed[celement] > performance.now() )
+	{
+		return false;
+	}
+	
+	var elements;
+	if( updateHUD.lookupTable[celement] && updateHUD.lookupTable[celement][1] > performance.now() )
+	{
+		elements = updateHUD.lookupTable[celement][0];
+	}
+	if(!elements)
+	{
+		elements = document.getElementsByName(celement);
+		if( elements.length == 0 )
+		{
+			updateHUD.failed[celement] = performance.now()+(25000*Math.random());
+		}
+		else
+		{
+			updateHUD.lookupTable[celement] = [elements, performance.now()+(50000*Math.random())];
+		}
+	}
+	for(var i=elements.length-1;i>=0;--i)
 	{
 		var value = thevalue;
 		var element = elements[i];
@@ -364,6 +391,8 @@ function updateHUD(celement,thevalue,min=false,max=false)
 		}
 	}
 }
+updateHUD.lookupTable = {};
+updateHUD.failed = {};
 
 function draw2d_canvas() //TODO: have an svg output option
 {
