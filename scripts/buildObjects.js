@@ -139,6 +139,11 @@ window.buildGrid = function()
 		if(isNaN(sZpos)) sZpos = 0;
 		if ( allSpawns[s].hasAttribute("angle") ) { var sAng = allSpawns[s].getAttribute("angle"); }
 		else { var sAng = gafd( parseFloat(allSpawns[s].getAttribute("xdir")), parseFloat(allSpawns[s].getAttribute("ydir")) ); }
+		if(settings.STRICT_AXES_SPAWN)
+		{
+			var deg = (360/settings.ARENA_AXES);
+			sAng = Math.round(sAng/deg)*deg;
+		}
 		var spawn_data = [sXpos, sYpos, sZpos, sAng];
 		engine.map.spawns.push( spawn_data );
 	}
