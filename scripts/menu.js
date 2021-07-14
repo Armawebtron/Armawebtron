@@ -151,6 +151,176 @@ function hoverSelect(item)
 	}
 }
 
+function menuIf(syntax) 
+{
+	// oh noes, eval! Bleech, get it away!
+	return !!eval(syntax.replace(/not/,"!").replace(/and/,"&&").replace(/or/,"||"));
+}
+
+function parseItem(cmenu,item)
+{
+	var parent = document.createElement("LI");
+	var element = document.createElement("A");
+	//var text = document.createTextNode(item.attributes.text.value);
+	var text = document.createElement("SPAN");
+	text.innerHTML = replaceColors(tStringify(item.attributes.text.value));
+	if(item.attributes.title)
+	{
+		text.title = item.attributes.title.value;
+	}
+	if(item.attributes.style)
+	{
+		parent.setAttribute("style",item.attributes.style.value);
+	}
+	if(item.attributes.var || item.attributes.call)
+	{
+		//text.appendData(": ");
+		text.append(": ");
+		if(item.attributes.type && item.attributes.type.value == "list")
+		{
+			parent.setAttribute("id",item.attributes.type.value);
+			var input = document.createElement("SPAN");
+			input.options = [];
+			if(item.attributes.call)
+			{
+				input.call = eval(item.attributes.call.value);
+			}
+			else
+			{
+				input.call = mkSettingCallback(item.attributes.var.value,true);
+			}
+			if(item.attributes.from)
+			{
+				var si = getVarFromString(item.attributes.from.value);
+				var subitems = si[0][si[1]];
+				for(var z=0;z<subitems.length;z++)
+				{
+					var option = subitems[z];
+					input.options[option] = option;
+				}
+			}
+			else
+			{
+				var subitems = item.getElementsByTagName("Option");
+				for(var z=0;z<subitems.length;z++)
+				{
+					var option = subitems[z];
+					input.options[option.attributes.value.value] = tStringify(option.attributes.text.value);
+				}
+			}
+			input.innerHTML = replaceColors(input.options[input.call()])
+		}
+		else if(item.attributes.type.value == "keys")
+		{
+			var input = document.createElement("SPAN");
+			var one = settings.controls[item.attributes.var.value];
+			if(!one)
+			{
+				var vri = getVarFromString(item.attributes.var.value);
+				one = vri[0][vri[1]];
+			}
+			var out = "";
+			console.log(one.length);
+			for(var z=0;z<one.length;z++)
+			{
+				if(z != 0) out += ", ";
+				out += keycodeList[one[z]];
+			}
+			if(out == "") out = "Unbound";
+			input.appendChild(document.createTextNode(out));
+			parent.setAttribute("id","controlAR:"+item.attributes.var.value);
+		}
+		else 
+		{
+			parent.setAttribute("id","var:"+item.attributes.var.value+":"+item.attributes.type.value);
+			var input = document.createElement("SPAN");
+			input.setAttribute("contenteditable",true);
+			var vri = getVarFromString(item.attributes.var.value);
+			input.appendChild(document.createTextNode(vri[0][vri[1]]));
+			//input.setAttribute("oninput","settings."+item.attributes.var.value+" = this.innerText");
+			switch(item.attributes.type.value)
+			{
+				case "num":
+					if(item.attributes.range)
+					{
+						var spl = item.attributes.range.value.split(",");
+						var min = parseFloat(spl[0]), max = parseFloat(spl[1]);
+					}
+					else
+					{
+						var min = -Infinity, max = Infinity;
+					}
+					if(item.attributes.add) add = item.attributes.add.value;
+					else add = 1;
+					parent.min = min; parent.max = max; parent.add = add;
+					break;
+				case "color":
+					//input.style.color=input.innerText;
+					input.oninput = function()
+					{
+						this.style.color=this.innerText;
+						//this.style.background=getDarkBGFromHex(this.style.innerText);
+					}
+					input.setAttribute("onblur","this.innerText = chsetting(\""+item.attributes.var.value+"\",'#'+(new THREE.Color(this.innerText.toLowerCase()).getHexString()),true);this.oninput()");
+					input.className += " darktext";
+					input.oninput();
+					break;
+				default:
+					input.setAttribute("oninput","chsetting(\""+item.attributes.var.value+"\",this.innerText,true)");
+					break;
+			}
+		}
+		element.setAttribute("href","javascript:void(0);");
+	}
+	else
+	{
+		var input = false;
+		if(item.attributes.from)
+		{
+			var fromsplit = item.attributes.from.value.split(":");
+			var obj = {to:text,type:fromsplit[1]?fromsplit[1]:"all"};
+			switch(fromsplit[0])
+			{
+				case "con": engine.concatch = obj; break;
+				case "msg": engine.msgcatch = obj; break;
+			}
+		}
+		if(item.attributes.type.value != "text")
+		{
+			switch(item.attributes.type.value)
+			{
+				case "submenu":
+					parent.setAttribute("id","menu:"+item.attributes.onenter.value);
+					break;
+				case "js":
+					parent.setAttribute("id","js:"+item.attributes.onenter.value);
+					break;
+				case "exitmenu":
+					if(cmenu.attributes.exitmenu)
+					{
+						parent.setAttribute("id","js:"+cmenu.attributes.exitmenu.value);
+					}
+					else
+					{
+						//parent.setAttribute("id",engine.inputState);
+						parent.setAttribute("id","exitmenu");
+					}
+					break;
+				default:
+					parent.setAttribute("id",item.attributes.type.value);
+					break;
+			}
+			element.setAttribute("href","javascript:void(0);");
+		}
+	}
+	element.setAttribute("onmousemove","hoverSelect(this.parentNode)");
+	element.setAttribute("onclick","menu(this.parentNode.id)");
+	element.appendChild(text);
+	if(input !== false) element.appendChild(input);
+	parent.appendChild(element);
+	return parent;
+}
+
 ////////////////////////////////////////
 //MENU - changes menus, performs basic actions when menu switching (pause), optional active menu element
 function menu(act,from=false)
@@ -196,168 +366,39 @@ function menu(act,from=false)
 					{
 						if(cmenu.attributes.title)
 							document.getElementById('menu').innerHTML = "<h1>"+replaceColors(tStringify(cmenu.attributes.title.value))+"</h1>";
-						var items = cmenu.getElementsByTagName("Item");
+						window.test = cmenu;
+						//var items = cmenu.getElementsByTagName("Item");
 						var list = document.createElement("UL");
 						list.setAttribute("id","menuList");
-						for(var i=0;i<items.length;i++)
+						for(var i=0;i<cmenu.children.length;i++)
 						{
-							var item = items[i];
-							var parent = document.createElement("LI");
-							var element = document.createElement("A");
-							//var text = document.createTextNode(item.attributes.text.value);
-							var text = document.createElement("SPAN");
-							text.innerHTML = replaceColors(tStringify(item.attributes.text.value));
-							if(item.attributes.style)
+							var item = cmenu.children[i];
+							switch(item.nodeName)
 							{
-								parent.setAttribute("style",item.attributes.style.value);
-							}
-							if(item.attributes.var || item.attributes.call)
-							{
-								//text.appendData(": ");
-								text.append(": ");
-								if(item.attributes.type && item.attributes.type.value == "list")
-								{
-									parent.setAttribute("id",item.attributes.type.value);
-									var input = document.createElement("SPAN");
-									input.options = [];
-									if(item.attributes.call)
+								case "Item":
+									if(!item.attributes.if || menuIf(item.attributes.if.value)) 
 									{
-										input.call = eval(item.attributes.call.value);
+										list.appendChild(parseItem(cmenu,item));
 									}
-									else
-									{
-										input.call = mkSettingCallback(item.attributes.var.value,true);
-									}
-									if(item.attributes.from)
-									{
-										var si = getVarFromString(item.attributes.from.value);
-										var subitems = si[0][si[1]];
-										for(var z=0;z<subitems.length;z++)
-										{
-											var option = subitems[z];
-											input.options[option] = option;
-										}
-									}
-									else
-									{
-										var subitems = item.getElementsByTagName("Option");
-										for(var z=0;z<subitems.length;z++)
-										{
-											var option = subitems[z];
-											input.options[option.attributes.value.value] = tStringify(option.attributes.text.value);
-										}
-									}
-									input.innerHTML = replaceColors(input.options[input.call()])
-								}
-								else if(item.attributes.type.value == "keys")
-								{
-									var input = document.createElement("SPAN");
-									var one = settings.controls[item.attributes.var.value];
-									if(!one)
-									{
-										var vri = getVarFromString(item.attributes.var.value);
-										one = vri[0][vri[1]];
-									}
-									var out = "";
-									console.log(one.length);
-									for(var z=0;z<one.length;z++)
-									{
-										if(z != 0) out += ", ";
-										out += keycodeList[one[z]];
-									}
-									if(out == "") out = "Unbound";
-									input.appendChild(document.createTextNode(out));
-									parent.setAttribute("id","controlAR:"+item.attributes.var.value);
-								}
-								else 
-								{
-									parent.setAttribute("id","var:"+item.attributes.var.value+":"+item.attributes.type.value);
-									var input = document.createElement("SPAN");
-									input.setAttribute("contenteditable",true);
+									break;
+								case "Foreach":
 									var vri = getVarFromString(item.attributes.var.value);
-									input.appendChild(document.createTextNode(vri[0][vri[1]]));
-									//input.setAttribute("oninput","settings."+item.attributes.var.value+" = this.innerText");
-									switch(item.attributes.type.value)
+									var t = vri[0][vri[1]];
+									for(var y=0;y<t.length;++y)
 									{
-										case "num":
-											if(item.attributes.range)
+										for(var z=0;z<item.children.length;++z)
+										{
+											var node = item.children[z].cloneNode();
+											for(var a=node.attributes.length-1;a>=0;--a)
 											{
-												var spl = item.attributes.range.value.split(",");
-												var min = parseFloat(spl[0]), max = parseFloat(spl[1]);
+												node.attributes[a].value = node.attributes[a].value.replace(new RegExp("\\$\\("+item.attributes.as.value+"\\)",'g'),y);
 											}
-											else
-											{
-												var min = -Infinity, max = Infinity;
-											}
-											if(item.attributes.add) add = item.attributes.add.value;
-											else add = 1;
-											parent.min = min; parent.max = max; parent.add = add;
-											break;
-										case "color":
-											//input.style.color=input.innerText;
-											input.oninput = function()
-											{
-												this.style.color=this.innerText;
-												//this.style.background=getDarkBGFromHex(this.style.innerText);
-											}
-											input.setAttribute("onblur","this.innerText = chsetting(\""+item.attributes.var.value+"\",'#'+(new THREE.Color(this.innerText.toLowerCase()).getHexString()),true);this.oninput()");
-											input.className += " darktext";
-											input.oninput();
-											break;
-										default:
-											input.setAttribute("oninput","chsetting(\""+item.attributes.var.value+"\",this.innerText,true)");
-											break;
+											
+											list.appendChild(parseItem(cmenu,node));
+										}
 									}
-								}
-								element.setAttribute("href","javascript:void(0);");
+									break;
 							}
-							else
-							{
-								var input = false;
-								if(item.attributes.from)
-								{
-									var fromsplit = item.attributes.from.value.split(":");
-									var obj = {to:text,type:fromsplit[1]?fromsplit[1]:"all"};
-									switch(fromsplit[0])
-									{
-										case "con": engine.concatch = obj; break;
-										case "msg": engine.msgcatch = obj; break;
-									}
-								}
-								if(item.attributes.type.value != "text")
-								{
-									switch(item.attributes.type.value)
-									{
-										case "submenu":
-											parent.setAttribute("id","menu:"+item.attributes.onenter.value);
-											break;
-										case "js":
-											parent.setAttribute("id","js:"+item.attributes.onenter.value);
-											break;
-										case "exitmenu":
-											if(cmenu.attributes.exitmenu)
-											{
-												parent.setAttribute("id","js:"+cmenu.attributes.exitmenu.value);
-											}
-											else
-											{
-												//parent.setAttribute("id",engine.inputState);
-												parent.setAttribute("id","exitmenu");
-											}
-											break;
-										default:
-											parent.setAttribute("id",item.attributes.type.value);
-											break;
-									}
-									element.setAttribute("href","javascript:void(0);");
-								}
-							}
-							element.setAttribute("onmousemove","hoverSelect(this.parentNode)");
-							element.setAttribute("onclick","menu(this.parentNode.id)");
-							element.appendChild(text);
-							if(input !== false) element.appendChild(input);
-							parent.appendChild(element);
-							list.appendChild(parent);
 						}
 						engine.inputState = "menu:"+cmenu.attributes.id.value;
 						document.getElementById('menu').appendChild(list);

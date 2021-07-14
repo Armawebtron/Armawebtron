@@ -139,10 +139,10 @@ global.getCycleSensors = function(full=false)
 	}
 	var campos = engine.camera.position, ppos;
 	if(!engine.dedicated) ppos = engine.players[engine.viewTarget]?engine.players[engine.viewTarget].position:(new THREE.Vector3());
+	var lookThroughWall = false;
 	for(var y=engine.map.walls.length-1;y>=0;--y)
 	{
 		//console.log("ohi");
-		var lookThroughWall = false;
 		for(var i=engine.map.walls[y].length-1;i>=0;--i)
 		{
 			var w1x = engine.map.walls[y][i][0], w1y = engine.map.walls[y][i][1], p=engine.map.walls[y][i+1];
@@ -233,13 +233,21 @@ global.getCycleSensors = function(full=false)
 						zone.wall[0]=w1x;zone.wall[1]=w1y;zone.wall[2]=w2x;zone.wall[3]=w2y;
 					}
 				}
-				if(!engine.dedicated && !lookThroughWall) lookThroughWall = (engine.walls.children[y]&&engine.walls.children[y].geometry.vertices[engine.walls.children[y].geometry.vertices.length-1].z) > campos.z && lineIntersect(campos.x,campos.y,ppos.x,ppos.y,w1x,w1y,w2x,w2y);
+				if(!engine.dedicated)
+				{
+					var test = (engine.walls.children[y]&&engine.walls.children[y].geometry.vertices[engine.walls.children[y].geometry.vertices.length-1].z) > campos.z && lineIntersect(campos.x,campos.y,ppos.x,ppos.y,w1x,w1y,w2x,w2y);
+					if( !(lookThroughWall && !test) )
+					{
+						var newDist = test?(distanceoflines(campos.x,campos.y,campos.x,campos.y,w1x,w1y,w2x,w2y)+6):settings.CAMERA_NEAR_RENDER;
+						lookThroughWall = test;
+						if( newDist != engine.camera.near && newDist >= settings.CAMERA_NEAR_RENDER )
+						{
+							engine.camera.near = newDist;
+							engine.camera.updateProjectionMatrix();
+						}
+					}
+				}
 			}
-		}
-		if(!engine.dedicated && engine.walls.children[y])
-		{
-			//engine.walls.children[y].visible = !lookThroughWall;
-			engine.walls.children[y].material.depthWrite = !lookThroughWall;
 		}
 	}
 	for(var a=engine.players.length-1;a>=0;--a) if(engine.players[a] !== undefined)
@@ -263,7 +271,7 @@ global.getCycleSensors = function(full=false)
 					if(engine.players[a] != engine.players[x] || i <= len-(settings.ARENA_AXES))
 					{
 						//var posx = engine.players[x].position.x, posy = engine.players[x].position.y, posz = engine.players[x].position.z;
-						if(p1[2]||0 <= engine.players[x].position.z && (p1[2]||0)+1 >= engine.players[x].position.z)
+						if((p1[2]||0) <= engine.players[x].position.z && (p1[2]||0)+2 >= engine.players[x].position.z)
 						{
 						
 							if(engine.players[x].newPos && lineIntersect(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].newPos.x,engine.players[x].newPos.y,p1[0],p1[1],p2[0],p2[1]))

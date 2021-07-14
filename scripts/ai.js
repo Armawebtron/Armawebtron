@@ -151,6 +151,12 @@ class AI
 	}
 	basicDecision()
 	{
+		if( settings.CYCLE_JUMP > 0 && typeof(this.cycle.sensor.nearestobj) == "object" && Math.random() > 0.5 && this.cycle.sensor.front > settings.CYCLE_JUMP )
+		{
+			//TODO: make jumping a common function, and maybe less hacky too
+			if(settings.CYCLE_MIDAIR_JUMP || engine.players[engine.activePlayer].position.z == 0)
+				this.cycle.model.rotation.y = -settings.CYCLE_JUMP;
+		}
 		if(this.cycle.sensor.rightTurn < this.cycle.sensor.leftTurn)
 			//if(this.cycle.sensor.left > this.cycle.sensor.front) 
 				this.turn(-1);

@@ -95,6 +95,9 @@ engine = {
 
 	menus: [],
 	
+	//
+	inputHistory: {chat:[],console:[]},
+	
 	//sound
 	sound: false,
 	useSound: true,

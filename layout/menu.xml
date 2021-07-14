@@ -31,8 +31,7 @@
 	</Menu>
 	<!-- General game configuration -->
 	<Menu id="game" title="Play Game">
-		<Item type="js" onenter="game.play()" style="display:inline-block;" text="Locally"/>
-		<Item type="submenu" onenter="game_setup" style="font-size:16pt;" text="(config)"/>
+		<Item type="submenu" onenter="presets" text="Locally"/>
 		<Item type="submenu" onenter="network" text="Custom Connect"/>
 		<Item type="exitmenu" text="&lt;- Go Back"/>
 	</Menu>
@@ -57,7 +56,7 @@
 			<Item type="text" text="" from="con:last" style="font-size:11pt;text-align:left;padding:10px" />
 			<Item type="leave" text="&lt;- Okay"/>
 		</Menu>
-			<Menu id="game_setup" title="Local Game Config" if="not engine.network">
+			<Menu id="game_setup" title="Local Game Config">
 				<Item type="submenu" onenter="presets" text="Load Preset..."/>
 				<Item type="num" range="0,Infinity" var="TEAMS_MIN" text="Min Teams (# of Humans+AIs)" />
 				<Item type="list" var="GAME_TYPE" text="When the round finishes">
@@ -74,21 +73,15 @@
 				<Item type="num" range="0,Infinity" var="CYCLE_RUBBER" text="Cycle Rubber" />
 				<Item type="exitmenu" text="&lt;- Go Back"/>
 			</Menu>
-				<!--<Menu id="presets" title="Load Preset">
-					<Item type="js" onenter="preset('classic');menu('exitmenu');menu('exitmenu')" text="Classic"/>
-					<Item type="js" onenter="preset('df');menu('menu:loading')" text="Dogfight"/>
-					<Item type="js" onenter="preset('hr');menu('menu:loading')" text="High Rubber"/>
-					<Item type="js" onenter="preset('ft');menu('menu:loading')" text="Fast Track"/>
-					<Item type="js" onenter="preset('fort');menu('menu:loading')" text="Fortress"/>
-					<Item type="js" onenter="preset('racing');menu('menu:loading')" text="Racing"/>
-					<Item type="js" onenter="preset('zonetest');menu('exitmenu');menu('exitmenu')" text="Zone test"/>
-					<Item type="exitmenu" text="Cancel"/>
-				</Menu>-->
 				<Menu id="presets" title="Load Preset">
-					<Item type="js" style="font-size:14pt" onenter="preset('classic');menu('exitmenu');menu('exitmenu')" 
+					<Item type="js" onenter="game.play()" style="display:inline-block;" if="engine.menus[engine.menus.length-1] == 'game'"
+						text="Current" title="Just use the settings already loaded"/>
+					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('classic')" 
 						text="Classic" title="Default low rubber settings in Armagetron"/>
 					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('df')" 
 						text="Loose Dogfight" title="Obey loose dogfight rules or go elsewhere!"/>
+					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('jump')" 
+						text="Jump test" title="Jump! Go ahead, jump!"/>
 					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('hr')" 
 						text="0x0000ff-=}0xffffffID0x0000ff&lt; 0xffff00T0x00ff00I0xffff00L0x00ff00T 0x0000ffHigh Rubber0x00ff00" title="No camping!"/>
 					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('ft')" 
@@ -103,8 +96,9 @@
 						text="0x66cc66Adventures of 0x00cc00TRON 0xffffff>> Advanced Racing &lt;&lt;" title="First to the finish line wins!"/>
 					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('snake')" 
 						text="0x66ccffSnake Survival" title="How long can you get your trail?"/>
-					<Item type="js" style="font-size:14pt" onenter="preset('zonetest');menu('exitmenu');menu('exitmenu')" 
+					<Item type="js" style="font-size:14pt" onenter="menu('menu:loading');preset('zonetest')" 
 						text="Zone test" title="Zones! Zones! Zones! Zones everywhere!"/>
+					<Item type="submenu" onenter="game_setup" style="font-size:16pt;" text="(config)" if="engine.menus[engine.menus.length-1] == 'game'"/>
 					<Item type="exitmenu" text="Cancel" title="Never mind, none of these look interesting..."/>
 				</Menu>
 	<Menu id="loading" title="Loading...">
@@ -114,6 +108,7 @@
 	<!-- Player configuration -->
 	<Menu id="player" title="Player Setup">
 		<Item type="str" var="player.name" text="Name"/>
+		<Item type="str" var="player.teamName" text="Team Name"/>
 		<Item type="submenu" onenter="macro" text="Instant Chats"/>
 		<Item type="color" var="player.cycleColor" text="Cycle Color" />
 		<Item type="color" var="player.tailColor" text="Tail Color" />
@@ -125,29 +120,14 @@
 		<Item type="js" onenter="importSets()" text="Import settings" />
 		<Item type="exitmenu" text="&lt;- Go Back"/>
 	</Menu>
-		<Menu id="macro" title="Instant Chats">
-			<!--<Foreach var="instantchats" as="n">
+		<Menu id="macro" title="Chat Macros">
+			<Foreach var="instantchats" as="n">
 				<Item type="str" var="instantchats.$(n).text" text="Chat"/>
 				<Item type="keys" var="instantchats.$(n).input" text="Input" />
 				<Item type="text" text="&amp;nbsp;" />
-			</Foreach>-->
-			<Item type="str" var="instantchats.0.text" text="Chat"/>
-			<Item type="keys" var="instantchats.0.input" text="Input" />
-			<Item type="text" text="&amp;nbsp;" />
+			</Foreach>
 			
-			<Item type="str" var="instantchats.1.text" text="Chat"/>
-			<Item type="keys" var="instantchats.1.input" text="Input" />
-			<Item type="text" text="&amp;nbsp;" />
-			
-			<Item type="str" var="instantchats.2.text" text="Chat"/>
-			<Item type="keys" var="instantchats.2.input" text="Input" />
-			<Item type="text" text="&amp;nbsp;" />
-			
-			<Item type="str" var="instantchats.3.text" text="Chat"/>
-			<Item type="keys" var="instantchats.3.input" text="Input" />
-			<Item type="text" text="&amp;nbsp;" />
-			
-			<Item type="js" onenter="" text="Add instant chat (future)" />
+			<Item type="js" onenter="settings.instantchats.push({input:[],text:''});menu('exitmenu');menu('menu:macro')" text="Add instant chat" />
 			<Item type="exitmenu" text="&lt;- Go Back"/>
 		</Menu>
 	<Menu id="input" title="Configure Input">
@@ -304,7 +284,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA."
 		</Menu>
 	
 	<Menu id="pause" title="Paused" exitmenu="pauseMenuToggle()">
-		<Item type="submenu" onenter="game_setup" text="Local Game Setup"/>
+		<Item type="submenu" onenter="game_setup" text="Local Game Setup" if="!engine.network"/>
 		<Item type="submenu" onenter="team" text="Change Teams"/>
 		<Item type="submenu" onenter="player" text="Customize Player"/>
 		<Item type="submenu" onenter="input" text="Configure Input"/>

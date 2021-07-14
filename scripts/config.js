@@ -74,7 +74,7 @@ settings = {
 	
 	//CAMERA
 	CAMERA_FOV: 60,
-	CAMERA_NEAR_RENDER: 0.001,
+	CAMERA_NEAR_RENDER: 0.04,
 	CAMERA_FAR_RENDER: 2000,
 	
 	// settings for camera types
@@ -871,7 +871,15 @@ function plnumcolors(o)
 
 function preset(name)
 {
-	var leave = function() { for(var x=2;x--;) menu('exitmenu'); 
+	var leave = (function()
+	{
+		console.log(engine.menus[engine.menus.length-2]);
+		if(engine.menus[engine.menus.length-3] == "game")
+		{
+			//menu('exitmenu');
+			game.play();
+		}
+		else for(var x=2;x--;) menu('exitmenu'); 
 		if(settings.TEXT_OUT_MODE == 1)
 		{
 			var lines = engine.console.scrollback,lnnum = engine.console.scrollby;
@@ -881,7 +889,7 @@ function preset(name)
 			var lines = engine.console.innerText.split("\n"),lnnum = (-(parseFloat(engine.console.style.top)/engine.console.scrollby));
 		}
 		engine.console.scroll(lines.length-lnnum-6); 
-	};
+	});
 	if(name != "default")
 	{
 		var tmp_settings = JSON.parse(JSON.stringify(game_settings_default));
@@ -901,10 +909,17 @@ function preset(name)
 		case "zonetest":
 			chsetting("MAP_FILE","nelg/test/zonetest-0.1.aamap.xml");
 			chsetting("SIZE_FACTOR",6);
+			setTimeout(function(){leave();},0);
 			break;
 		
 		case "classic":
 			applysettings(tmp_settings);
+			setTimeout(function(){leave();},0);
+			break;
+		case "jump":
+			applysettings(tmp_settings);
+			chsetting("CYCLE_JUMP",0.6);
+			setTimeout(function(){leave();},0);
 			break;
 		case "fort":
 			applysettings(tmp_settings);
