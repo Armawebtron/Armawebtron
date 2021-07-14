@@ -563,12 +563,24 @@ var cameraView = function(cycle, timestep) {
 			break;
 		case 'custom':
 			
+			var realRot;
+			if(engine.camera.userViewDir !== false) // HACK: camera rotation
+			{
+				realRot = cycle.rotation.z;
+				engine.camera.testrot = cycle.rotation.z = Math.atan2(engine.camera.userViewDir[1],engine.camera.userViewDir[0]);
+			}
+			
 			cameraCustom(cycle, timestep, 
 				settings.CAMERA_CUSTOM_BACK+cycle.speed*settings.CAMERA_CUSTOM_BACK_FROMSPEED,
 				settings.CAMERA_CUSTOM_RISE+cycle.speed*settings.CAMERA_CUSTOM_RISE_FROMSPEED,
 				settings.CAMERA_CUSTOM_OFFSET+cycle.speed*settings.CAMERA_CUSTOM_OFFSET_FROMSPEED,
 				settings.CAMERA_CUSTOM_TURN_SPEED,
 			);
+			
+			if(engine.camera.userViewDir !== false)
+			{
+				engine.camera.testrot = cycle.rotation.z = realRot;
+			}
 			
 			break;
 		case 'stationary':
