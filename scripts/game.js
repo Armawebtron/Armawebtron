@@ -1195,9 +1195,9 @@ game.updateScoreBoard = function()
 		var cycle = engine.playersByScore[x];
 		tmp += "<tr class=\"player\">\
 		<td>"+
-			(cycle.hasFlag?replaceColors((engine.teams[cycle.hasFlag.team]==engine.players[engine.activePlayer].team?"0xff7fff":"0xff7f00")+"F"):'')+
+			(cycle.hasFlag?replaceColors((engine.teams[cycle.hasFlag.team]==engine.players[engine.activePlayer].team?"0xff7fff":"0xff7f00")+"F"):'&nbsp;')+
 			(cycle.chatting?"*":"&nbsp;")+
-			replaceColors(cycle.getColoredName())+
+			replaceColors(htmlEntitiesNative(cycle.getColoredName()).replace(/ /g,"&nbsp;"))+
 		"</td><td>"+
 			replaceColors(cycle.alive?"0x00ff00Yes":"0xff0000No")+
 		"</td><td style='text-align:right'>"+
@@ -1205,7 +1205,7 @@ game.updateScoreBoard = function()
 		"</td><td style='text-align:right'>"+
 			cycle.ping+
 		"</td><td>"+
-			(cycle.team?cycle.team.name:"")+
+			(cycle.team?(replaceColors(htmlEntitiesNative((((settings.ALLOW_TEAM_NAME_COLOR?(cycle.getColoredName().slice(0,8)):("0x"+(game.teamColor(engine.teams.indexOf(cycle.team)).getHexString()))))+cycle.team.name)).replace(/ /g,"&nbsp;"))):"")+
 		"</td><tr>";
 	}
 	playersSB.innerHTML = tmp;

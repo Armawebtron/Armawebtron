@@ -177,6 +177,14 @@ global.htmlEntities = function(str) //! Get HTML entities for some characters.
 	return (""+str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
+global.htmlEntitiesNative = function(str)
+{
+	if(document.createElement) return htmlEntities(str);
+	var s=document.createElement("SPAN");
+	s.innerText = str;
+	return s.innerHTML;
+}
+
 global.colorIsDark = function(r,g,b)
 {
 	return (
