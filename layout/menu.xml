@@ -122,12 +122,12 @@
 	</Menu>
 		<Menu id="macro" title="Chat Macros">
 			<Foreach var="instantchats" as="n">
-				<Item type="str" var="instantchats.$(n).text" text="Chat"/>
-				<Item type="keys" var="instantchats.$(n).input" text="Input" />
-				<Item type="text" text="&amp;nbsp;" />
+				<Item type="str" var="instantchats.$(n)" text="Chat" style="line-height: 1.25;"/>
+				<Item type="keys" var="instant_chat_$(n)" text="Input" style="line-height: 1;"/>
+				<Item type="text" text="&amp;nbsp;" style="line-height: 1;"/>
 			</Foreach>
 			
-			<Item type="js" onenter="settings.instantchats.push({input:[],text:''});menu('exitmenu');menu('menu:macro')" text="Add instant chat" />
+			<Item type="js" onenter="newInstantChat();menu('exitmenu');menu('menu:macro')" text="Add instant chat" />
 			<Item type="exitmenu" text="&lt;- Go Back"/>
 		</Menu>
 	<Menu id="input" title="Configure Input">

@@ -445,10 +445,9 @@ function gameControl(keycode)
 	}
 	for(var x=settings.instantchats.length-1;x>=0;--x)
 	{
-		var chat = settings.instantchats[x];
-		for(var y=chat.input.length-1;y>=0;--y)
+		if(settings.controls["instant_chat_"+x].indexOf(keycode) >= 0)
 		{
-			if(keycode == chat.input[y]) handleChat(engine.players[engine.activePlayer],chat.text);
+			handleChat(engine.players[engine.activePlayer], settings.instantchats[x]);
 		}
 	}
 }

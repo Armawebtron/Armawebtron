@@ -446,7 +446,7 @@ for(var i=0;i<sets.length;i++)
 }
 
 //possible admin commands (methods)
-var commands = {
+commands = {
 	TOGGLE: function(params)
 	{
 		var split = params.split(" ");
@@ -527,9 +527,11 @@ var commands = {
 		var pos = params.indexOf(" ");
 		var name = params.substr(0,pos), cfg = JSON.parse(params.substr(pos+1));
 		var sets = Object.keys(cfg);
+		if( name == "instantchats" ) { settings[name] = cfg; return; }
 		for(var i=0;i<sets.length;i++)
 		{
-			if(typeof(settings[name][sets[i]]) != "undefined") settings[name][sets[i]] = cfg[sets[i]];
+			if( sets[i].indexOf("instant") == 0 || typeof(settings[name][sets[i]]) != "undefined" )
+				settings[name][sets[i]] = cfg[sets[i]];
 		}
 	},
 	FLOOR_RED: updategrid, FLOOR_GREEN: updategrid, FLOOR_BLUE: updategrid, GRID_SIZE: updategrid,
@@ -1000,24 +1002,25 @@ settings.controls = { //defaults declared
 
 };
 
-settings.instantchats = [
-	{
-		input: [49],
-		text: "Well done!",
-	},
-	{
-		input: [50],
-		text: "Thank you!",
-	},
-	{
-		input: [51],
-		text: "Good match!",
-	},
-	{
-		input: [115,52],
-		text: "LOL!",
-	},
-]
+settings.instantchats = [];
+
+function newInstantChat(chat="",keys=null)
+{
+	var x = settings.instantchats.length;
+	settings.controls["instant_chat_"+x] = keys?keys:[];
+	settings.instantchats[x] = chat;
+}
+function removeInstantChat(x)
+{
+	settings.controls["instant_chat_"+x].splice(0);
+	delete settings.controls["instant_chat_"+x];
+	delete settings.instantchats[x];
+}
+
+newInstantChat("Well done!",[49]);
+newInstantChat("Thank you!",[50]);
+newInstantChat("Good match!",[51]);
+newInstantChat("LOL!",[115,52]);
 
 function init_key(x=false) // ?
 {
@@ -1081,7 +1084,7 @@ var uservars = [
 	"EXPLOSIONS","HIGH_RIM","FLOOR_DETAIL",
 	/*"MENU_RENDER",*/"REDRAW_MODE","MAX_TARGET_FPS",//"GAME_LOOP",
 	"ZONE_HEIGHT","ZONE_SEGMENTS","ZONE_SEG_LENGTH","ZONE_ALPHA","ZONE_SPIN_SPEED","ZONE_RENDER_TYPE",
-	"player","controls"
+	"player","controls", "instantchats",
 ];
 
 function exportUsrSets()
@@ -1093,7 +1096,7 @@ function exportUsrSets()
 	}
 	for(var i=0;i<settings.instantchats.length;i++)
 	{
-		txt += "INSTANT_CHAT_STRING_1_"+(i+1)+" "+settings.instantchats[i].text+"\n";
+		txt += "INSTANT_CHAT_STRING_1_"+(i+1)+" "+settings.instantchats[i]+"\n";
 	}
 	txt += "\n# Native Armawebtron user.cfg settings. Most, but not all, also work with Armagetron.\n";
 	for(var i=0;i<uservars.length;i++)

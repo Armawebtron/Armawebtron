@@ -22,7 +22,14 @@
 	src: url(styles/fonts/nicefont.woff);
 }
 
-html, body { margin: 0; padding: 0; background:#000; overflow:hidden; font-family: Armagetronad, monospace;}
+html, body
+{
+	margin: 0; padding: 0; 
+	background: #000; 
+	overflow: hidden; 
+	font-family: Armagetronad, monospace;
+	line-height: 1.25;
+}
 
 a { color: inherit; text-decoration: none; }
     
