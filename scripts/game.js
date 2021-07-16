@@ -240,7 +240,7 @@ function processPlayer(x,cfg)
 		cfg.name = "";
 		var len = 0;
 		console.log(str,str.length);
-		for(var i=0;len<15||i<str.length;++i)
+		for(var i=0;len<15&&i<str.length;++i)
 		{
 			if(str[i] == "0" && str[i+1] == "x")
 			{
