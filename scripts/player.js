@@ -204,6 +204,11 @@ class Player extends THREE.Object3D
 			return this.turn(-1);
 		}
 	}
+	jump()
+	{
+		if(settings.CYCLE_MIDAIR_JUMP || this.position.z == 0)
+			this.model.rotation.y = -settings.CYCLE_JUMP;
+	}
 	spawn(cfg,respawn=true,update=true)
 	{
 		//configure cycle

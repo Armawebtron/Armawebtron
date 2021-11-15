@@ -343,8 +343,8 @@ function gameControl(keycode)
 			}
 			if(settings.controls.jump.indexOf(keycode) > -1)
 			{
-				if(settings.CYCLE_MIDAIR_JUMP || engine.players[engine.activePlayer].position.z == 0)
-					engine.players[engine.activePlayer].model.rotation.y = -settings.CYCLE_JUMP;
+				if(engine.players[engine.activePlayer].alive)
+					engine.players[engine.activePlayer].jump();
 				engine.controls.pressed.push(keycode);
 			}
 		}
