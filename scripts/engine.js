@@ -143,6 +143,7 @@ if(typeof(Proxy) !== "undefined")
 						engine.playersByScore.splice(x,1);
 					}
 				}
+				delete engine.playersById[id];
 			}
 			return true;
 		},
