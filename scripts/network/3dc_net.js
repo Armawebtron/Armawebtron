@@ -823,6 +823,25 @@ class Server3dc
 			this.clients[i].send(data);
 		}
 	}
+	syncCycle(cycle, walls=false)
+	{
+		var data = ({type:"griddata",data:[{
+			position:[cycle.position.x,cycle.position.y,cycle.position.z],
+			direction:rad2deg(cycle.rotation.z), 
+			speed:cycle.speed, rubber:cycle.rubber,
+			alive:cycle.alive,
+			netid:x}],gtime:engine.gtime});
+		if(walls) data.data.wall = cycle.walls.map;
+		this.send(data);
+	}
+	syncDeath(cycle)
+	{
+		this.send({type:"griddata",data:[{
+			netid:engine.players.indexOf(cycle),
+			alive:false,speed:0,
+			position:[cycle.position.x,cycle.position.y,cycle.position.z], 
+		}],gtime:engine.gtime});
+	}
 }
 
 class ServerClient3dc
@@ -1120,6 +1139,7 @@ class ServerClient3dc
 				for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x])
 				{
 					cycle = engine.players[x];
+					if(!cycle.alive) continue;
 					data.push(cd = {
 						position:[cycle.position.x,cycle.position.y,cycle.position.z],direction:rad2deg(cycle.rotation.z), 
 						speed:cycle.speed, rubber:cycle.rubber,
@@ -1128,11 +1148,22 @@ class ServerClient3dc
 					});
 				}
 				break;
+			case 2:
+				for(var x=engine.teams.length-1;x>=0;--x) if(engine.teams[x])
+				{
+					data.push(cd = {
+						x:engine.teams[x].x,y:engine.teams[x].y,z:engine.teams[x].z,
+						name:engine.teams[x].name,
+						id:x,
+					});
+				}
+				break
 		}
+		// Why was this split into two switch statements again?
 		switch(type)
 		{
 			case 0:
-				this.send({type:"playerdata",data:data,gtime:engine.gtime});
+				this.send({type:"playerdata",data:data,gtime:engine.gtime,JSON:true});
 				break;
 			case 1:
 				this.send({type:"griddata",data:data,gtime:engine.gtime,req:false});
@@ -1143,7 +1174,19 @@ class ServerClient3dc
 				else
 					this.timeoutID = setTimeout(function(){self.senddata()},2000);
 				break;
+			case 2:
+				this.send({type:"team",data:data,JSON:true});
+				break;
 		}
+	}
+	syncOurCycleNow()
+	{
+		var cycle = engine.players[this.netid];
+		this.send({type:"griddata",data:[{
+			position:[cycle.position.x,cycle.position.y,cycle.position.z],direction:rad2deg(cycle.rotation.z),
+			alive:cycle.alive,speed:cycle.speed,rubber:cycle.rubber,
+			netid:this.netid,
+		}],gtime:engine.gtime});
 	}
 }
 

@@ -481,13 +481,7 @@ game.processPlayers = function(removeAIs=true)
 	
 	if(window.svr) 
 	{
-		var teams = [];
-		for(var x=engine.teams.length-1;x>=0;--x) if(engine.teams[x])
-		{
-			teams.push({id:x,name:engine.teams[x].name,x:engine.teams[x].x,y:engine.teams[x].y,z:engine.teams[x].z});
-		}
-		teams={type:"team",data:teams};
-		window.svr.clients.forEach(function(ws){ws.send(teams);ws.senddata(0)});
+		window.svr.clients.forEach(function(ws){ws.senddata(2);ws.senddata(0)});
 	}
 }//*/
 
@@ -678,21 +672,9 @@ game.run = function(oneoff=false)
 								if(engine.network) engine.network.syncTurn(cycle);
 								if(window.svr) //force a player sync
 								{
-									var data = ({type:"griddata",data:[{
-										position:[cycle.position.x,cycle.position.y,cycle.position.z],
-										direction:rad2deg(cycle.rotation.z), 
-										speed:cycle.speed, rubber:cycle.rubber,
-										alive:cycle.alive,
-										netid:x, wall:cycle.walls.map,
-									}],gtime:engine.gtime});
+									window.svr.syncCycle(cycle, false);
 									if(cycle.speed > 1) cycle.update(0.01/cycle.speed);
-									var data2 = ({type:"griddata",data:[{
-										position:[cycle.position.x,cycle.position.y,cycle.position.z],
-										direction:rad2deg(cycle.rotation.z), 
-										speed:cycle.speed, rubber:cycle.rubber,
-										alive:cycle.alive,
-										netid:x}],gtime:engine.gtime});
-									window.svr.clients.forEach(function(ws){ws.send(data);ws.send(data2)});
+									window.svr.syncCycle(cycle, true);
 								}
 							}
 							cycle.turnQueue.splice(0,1);
