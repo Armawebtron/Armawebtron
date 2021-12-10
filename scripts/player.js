@@ -50,6 +50,8 @@ class Player extends THREE.Object3D
 		this.turns = 0;
 		this.turnsSynced = 0;
 		this.turnQueue = [];
+		this.dist = 0;
+		this.lastTurnPos = null;
 		this.lastTurnTime = 0;
 		this.gameTime = 0;
 		this.handleNetTurn = true;
@@ -327,6 +329,8 @@ class Player extends THREE.Object3D
 		if(this.haswall) this.newWallSegment();
 		
 		this.turns++;
+		this.lastTurnDir = dir;
+		this.lastTurnPos = this.position.clone();
 		
 		if(engine.audio) try
 		{
@@ -571,6 +575,7 @@ class Player extends THREE.Object3D
 				wallmod.scale.y += newy/wallmod.size;
 				
 				this.walls.netLength += dist;
+				this.dist += dist;
 				
 				this.sensor.front -= dist; //assume distance until we have new real results.
 				//this.sensor.front = 
@@ -632,6 +637,7 @@ class Player extends THREE.Object3D
 
 		//choose model
 		this.model = cycleModel(cfg.cycleColor);
+		this.model.owner = this;
 		this.add(this.model);
 		//this.shadow = cycleShadow();
 		//this.add(this.shadow);
