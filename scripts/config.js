@@ -209,6 +209,7 @@ settings = {
 	ZONE_SEGMENTS: 11,//arma render only
 	ZONE_SEG_LENGTH: 0.5,//arma render only
 	ZONE_ALPHA: 0.7,
+	ZONE_ALPHA_TOGGLE: false,
 	ZONE_SPIN_SPEED: 0.05,
 	ZONE_RENDER_TYPE: 'arma',//cylinder or arma
 	

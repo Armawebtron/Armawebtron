@@ -207,7 +207,13 @@ class Zone
 		//var alpha = Math.max(color.r,color.g,color.b);
 		//color.r /= alpha; color.g /= alpha; color.b /= alpha;
 		if(!this.mat)
-			this.mat = new THREE.MeshBasicMaterial( { color: color, transparent: settings.ALPHA_BLEND, opacity: settings.ZONE_ALPHA/**alpha*/, side: THREE.DoubleSide } );
+			this.mat = new THREE.MeshBasicMaterial({
+				color: color, 
+				transparent: settings.ALPHA_BLEND, opacity: settings.ZONE_ALPHA/**alpha*/,
+				wireframe: settings.ALPHA_BLEND^settings.ZONE_ALPHA_TOGGLE,
+				
+				side: THREE.DoubleSide 
+			});
 		if(!this.mesh)
 		{
 			this.mesh = new THREE.Mesh(geo,this.mat);
@@ -364,7 +370,7 @@ class Zone
 				cycle.speed += cycle.speed*accel;
 				break;
 			case "flag":
-				if(!engine.network && !cycle.hasFlag && engine.teams.indexOf(cycle.team) != this.team)
+				if( !engine.network && !cycle.hasFlag && engine.teams.indexOf(cycle.team) != this.team && engine.teams[this.team] )
 				{
 					engine.console.print(cycle.getColoredName()+"0xRESETT picked up "+engine.teams[this.team].name+"0xRESETT's flag.\n");
 					cycle.hasFlag = this;
