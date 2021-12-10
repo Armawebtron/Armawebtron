@@ -668,6 +668,8 @@ createWall = function(cycle,x,y)
 	group.netLength = 0;
 	group.map = [[x,y],[x,y]];
 
+	group.owner = cycle;
+
 	return group;
 };
 
