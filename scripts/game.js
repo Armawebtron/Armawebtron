@@ -1044,8 +1044,7 @@ game.unpause = function()
 
 game.changeViewTarget = function(a=1,forcechange=false) 
 {
-	if(engine.dedicated) return;
-	if(a != 0)
+	if(a != 0 && !engine.dedicated)
 	{
 		if(!forcechange && engine.players[engine.activePlayer].alive) return;
 		var first = true; //force the loop to get started
@@ -1071,7 +1070,14 @@ game.changeViewTarget = function(a=1,forcechange=false)
 				engine.players[x].audio.gain.setTargetAtTime(6, engine.audio.currentTime, 1);
 		}
 	}
-	if(!engine.network && !engine.players[engine.activePlayer].spectating && typeof(engine.winner) == "undefined")
+	
+	var numHumans = 0;
+	for(var x=engine.players.length-1;x>=0;--x)
+	{
+		if( engine.players[x] && !engine.players[x].AI && !engine.players[x].spectating )
+			++numHumans;
+	}
+	if(!engine.network && numHumans > 0 && typeof(engine.winner) == "undefined")
 	{
 		switch(settings.FINISH_TYPE)
 		{
@@ -1093,6 +1099,7 @@ game.changeViewTarget = function(a=1,forcechange=false)
 		
 	}
 	
+	if(engine.dedicated) return;
 	engine.console.print("Watching "+engine.players[engine.viewTarget].name+"...\n");
 }
 
@@ -1100,11 +1107,17 @@ game.checkForWinner = function()
 {
 	var alivecount = aliveaicount = 0;
 	var numPlay = 0;
+	var numHumanPlay = 0;
 	var alive = [], theplayer = false;
 	var declareRoundWinner = typeof(engine.declareRoundWinner) != "undefined";
 	for(var x=engine.players.length-1;x>=0;--x) if(typeof(engine.players[x]) != "undefined")
 	{
-		if(!engine.players[x].spectating) numPlay++;
+		if(!engine.players[x].spectating)
+		{
+			numPlay++;
+			if(!engine.players[x].AI) 
+				numHumanPlay++;
+		}
 		if(engine.players[x].alive) 
 		{
 			alivecount++;
@@ -1120,7 +1133,7 @@ game.checkForWinner = function()
 	}
 	if(
 		(declareRoundWinner) ||
-		(settings.GAME_TYPE == 1 && numPlay > 1 && (alivecount <= 1 || (settings.FINISH_TYPE == 1 && aliveaicount == alivecount))) || 
+		(settings.GAME_TYPE == 1 && numHumanPlay > 0 && numPlay > 1 && (alivecount <= 1 || (settings.FINISH_TYPE == 1 && aliveaicount == alivecount))) || 
 		(/*settings.GAME_TYPE == 0 && */(alivecount <= 0))
 	)
 	{
