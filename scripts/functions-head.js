@@ -177,7 +177,7 @@ global.htmlEntities = function(str) //! Get HTML entities for some characters.
 	return (""+str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-global.htmlEntitiesNative = function(str)
+global.htmlEntitiesNative = function(str) //! Get HTML entities for some characters with the browser's text processing
 {
 	if(document.createElement) return htmlEntities(str);
 	var s=document.createElement("SPAN");
@@ -204,7 +204,7 @@ global.getDarkBGFromHex = function(hex)
 		return "none";
 }
 
-global.replaceColors = function(str)
+global.replaceColors = function(str,stripCodes=true) //! Get HTML for Armagetron color codes
 {
 	if(typeof(str) == "undefined") return typeof(str);
 	var dark = "class=darktext";
@@ -214,7 +214,7 @@ global.replaceColors = function(str)
 		{
 			if(x.substr(2,6) == "RESETT")
 			{
-				return x.substr(8);
+				return x.substr(stripCodes?8:0);
 			}
 			else
 			{
@@ -244,7 +244,7 @@ global.replaceColors = function(str)
 						}
 					}
 				}
-				return "<span "+darkI1+" style='color:rgb("+r+","+g+","+b+");'>"+x.substr(8)+"</span>";
+				return "<span "+darkI1+" style='color:rgb("+r+","+g+","+b+");'>"+x.substr(stripCodes?8:0)+"</span>";
 			}
 		});
 	return str;
@@ -482,7 +482,7 @@ global.normalizeRad = function(radians)
 // liable for any real or imagined damage resulting from its use.
 // Users of this code must verify correctness for their application.
 var dot = function(ux,uy,vx,vy) { return ((ux*vx)+(uy*vy)); };
-var SMALL_NUM = 0.00000001; // anything that avoids division overflow
+global.SMALL_NUM = 0.00000001; // anything that avoids division overflow
 global.distanceoflines = function(x1,y1, x2,y2, x3,y3, x4,y4)
 {
 	var ux=x2-x1,uy=y2-y1;
