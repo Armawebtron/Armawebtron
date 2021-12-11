@@ -441,13 +441,8 @@ game.processPlayers = function(removeAIs=true)
 				{
 					if(engine.players[x].AI)
 					{
-						engine.console.print(engine.players[x].getColoredName()+"0xff7f7f left the game.\n");
-						engine.players.splice(x,1);
+						game.playerLeave(engine.players[x]);
 						AIsToDealWith--;
-						if(window.svr)
-						{
-							window.svr.send({type:"leave",data:x});
-						}
 					}
 					if(AIsToDealWith == 0) break;
 				}
@@ -493,6 +488,26 @@ game.processPlayers = function(removeAIs=true)
 		window.svr.clients.forEach(function(ws){ws.senddata(2);ws.senddata(0)});
 	}
 }//*/
+
+game.playerLeave = function(p)
+{
+	if(p.spectator)
+		engine.console.print("0xff7f7fSpectator "+p.getColoredName()+"0xff7f7f left.\n");
+	else
+		engine.console.print(p.getColoredName()+"0xff7f7f left the game.\n");
+	
+	var id = engine.players.indexOf(p);
+	
+	if(window.svr)
+	{
+		window.svr.send({type:"del", data:id});
+	}
+	
+	delete engine.players[id];
+	delete settings.players[id];
+	
+	var i; for(i=engine.players.length-1;i>0;--i) { if(i in engine.players) break; } engine.players.splice(i+1); 
+}
 
 game.loadRound = function(dlmap)
 {

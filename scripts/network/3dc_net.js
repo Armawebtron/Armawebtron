@@ -1041,29 +1041,7 @@ class ServerClient3dc
 		var cycle = engine.players[this.netid];
 		if(cycle)
 		{
-			//TODO: handle leaving in game.js instead
-			if(cycle.spectator)
-				engine.console.print("0xff7f7fSpectator "+cycle.getColoredName()+"0xff7f7f left.\n");
-			else
-				engine.console.print(cycle.getColoredName()+"0xff7f7f left the game.\n");
-			
-			if(this.netid+1 == engine.players.length)
-			{
-				engine.players.splice(this.netid,1);
-				settings.players.splice(this.netid,1);
-			}
-			else
-			{
-				//engine.players[this.netid] = undefined;
-				delete engine.players[this.netid];
-				//settings.players[this.netid] = undefined;
-				delete settings.players[this.netid];
-			}
-			
-			if(this.version >= 0.73)
-				this.server.send({type:"delete",data:this.netid});
-			else
-				this.server.send({type:"leave",data:this.netid});
+			game.playerLeave(cycle);
 		}
 	}
 	onClose()
