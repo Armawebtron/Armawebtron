@@ -814,7 +814,7 @@ class Server3dc
 				cert: fs.readFileSync(settings.SERVER_SSL_CERT),
 				key: fs.readFileSync(settings.SERVER_SSL_KEY),
 			});
-			this.server = new WebSocket.Server(this.core);
+			this.server = new WebSocket.Server({server:this.core});
 			this.core.listen(port);
 		}
 		else
@@ -1081,7 +1081,7 @@ class ServerClient3dc
 		this.server.clients.splice(id,1);
 		engine.console.print("User "+this.netid+" disconnected: "+this.r.connection.remoteAddress+"\n",false);
 		
-		if(this.server.clients.length == 0)
+		if(window.svr.clients.length == 0)
 		{
 			settings.players.splice(0);
 			roundEndForce();
