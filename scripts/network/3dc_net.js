@@ -43,6 +43,14 @@ tdc_NetOrder[_3dc_config] = [
 	"data:str" //the supporting functions will detect the real type
 ];
 
+const _3dc_gametime = 210;
+tdc_Version[_3dc_gametime] = 0.80;
+tdc_NetOrder[_3dc_gametime] = [
+	String.fromCharCode(0),
+	"gtime:float",
+	"speed:float"
+];
+
 
 // on second thought, this form of the version will never be transmitted
 const _3dc_version = 10;
@@ -52,6 +60,7 @@ tdc_NetOrder[_3dc_version] = [
 	String.fromCharCode(0),
 	"data:auto"
 ];
+
 
 const _3dc_newPlayer = 201;
 tdc_Aliases["playerdata"] = _3dc_newPlayer;
@@ -85,6 +94,7 @@ tdc_NetOrder[_3dc_splicePlayer] = [
 	"data:intc"
 ];
 
+
 const _3dc_newTeam = 220;
 tdc_Aliases["team"] = _3dc_newTeam;
 tdc_Version[_3dc_newTeam] = 0.80;
@@ -114,12 +124,17 @@ tdc_NetOrder[_3dc_spliceTeam] = [
 	"data:intc"
 ];
 
+
 const _3dc_roundEvent = 320;
 tdc_Version[_3dc_roundEvent] = 0.80;
 tdc_NetOrder[_3dc_roundEvent] = [
 	null,
 	"type:int?0=endRound&1=newRound"
 ];
+
+
+
+
 
 function tdcDeconstructData(data,con) //! prepares network data to be sent
 {
@@ -258,17 +273,17 @@ function tdcConstructData(msg,data) //! converts transmitted data back into an o
 	var pos = 0;
 	var dataspl = [];
 	
-	function tdcCD_Recursive(obj,data,layers=0,sep=undefined)
+	function tdcCD_Recursive(obj,data,msg,layers=0,sep=undefined)
 	{
 		var ret = true;
-		for(var i=0;i>obj.length;++i)
+		for(var i=0;i<obj.length;++i)
 		{
 			if(i == 0)
 			{
 				if(layers == 0)
 				{
 					sep = obj[i];
-					dataspl = obj.split(sep);
+					dataspl = data.split(sep);
 				}
 				else
 				{
@@ -280,6 +295,7 @@ function tdcConstructData(msg,data) //! converts transmitted data back into an o
 				switch(typeof(obj[i]))
 				{
 					case "string":
+					{
 						var split = obj[i].split(":");
 						var value = dataspl[pos];
 						switch(split[1])
@@ -302,7 +318,7 @@ function tdcConstructData(msg,data) //! converts transmitted data back into an o
 								// otherwise, string
 								break;
 							case "color":
-								value = new THREE.Color(value);
+								value = new THREE.Color(parseFloat(value));
 								//falls through
 							case "int":
 								value = parseInt(value);
@@ -311,15 +327,16 @@ function tdcConstructData(msg,data) //! converts transmitted data back into an o
 								value = parseFloat(value);
 								break;
 						}
-						data[split[0]] = value;
+						msg[split[0]] = value;
 						//buf += obj[i][split[0]]
-						break;
+					}	break;
 					case "object":
+					{
 						if(obj[i] === null) break;
-						data[obj[i][0]] = {};
-						var ret2 = tdcCD_Recursive(obj[i],data[obj[i][0]],layers+1,sep);
+						msg[obj[i][0]] = {};
+						var ret2 = tdcCD_Recursive(obj[i],msg[obj[i][0]],layers+1,sep);
 						ret = ret2&&ret;
-						break;
+					}	break;
 				}
 				++pos;
 				//buf += sep;
@@ -327,7 +344,7 @@ function tdcConstructData(msg,data) //! converts transmitted data back into an o
 		}
 		return ret;
 	}
-	return tdcCD_Recursive(data,msg);
+	return tdcCD_Recursive(tdc_NetOrder[desc],data,msg);
 }
 
 class Connection3dc
