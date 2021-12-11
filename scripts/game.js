@@ -166,9 +166,16 @@ game.newRound = function()
 		if(engine.currrot > maps.length) engine.currrot = 0;
 		settings.MAP_FILE = maps[engine.currrot];
 	}
-	if(settings.MAP_FILE != "" && settings.MAP_FILE != engine.loadedMap)
+	var pureName = settings.MAP_FILE.replace(/\(.+\)/,"");
+	if(settings.MAP_FILE != "" && pureName != engine.loadedMap)
 	{
-		var mapfile = settings.RESOURCE_REPOSITORY_SERVER+(settings.MAP_FILE.replace(/\(.+\)/,""));
+		if(typeof(sessionStorage) !== "undefined")
+		{
+			var mapData = sessionStorage.getItem(pureName);
+			if(mapData !== null)
+				return game.loadRound(mapData);
+		}
+		var mapfile = settings.RESOURCE_REPOSITORY_SERVER+pureName;
 		engine.console.print("Downloading map from "+mapfile+"...\n",false);
 		httpGetAsync(mapfile,game.loadRound,revertMap);
 	}
@@ -262,6 +269,7 @@ function processPlayer(x,cfg)
 			cfg.name = removeColors(cfg.name).slice(0,15);
 		}
 	}
+	
 	if(engine.players[x])
 	{
 		var cycle = engine.players[x];
@@ -488,10 +496,12 @@ game.processPlayers = function(removeAIs=true)
 
 game.loadRound = function(dlmap)
 {
+	if(inround()) return;
 	if(typeof(dlmap) !== "undefined")
 	{
 		engine.mapString = dlmap;
-		engine.loadedMap = settings.MAP_FILE;
+		engine.loadedMap = settings.MAP_FILE.replace(/\(.+\)/,"");
+		sessionStorage.setItem(engine.loadedMap, dlmap);
 	}
 	
 	engine.mapXML = xmlify(engine.mapString);
