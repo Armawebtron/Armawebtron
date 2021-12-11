@@ -830,7 +830,7 @@ class Server3dc
 			direction:rad2deg(cycle.rotation.z), 
 			speed:cycle.speed, rubber:cycle.rubber,
 			alive:cycle.alive,
-			netid:x}],gtime:engine.gtime});
+			netid:engine.players.indexOf(cycle)}],gtime:engine.gtime});
 		if(walls) data.data.wall = cycle.walls.map;
 		this.send(data);
 	}
