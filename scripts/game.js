@@ -54,6 +54,7 @@ game.endRound = function()
 		}
 	}
 	engine.gtime = -4000;
+	engine.timemult = 0;
 	for(var x=engine.players.length-1;x>=0;--x) if(typeof(engine.players[x]) != "undefined")
 	{
 		engine.players[x].alive = false;
