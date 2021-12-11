@@ -1092,10 +1092,14 @@ class ServerClient3dc
 	assignNetId()
 	{
 		var netid = false;
-		for(var x=1;x<settings.players.length;x++) if(!settings.players[x])
+		var len=Math.max(settings.players.length,engine.players.length);
+		for(var x=1;x<len;x++) 
 		{
-			netid = x;
-			break;
+			if( settings.players[x] === undefined && !engine.players[x] )
+			{
+				netid = x;
+				break;
+			}
 		}
 		if(netid === false) netid = x;
 		this.netid = netid;
