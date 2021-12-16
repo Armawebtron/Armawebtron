@@ -419,12 +419,7 @@ class Player extends THREE.Object3D
 		this.accel = acceleration;
 		if(this.speed < 0) this.speed = 0;
 		
-		//wheel spin per player
-		if(!engine.dedicated)
-		{
-			this.model.children[1].rotation.y += (deg2rad(this.model.rotaon.front * this.speed) * timestep);//0.5x wheel size
-			this.model.children[2].rotation.y += (deg2rad(this.model.rotaon.back * this.speed) * timestep);
-		}
+		this.lastMoved = true;
 		
 		//collision test
 		var dir = cdir(this.rotation.z);
@@ -494,6 +489,7 @@ class Player extends THREE.Object3D
 				radj *= this.lastSpeed;
 				dist -= adjdist;
 				//console.warn(x+" should have collided: "+(this.collidetime-timeElapsed)+"ms\n");
+				this.lastMoved = false;
 			}
 			//if((dir[0]==0?0:(newx/dir[0]))+(dir[1]==0?0:(newx/dir[1])) >= this.sensor.front)
 			if(dist >= this.sensor.front-(this.minDistance.front))
@@ -502,6 +498,7 @@ class Player extends THREE.Object3D
 				dist = (this.sensor.front-(this.minDistance.front));
 				//if(x == engine.viewTarget) console.warn(dist+" "+this.sensor.front+"\n");
 				collided = true;
+				this.lastMoved = false;
 			}
 			if(dist > this.sensor.front-(this.minDistance.front)) //shouldn't happen
 			{
@@ -612,7 +609,7 @@ class Player extends THREE.Object3D
 				}//*/
 				if(this.position.z > 0) this.newWallSegment();
 			}
-			else if(engine.gtime > this.spawntime+(settings.CYCLE_WALL_TIME*1000))
+			else if(this.gameTime > this.spawntime+(settings.CYCLE_WALL_TIME*1000))
 			{
 				this.walls = createWall(this,this.position.x,this.position.y,this.position.z);
 				engine.scene.add(this.walls);
