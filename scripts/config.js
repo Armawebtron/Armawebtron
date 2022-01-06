@@ -1174,6 +1174,7 @@ window.saveusercfg = function()
 	localStorage.setItem("user.cfg",usercfg);
 }
 
+window.chsetting = chsetting;
 function chsetting(setting,value,silent=false,txt="",pretxt="")
 {
 	if(setting[0] == "#" || setting == "") return;
