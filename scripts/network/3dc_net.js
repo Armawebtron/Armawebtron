@@ -615,7 +615,7 @@ class Connection3dc
 						
 						if(engine.audio)
 						{
-							engine.audio.audioMixing(engine.players[data.netid]);
+							engine.audio.mixCycle(engine.players[data.netid]);
 						}
 					}
 					else
