@@ -128,8 +128,8 @@ global.httpGetAsync = function(url,callback,errcb=false) //! gets HTTP requests 
 	}
 	else if(window.http) //no https support
 	{
-		url=url.replace("https://","http://");
-		var req = http.get(url.replace("https://","http://"),function(res)
+		if( url.indexOf("https://") == 0 ) url = url.replace("https://","http://");
+		var req = http.get(url,function(res)
 		{
 			res.data = "";
 			res.on('data',function(data)
