@@ -139,8 +139,11 @@ function draw()
 		}
 		
 		//wheel spin per player
-		cycle.model.children[1].rotation.y += (deg2rad(cycle.model.rotaon.front * cycle.speed) * frametime);//0.5x wheel size
-		cycle.model.children[2].rotation.y += (deg2rad(cycle.model.rotaon.back * cycle.speed) * frametime);
+		if(engine.gtime > 0)
+		{
+			cycle.model.children[1].rotation.y += (deg2rad(cycle.model.rotaon.front * cycle.speed) * frametime);//0.5x wheel size
+			cycle.model.children[2].rotation.y += (deg2rad(cycle.model.rotaon.back * cycle.speed) * frametime);
+		}
 		//sound
 		if(engine.audio) engine.audio.mixCycle(cycle);
 	}
