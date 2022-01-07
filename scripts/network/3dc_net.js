@@ -172,10 +172,10 @@ function tdcDeconstructData(data,con) //! prepares network data to be sent
 	}
 	function tdcDD_Recursive(obj,data,layers=0,sep=undefined)
 	{
-		console.log(obj,data);
+		//console.log(obj,data);
 		for(var i=0;i<obj.length;++i)
 		{
-			console.log(obj,data,i);
+			//console.log(obj,data,i);
 			if(i == 0)
 			{
 				if(layers == 0)
