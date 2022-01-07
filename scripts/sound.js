@@ -108,8 +108,9 @@ engine.audio.audioMixing = function()
 		m.elements[12] = m.elements[13] = m.elements[14] = 0;
 
 		var vec = new THREE.Vector3(0,1,0);
-		//vec.applyMatrix4(m);
-		//vec.normalize();
+		// NOTE: the following 2 lines were commented out, but I don't know why as they seem to fix panning issues
+		vec.applyMatrix4(m);
+		vec.normalize();
 		var up = new THREE.Vector3(0,0,1);
 		up.applyMatrix4(m);
 		up.normalize();
@@ -148,6 +149,7 @@ engine.audio.changeEngineSound = function(cycle,choice)
 	cycle.engineType = choice;
 	cycle.engineSound.stop();
 	cycle.engineSound = playSound(bufferLoader.bufferList[choice], 0.5, 1, true, cycle.audio);
+	engine.audio.resume();
 }
 
 engine.audio.stopCycles = function()
@@ -160,6 +162,7 @@ engine.audio.stopCycles = function()
 
 engine.audio.startCycles = function()
 {
+	engine.audio.resume();
 	for(var x=0;x<engine.players.length;x++) if(typeof(engine.players[x]) != "undefined" && engine.players[x].alive)
 	{
 		engine.players[x].audio.panner.connect(engine.audio.destination);//turns on audio
