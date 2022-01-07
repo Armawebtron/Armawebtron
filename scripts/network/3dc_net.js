@@ -613,7 +613,10 @@ class Connection3dc
 						if(data.alive) engine.players[data.netid].spawn(cycleinfo,false);
 						else if(data.netid == engine.activePlayer) game.changeViewTarget();
 						
-						audioMixing(engine.players[data.netid]);
+						if(engine.audio)
+						{
+							engine.audio.audioMixing(engine.players[data.netid]);
+						}
 					}
 					else
 					{
