@@ -54,6 +54,7 @@ game.endRound = function()
 		}
 	}
 	engine.gtime = -4000;
+	engine.syncGameTime = engine.gtime;
 	engine.timemult = 0;
 	for(var x=engine.players.length-1;x>=0;--x) if(typeof(engine.players[x]) != "undefined")
 	{
@@ -611,19 +612,29 @@ game.run = function(oneoff=false)
 			rDelta = settings.TIMESTEP_MAX*1000;
 			//engine.timeStart += rDelta;
 		} else var more = false;
-		var delta = rDelta*engine.timemult;
+		var delta = rDelta*engine.timemult;//*engine.timemultSync;
 		var timestep = delta/1000;
 		engine.totalPauseTime += (timenow-engine.lastGameTime)-delta;
 		engine.lastGameTime += rDelta;
 		engine.avgTimeStep += rDelta/1000; engine.avgTimeStep /= 2;
 		//if(!engine.network && !engine.dedicated) engine.players[0].ping = parseInt(engine.avgTimeStep*1000)
 		//if(!engine.network && timestep > engine.avgTimeStep*10 && rDelta == delta) {engine.totalPauseTime += timestep; console.log("Compensated skip of "+delta+"ms."); timestep = engine.avgTimeStep;}
+		
+		// speedup from time warp
 		engine.timemult += (engine.asendtm*timestep);
 		if(engine.timemult > 100) engine.timemult = 100;
+		
+		// trying to keep in sync with the server's timer
+		var syncDiff = engine.syncGameTime - engine.gtime;
+		//engine.timemultSync += ((syncDiff/engine.timemultSync)/1000)*(rDelta/1000);
+		// ehhhh
+		engine.gtime += syncDiff*(rDelta/1000);
+		
 		//var timeElapsed = timenow-engine.timeStart-engine.totalPauseTime-4000;
 		//skipping ahead at the beginning of the round is silly
 		//engine.gtime = timeElapsed;
 		var timeElapsed = (engine.gtime += delta);
+		engine.syncGameTime += rDelta*engine.timemult;
 		
 		if(!engine.thread_collisiondetect && (settings.GAME_LOOP != 0.5 || !oneoff)) getCycleSensors();
 		

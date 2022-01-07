@@ -33,6 +33,9 @@ engine = {
 	framesCount: 0,
 	avgTimeStep: 0,
 	gtime:-Infinity,
+	timemult: 0,
+	timemultSync: 1,
+	syncGameTime: -4500,
 	lastSyncTime:-Infinity,
 	lastScoreTime:-Infinity,
 	

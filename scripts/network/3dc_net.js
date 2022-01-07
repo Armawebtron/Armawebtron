@@ -457,8 +457,8 @@ class Connection3dc
 			case "timeSync": //old test
 				if(msg.data)
 				{
-					engine.gtime = msg.data;
-					this.send({type:"timeSync",data:engine.gtime});
+					engine.syncGameTime = msg.data;
+					this.send({type:"timeSync",data:engine.syncGameTime});
 				}
 				this.connection.timeSync = false;
 				break;//*/
@@ -504,7 +504,13 @@ class Connection3dc
 					this.send({type:"rdy"});
 				}
 				break;
-				
+			
+			case _3dc_gametime:
+			{
+				engine.syncGameTime = msg.gtime;
+				engine.timemult = msg.speed;
+				break;
+			}
 			//
 			case "version": 
 				this.send({type:"version",data:0.8});
@@ -1049,6 +1055,8 @@ class ServerClient3dc
 	}
 	onClose()
 	{
+		clearInterval(this.gtimeid);
+		
 		var id;
 		for(var i=this.server.clients.length-1;i>=0;--i)
 		{
@@ -1070,6 +1078,7 @@ class ServerClient3dc
 		}
 		this.netid = -1;
 	}
+	gtimeobj() { return {type:_3dc_gametime,gtime:engine.gtime,speed:engine.timemult}; }
 	assignNetId()
 	{
 		var netid = false;
@@ -1095,6 +1104,17 @@ class ServerClient3dc
 		this.send({type:"syncdata",netid:netid,rTime:Date.now(),gtime:isFinite(engine.gtime)?engine.gtime:-4000});
 		
 		this.doPing();
+		
+		var that = this;
+		this.gtimeid = setInterval(function()
+		{
+			//if(inround())
+			{
+				that.send(that.gtimeobj());
+			}
+			
+		},1000);
+		
 		return netid;
 	}
 	doPing()
