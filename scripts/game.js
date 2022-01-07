@@ -616,7 +616,7 @@ game.run = function(oneoff=false)
 		engine.totalPauseTime += (timenow-engine.lastGameTime)-delta;
 		engine.lastGameTime += rDelta;
 		engine.avgTimeStep += rDelta/1000; engine.avgTimeStep /= 2;
-		if(!engine.network && !engine.dedicated) engine.players[0].ping = parseInt(engine.avgTimeStep*1000)
+		//if(!engine.network && !engine.dedicated) engine.players[0].ping = parseInt(engine.avgTimeStep*1000)
 		//if(!engine.network && timestep > engine.avgTimeStep*10 && rDelta == delta) {engine.totalPauseTime += timestep; console.log("Compensated skip of "+delta+"ms."); timestep = engine.avgTimeStep;}
 		engine.timemult += (engine.asendtm*timestep);
 		if(engine.timemult > 100) engine.timemult = 100;
