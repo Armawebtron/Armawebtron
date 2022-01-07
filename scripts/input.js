@@ -35,7 +35,7 @@ var keyboardKeyDown = function(e)
 	//refer to engine.inputState: menu | menu2 | game | chat | pause
 
 	//for each input state, either switch(keyCode) {}, or send keycode to appropriate function
-	var keyCode = typeof(keyCodeRemap[e.keyCode]) == "undefined"?e.keyCode:keyCodeRemap[e.keyCode];
+	var keyCode = getKeyCode(e);
 	var specificState = engine.inputState.split(':');
 	if(specificState[0] != "input" && settings.controls.console.indexOf(keyCode) > -1) //console key works everywhere except other inputs
 	{
@@ -211,7 +211,7 @@ var keyboardKeyUp = function(e)
 {
 	if(engine.inputState == 'game')//game settings.controls
 	{
-		gameControlUp(typeof(keyCodeRemap[e.keyCode]) == "undefined"?e.keyCode:keyCodeRemap[e.keyCode]);
+		gameControlUp(getKeyCode(e));
 	}
 	
 	var specificState = engine.inputState.split(':');
@@ -484,12 +484,26 @@ function gameControlUp(keycode)
 }
 
 
+function getKeyCode(e)
+{
+	if(e.keyCode == 16 && e.code == "ShiftRight")
+	{
+		// HACK: distinguish between left and right shift
+		return -16;
+	}
+	
+	if(keyCodeRemap[e.keyCode]) return keyCodeRemap[e.keyCode];
+	
+	return e.keyCode;
+}
+
 var keyCodeRemap = { 59:186, 61:187 }; //some browsers used alternate keycodes for ; and =
 
 var keycodeList = {
 	8: 'Backspace',
 	13: 'Enter',
-	16: 'Shift', 20: 'Capslock',
+	16: 'Left Shift', "-16": "Right Shift",
+	20: 'Capslock',
 	17: 'Ctrl', 18: 'Alt',
 	19: 'Pause/Break', 27: 'Escape', 93: 'Menu',
 	9: 'Tab', 32: 'Spacebar',
