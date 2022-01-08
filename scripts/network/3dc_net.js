@@ -507,6 +507,13 @@ class Connection3dc
 			
 			case _3dc_gametime:
 			{
+				if(msg.data)
+				{
+					// the bridge used this method...
+					engine.syncGameTime = msg.data[0]*1000;
+					engine.timemult = msg.data[1];
+					break;
+				}
 				engine.syncGameTime = msg.gtime;
 				engine.timemult = msg.speed;
 				break;
