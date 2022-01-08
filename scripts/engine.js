@@ -215,7 +215,7 @@ if(typeof(document) !== "undefined")
 		this.innerHTML += "  "+replaceColors(htmlEntities(str));
 		//console.log(replaceColors(str));
 		this.time = performance.now()+this.scrolltime; 
-		if(!inround()||!settings.TEXT_OUT()) console.log("[CON] "+str);
+		if(!inround()||!settings.TEXT_OUT) console.log("[CON] "+str);
 	}
 	engine.console.scrollby = 0;
 	engine.console.scrolltime = 5000;
