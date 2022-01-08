@@ -3,6 +3,10 @@
 if(typeof(global) === "undefined")
 	global = window;
 
+global.dechex = function(h) { return (h|0).toString(16); } //! number to hexadecimal
+global.hexdec = function(d) { return parseInt(d,16); } //! hexadecimal to number
+global.strlen = function(s) { return (""+s).length ; } //! Length of string or anything converted to string
+
 global.gafd = function(a,b) //! returns angle from xdir, ydir
 {
 	var c = 180 * Math.atan2(b,a) / Math.PI;
@@ -185,6 +189,28 @@ global.htmlEntitiesNative = function(str) //! Get HTML entities for some charact
 	return s.innerHTML;
 }
 
+global.color = function(r,g,b,h0="#")
+{
+	if( r > 15 || r < 0 ) r = 15;
+	if( g > 15 || g < 0 ) g = 15;
+	if( b > 15 || b < 0 ) b = 15;
+	var h1 = dechex(r*17); if(h1.length == 1) h1 += h1;
+	var h2 = dechex(g*17); if(h2.length == 1) h2 += h2;
+	var h3 = dechex(b*17); if(h3.length == 1) h3 += h3;
+	return h0+h1+h2+h3;
+};
+
+global.cycleColor = function(r,g,b)
+{
+	if(r < 0) r += 65536;
+	if(g < 0) g += 65536;
+	if(b < 0) b += 65536;
+	r = 1+((r-1)%15);
+	g = 1+((g-1)%15);
+	b = 1+((b-1)%15);
+	return color(r,g,b);
+}
+
 global.colorIsDark = function(r,g,b)
 {
 	return (
@@ -254,6 +280,104 @@ global.removeColors = function(str)
 {
 	return str.replace(settings.VERIFY_COLOR_STRICT?/0x([0-9A-Fa-f]{6}|RESETT)(.*?)(?=0x(?:[0-9A-Fa-f]{6}|RESETT)|$)/gm : /0x(.{6})(.*?)(?=0x(?:.{6})|$)/gm,function(x){return x.substr(8)});
 }
+
+global.guessColor = function($hexCycle,$hexTrail) //! will hopefully find the best result matching both colors...
+{
+	// ported from php where I originally wrote it, hense the $ everywhere.
+	
+	if(global.guessColor.cached[$hexCycle+$hexTrail])
+		return global.guessColor.cached[$hexCycle+$hexTrail];
+	
+	
+	var $cycle_r = hexdec($hexCycle.substr(1,2))/17;
+	var $cycle_g = hexdec($hexCycle.substr(3,2))/17;
+	var $cycle_b = hexdec($hexCycle.substr(5,2))/17;
+	
+	if($hexCycle == $hexTrail)
+	{
+		return [$cycle_r,$cycle_g,$cycle_b];
+	}
+	
+	$trail_r = hexdec($hexTrail.substr(1,2))/17;
+	$trail_g = hexdec($hexTrail.substr(3,2))/17;
+	$trail_b = hexdec($hexTrail.substr(5,2))/17;
+	
+	var $bestcolor = [0,0,0];
+	//var $errorCycle = Infinity;
+	//var $errorTrail = Infinity;
+	var $besterror = Infinity;
+	
+	var $r=0,$g=0,$b=0;
+	while(true)
+	{
+		++$r;
+		if($r > 31) { ++$g; $r = 0; }
+		if($g > 31) { ++$b; $g = 0; }
+		if($b > 31) { break; }
+		
+		
+		var $trail_test_r = Math.min($r,15);
+		var $trail_test_g = Math.min($g,15);
+		var $trail_test_b = Math.min($b,15);
+		
+		var $cycle_test_r = 1+(($r-1)%15);
+		var $cycle_test_g = 1+(($g-1)%15);
+		var $cycle_test_b = 1+(($b-1)%15);
+		
+		$error = /*Math.pow*/( 
+			(
+				// check standard error
+				Math.pow(($trail_r-$trail_test_r),2) +
+				Math.pow(($trail_g-$trail_test_g),2) +
+				Math.pow(($trail_b-$trail_test_b),2)
+				
+				+
+				Math.pow(($cycle_r-$cycle_test_r),2) +
+				Math.pow(($cycle_g-$cycle_test_g),2) +
+				Math.pow(($cycle_b-$cycle_test_b),2) 
+				
+				/*
+				// and emphasize difference between cycle and trail colors
+				+
+				Math.pow(($trail_test_r-$cycle_test_r),2) +
+				Math.pow(($trail_test_g-$cycle_test_g),2) +
+				Math.pow(($trail_test_b-$cycle_test_b),2)
+				*/
+			)//, 1/6
+		);
+		
+		if($besterror > $error && color($r,$g,$b) != cycleColor($r,$g,$b))
+		{
+			$bestcolor[0] = $r;
+			$bestcolor[1] = $g;
+			$bestcolor[2] = $b;
+			$besterror = $error;
+		}
+	}
+	
+	global.guessColor.cached[$hexCycle+$hexTrail] = $bestcolor;
+	return $bestcolor;
+}
+global.guessColor.cached = {};
+
+global.colorStr = function(c,b="#")
+{
+	switch(typeof(c))
+	{
+		case "string":
+			return c.replace("#",b);
+		case "object":
+			return b+c.getHexString();
+		case "number":
+			var color = c.toString(16);
+			color = ("0".repeat(6-color.length))+color;
+			return b+color+this.name;
+		default:
+			console.warn("Can't get color");
+			return b+"ffffff";
+	}
+}
+
 
 String.prototype.filter = function() //! Filter illegal player characters. Heavily based on ArmagetronAd's filtering.
 {

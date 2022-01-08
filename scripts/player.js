@@ -65,20 +65,7 @@ class Player extends THREE.Object3D
 	}
 	getColoredName() //! Name with colors...
 	{
-		switch(typeof(this.tailColor))
-		{
-			case "string":
-				return this.tailColor.replace("#","0x")+this.name;
-			case "object":
-				return "0x"+this.tailColor.getHexString()+this.name;
-			case "number":
-				var color = this.tailColor.toString(16);
-				color = ("0".repeat(6-color.length))+color;
-				return "0x"+color+this.name;
-			default:
-				console.warn("Can't get color");
-				return "0xRESETT"+this.name;
-		}
+		return colorStr(this.tailColor,"0x")+this.name;
 	}
 	getBoringName() //! Name without colors...
 	{
