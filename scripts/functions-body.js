@@ -107,6 +107,7 @@ global.getCycleSensors = function(full=false)
 {
 	var oneline = "";
 	var range = settings.CYCLE_SENSORS_RANGE;
+	var lrot, rrot, ldrot, rdrot;
 	for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x] !== undefined)
 	{
 		//if(full)
@@ -127,10 +128,12 @@ global.getCycleSensors = function(full=false)
 			engine.players[x].sensor.objrear = false;
 		engine.players[x].sensor.nearcycle = false;
 		engine.players[x].dir.front = cdir(engine.players[x].rotation.z);
-		engine.players[x].dir.left = cdir(engine.players[x].rotation.z+(Math.PI/2));
-		engine.players[x].dir.right = cdir(engine.players[x].rotation.z-(Math.PI/2));
-		engine.players[x].dir.leftTurn = cdir(engine.players[x].rotation.z+(Math.PI/(settings.ARENA_AXES*0.5)));
-		engine.players[x].dir.rightTurn = cdir(engine.players[x].rotation.z-(Math.PI/(settings.ARENA_AXES*0.5)));
+		engine.players[x].dir.left = cdir(lrot=(engine.players[x].rotation.z+(Math.PI/2)));
+		engine.players[x].dir.right = cdir(rrot=(engine.players[x].rotation.z-(Math.PI/2)));
+		engine.players[x].dir.leftTurn = cdir(ldrot=(engine.players[x].rotation.z+(Math.PI/(settings.ARENA_AXES*0.5))));
+		engine.players[x].dir.rightTurn = cdir(rdrot=(engine.players[x].rotation.z-(Math.PI/(settings.ARENA_AXES*0.5))));
+		engine.players[x].dir.lDiff = (lrot != ldrot);
+		engine.players[x].dir.rDiff = (rrot != rdrot);
 	}
 	for(var x=engine.zones.children.length-1;x>=0;--x)
 	{
@@ -250,10 +253,14 @@ global.getCycleSensors = function(full=false)
 			}
 		}
 	}
-	for(var a=engine.players.length-1;a>=0;--a) if(engine.players[a] !== undefined)
+	var pLen = engine.players.length-1;
+	var wCycle, cycle;
+	var walls, len;
+	for(var a=pLen;a>=0;--a) if(engine.players[a] !== undefined)
 	{
-		var walls = engine.players[a].walls.map;
-		var len = walls.length;
+		wCycle = engine.players[a];
+		walls = wCycle.walls.map;
+		len = walls.length;
 		for(var i=len-1;i>=0;--i)
 		{
 			var p1 = walls[i];
@@ -263,93 +270,97 @@ global.getCycleSensors = function(full=false)
 				var p2 = walls[i+1];
 				//var w2x = p2[0],w2y = p2[1],w2z = p2[2];
 				
-				for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x] !== undefined && engine.players[x].alive)
+				for(var x=pLen;x>=0;--x) if(engine.playersById[x] && engine.playersById[x].alive)
 				{
-					//var cycle = engine.players[x];
-					
-					//var isplayer = (engine.players[a] == engine.players[x]);
-					if(engine.players[a] != engine.players[x] || i <= len-(settings.ARENA_AXES))
+					if(wCycle !== engine.playersById[x] || i <= len-(settings.ARENA_AXES))
 					{
-						//var posx = engine.players[x].position.x, posy = engine.players[x].position.y, posz = engine.players[x].position.z;
-						if((p1[2]||0) <= engine.players[x].position.z && (p1[2]||0)+2 >= engine.players[x].position.z)
+						if((p1[2]||0) <= engine.playersById[x].position.z && (p1[2]||0)+2 >= engine.playersById[x].position.z)
 						{
 						
-							if(engine.players[x].newPos && lineIntersect(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].newPos.x,engine.players[x].newPos.y,p1[0],p1[1],p2[0],p2[1]))
+							if(engine.playersById[x].newPos && lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].newPos.x,engine.playersById[x].newPos.y,p1[0],p1[1],p2[0],p2[1]))
 							{
 								engine.players[x].position.x = engine.players[x].lastpos.x = engine.players[x].newPos.x;
 								engine.players[x].position.y = engine.players[x].lastpos.y = engine.players[x].newPos.y;
 								delete engine.players[x].newPos;
 								return getCycleSensors(full);
 							}
-							if(lineIntersect(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].lastpos.x,engine.players[x].lastpos.y,p1[0],p1[1],p2[0],p2[1]))
+							if(lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].lastpos.x,engine.playersById[x].lastpos.y,p1[0],p1[1],p2[0],p2[1]))
 							{
-								retToLastSafe(engine.players[x],p1[0],p1[1],p2[0],p2[1]);
+								retToLastSafe(engine.playersById[x],p1[0],p1[1],p2[0],p2[1]);
 							}
 							else
 							{
-								var dir = engine.players[x].dir.front,
-									ldir = engine.players[x].dir.left,
-									rdir = engine.players[x].dir.right,
-									ltdir = engine.players[x].dir.leftTurn,
-									rtdir = engine.players[x].dir.rightTurn;
-								//var rg = engine.players[x].sensor.front==Infinity?(engine.players[x].speed*range):engine.players[x].sensor.front;
-								//if(engine.players[x].sensor.front==Infinity)
-									var rg=engine.players[x].speed*range;//else var rg=engine.players[x].sensor.front;
-								//if(!(engine.players[x].position.x == p2[0] && engine.players[x].position.y == p2[1]))
+								var dir = engine.playersById[x].dir.front,
+									ldir = engine.playersById[x].dir.left,
+									rdir = engine.playersById[x].dir.right,
+									ltdir = engine.playersById[x].dir.leftTurn,
+									rtdir = engine.playersById[x].dir.rightTurn;
+								//var rg = engine.playersById[x].sensor.front==Infinity?(engine.playersById[x].speed*range):engine.playersById[x].sensor.front;
+								//if(engine.playersById[x].sensor.front==Infinity)
+									var rg=engine.playersById[x].speed*range;//else var rg=engine.playersById[x].sensor.front;
+								//if(!(engine.playersById[x].position.x == p2[0] && engine.playersById[x].position.y == p2[1]))
 								{
-									if(lineIntersect(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].position.x+(dir[0]*rg),engine.players[x].position.y+(dir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
+									if(lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x+(dir[0]*rg),engine.playersById[x].position.y+(dir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
 									{
-										var ff=distanceoflines(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].position.x,engine.players[x].position.y,p1[0],p1[1],p2[0],p2[1]);
+										var ff=distanceoflines(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x,engine.playersById[x].position.y,p1[0],p1[1],p2[0],p2[1]);
 										/*forward = Math.min(forward,ff);
-										if(ff == forward) type = engine.players[x];//*/
-										if(ff < engine.players[x].sensor.front)
+										if(ff == forward) type = engine.playersById[x];//*/
+										if(ff < engine.playersById[x].sensor.front)
 										{ 
-											engine.players[x].sensor.front=ff;
-											engine.players[x].sensor.nearestobj = engine.players[a];
-											if(engine.players[a] != engine.players[x]) 
+											engine.playersById[x].sensor.front=ff;
+											engine.playersById[x].sensor.nearestobj = wCycle;
+											if(wCycle != engine.playersById[x]) 
 											{
-												engine.players[x].sensor.lastnonselfobj = engine.players[a];
+												engine.playersById[x].sensor.lastnonselfobj = wCycle;
 											}
 										}
 									}
-									else if(lineIntersect(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].position.x+(ldir[0]*rg),engine.players[x].position.y+(ldir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
+									else if(lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x+(ldir[0]*rg),engine.playersById[x].position.y+(ldir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
 									{
-										var ll = distanceoflines(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].position.x,engine.players[x].position.y,p1[0],p1[1],p2[0],p2[1]);
-										if(ll < engine.players[x].sensor.left)
+										var ll = distanceoflines(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x,engine.playersById[x].position.y,p1[0],p1[1],p2[0],p2[1]);
+										if(ll < engine.playersById[x].sensor.left)
 										{ 
-											engine.players[x].sensor.left=ll;
-											engine.players[x].sensor.lnearestobj = engine.players[a];
-												engine.players[x].sensor.objleft = engine.players[a];
+											engine.playersById[x].sensor.left=ll;
+											engine.playersById[x].sensor.lnearestobj = wCycle;
+												engine.playersById[x].sensor.objleft = wCycle;
+										}
+										if( !engine.playersById[x].dir.lDiff && ll < engine.playersById[x].sensor.leftTurn )
+										{
+											if(ll < engine.playersById[x].sensor.leftTurn) { engine.playersById[x].sensor.leftTurn=ll;}
 										}
 									}
-									else if(lineIntersect(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].position.x+(rdir[0]*rg),engine.players[x].position.y+(rdir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
+									else if(lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x+(rdir[0]*rg),engine.playersById[x].position.y+(rdir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
 									{
-										var rr = distanceoflines(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].position.x,engine.players[x].position.y,p1[0],p1[1],p2[0],p2[1]);
-										if(rr < engine.players[x].sensor.right) 
+										var rr = distanceoflines(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x,engine.playersById[x].position.y,p1[0],p1[1],p2[0],p2[1]);
+										if(rr < engine.playersById[x].sensor.right) 
 										{ 
-											engine.players[x].sensor.right=rr;
-											engine.players[x].sensor.rnearestobj = 
-												engine.players[x].sensor.objright = engine.players[a];
+											engine.playersById[x].sensor.right=rr;
+											engine.playersById[x].sensor.rnearestobj = 
+												engine.playersById[x].sensor.objright = wCycle;
+										}
+										if( !engine.playersById[x].dir.rDiff && ll < engine.playersById[x].sensor.leftTurn )
+										{
+											if(rr < engine.playersById[x].sensor.rightTurn) { engine.playersById[x].sensor.rightTurn=rr;}
 										}
 									}
-									else if(lineIntersect(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].position.x+(-dir[0]*rg),engine.players[x].position.y+(-dir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
+									else if(lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x+(-dir[0]*rg),engine.playersById[x].position.y+(-dir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
 									{
-										var bb=distanceoflines(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].position.x,engine.players[x].position.y,p1[0],p1[1],p2[0],p2[1]);
-										if(bb < engine.players[x].sensor.rear) 
+										var bb=distanceoflines(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x,engine.playersById[x].position.y,p1[0],p1[1],p2[0],p2[1]);
+										if(bb < engine.playersById[x].sensor.rear) 
 										{ 
-											engine.players[x].sensor.rear=bb; 
-											engine.players[x].sensor.objrear = engine.players[a];
+											engine.playersById[x].sensor.rear=bb; 
+											engine.playersById[x].sensor.objrear = wCycle;
 										}
 									}
-									if(lineIntersect(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].position.x+(ltdir[0]*rg),engine.players[x].position.y+(ltdir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
+									if(engine.playersById[x].dir.lDiff && lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x+(ltdir[0]*rg),engine.playersById[x].position.y+(ltdir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
 									{
-										var ll = distanceoflines(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].position.x,engine.players[x].position.y,p1[0],p1[1],p2[0],p2[1]);
-										if(ll < engine.players[x].sensor.leftTurn) { engine.players[x].sensor.leftTurn=ll;}
+										var ll = distanceoflines(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x,engine.playersById[x].position.y,p1[0],p1[1],p2[0],p2[1]);
+										if(ll < engine.playersById[x].sensor.leftTurn) { engine.playersById[x].sensor.leftTurn=ll;}
 									}
-									else if(lineIntersect(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].position.x+(rtdir[0]*rg),engine.players[x].position.y+(rtdir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
+									else if(engine.playersById[x].dir.rDiff && lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x+(rtdir[0]*rg),engine.playersById[x].position.y+(rtdir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
 									{
-										var rr = distanceoflines(engine.players[x].position.x,engine.players[x].position.y,engine.players[x].position.x,engine.players[x].position.y,p1[0],p1[1],p2[0],p2[1]);
-										if(rr < engine.players[x].sensor.rightTurn) { engine.players[x].sensor.rightTurn=rr;}
+										var rr = distanceoflines(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x,engine.playersById[x].position.y,p1[0],p1[1],p2[0],p2[1]);
+										if(rr < engine.playersById[x].sensor.rightTurn) { engine.playersById[x].sensor.rightTurn=rr;}
 									}
 								}
 							}
