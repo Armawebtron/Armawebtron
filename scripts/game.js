@@ -606,6 +606,7 @@ game.run = function(oneoff=false)
 		//time handlers and delta
 		var timenow = performance.now()/settings.TIME_FACTOR;
 		var rDelta = (timenow-engine.lastGameTime);
+		if(rDelta <= 0) return;
 		if(rDelta > settings.TIMESTEP_MAX*1000 && engine.gtime > 0)
 		{
 			var more = true;
