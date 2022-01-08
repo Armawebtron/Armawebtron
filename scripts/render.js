@@ -283,11 +283,11 @@ function draw()
 	if( engine.framesCount%5 == 0 )
 	{
 	//settings test
-	var setnames = Object.keys(settings);
+	var setnames = Object.keys(conf);
 	for(var i=setnames.length;i--;)
 	{
 		var setting = setnames[i];
-		updateHUD(setting.toLowerCase(),settings[setting]);
+		updateHUD(setting.toLowerCase(),conf[setting].get());
 	}
 	
 	}

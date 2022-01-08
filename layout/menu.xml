@@ -166,7 +166,7 @@
 		<Item type="exitmenu" text="&lt;- Go Back"/>
 	</Menu>
 		<Menu id="screen" title="Screen Mode">
-			<Item type="list" call="settings.FULLSCREEN" text="Fullscreen (F11)" title="It's recommended that you use F11 instead of this fullscreen option. It is, however, left in for mobile touchscreen devices.">
+			<Item type="list" var="FULLSCREEN" text="Fullscreen (F11)" title="It's recommended that you use F11 instead of this fullscreen option. It is, however, left in for mobile touchscreen devices.">
 				<Option value="false" text="Off" /> <Option value="true" text="On" />
 			</Item>
 			<Item type="list" var="REDRAW_MODE" text="VSync" title="Synchronize framerate with vertical refresh rate\nThe vertical refresh rate is basically the frames per second your monitor displays. Turning this on would make it depend on browser redraw calls, effectively capping your FPS at the refresh rate. Turning it off would continously draw the frames but throws away additional frames that your monitor doesn't display. Depending on game loop configuration, this can provide minimal advantage.">

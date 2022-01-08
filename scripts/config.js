@@ -17,38 +17,143 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/*class Setting
+conf = {}; settings = {};
+
+game_settings_default = {};
+sets = [];
+
+class Setting
 {
 	constructor(conf)
 	{
 		switch(typeof(conf))
 		{
-			case "object": this = conf; break;
+			case "object": 
+				Object.defineProperty(this, "name", {value: conf.name});
+				this.val = conf.val;
+				this.callback = conf.callback;
+				this.type = conf.type;
+				break;
 		}
 		
+		if(this.val === undefined)
+		{
+			if(!this.type) throw("Setting without a value or type.");
+			this.set("");
+		}
+		if(!this.type) this.type = typeof(this.val);
+		switch(this.type)
+		{
+			case "bool": this.type = "boolean"; break;
+			case "str": this.type = "string"; break;
+		}
 	}
-	push()
+	set(val)
 	{
-		settings_work[this.name] = this;
-		settings[this.name] = this.val;
+		switch(this.type)
+		{
+			case "function":
+				this.val(val);
+				break;
+			case "int":
+				if(window.BigInt)
+					this.setDirect(BigInt(val));
+				else
+					this.setDirect(parseInt(val));
+				break;
+			case "boolean":
+				this.setDirect(Boolean(val));
+				break;
+			case "float":case "number":
+				this.setDirect(parseFloat(val));
+				break;
+			case "string":
+				this.setDirect(""+val);
+				break;
+			default:
+				console.log(this.type);
+				
+				break;
+		}
+		return this.get();
 	}
-}
-
-//new Setting({name:"VERIFY_COLOR_STRICT",val:false}).push();
-
-var settings_work = {};*/
-
-settings = {
-	VERIFY_COLOR_STRICT: false,
-	TEXT_BRIGHTEN: false,
-	TEXT_DARK_HIGHLIGHT: true,
-	FONT_MIN_R: 0.5, FONT_MIN_G: 0.5, FONT_MIN_B: 0.5,
-	FONT_MIN_TOTAL: 0.7,
-	CHAT_LAYER: 0.5,
-	TEXT_OUT: function(params=undefined){if(params !== undefined) engine.console.style.display=params?"block":"none"; return engine.console.style.display!="none";},
-	TEXT_OUT_MODE: 1,
+	setDirect(val)
+	{ 
+		this.val = val;
+		//settings[this.name] = this.val;
+	}
+	valueOf()
+	{
+		if(this.type == "function")
+		{
+			return this.val();
+		}
+		return this.val;
+	}
+	toJSON() { return this.valueOf().toJSON?this.valueOf().toJSON():null; }
+	toString() { return this.valueOf()+""; }
+	toLocaleString() { return this.valueOf().toLocaleString(); }
+	equals(v)
+	{
+		return(this.valueOf() == v.valueOf());
+	}
 	
-	FULLSCREEN: function(params=undefined){
+	
+	makeGameSetting()
+	{
+		game_settings_default[this.name] = this.val;
+		sets.push(this.name);
+
+		return this;
+	}
+	addSetting()
+	{
+		if(settings[this.name] !== undefined)
+		{
+			// hmm
+			settings[this.name] = this.val;
+		}
+		else
+		{
+			conf[this.name] = this;
+			
+			var that = this;
+			Object.defineProperty(settings, this.name, {
+				get: function()  { return that.valueOf(); },
+				set: function(n) { return that.set(n); },
+			});
+		}
+
+		return this;
+	}
+	
+}
+Setting.new = function(s) { return ((new Setting(s)).addSetting()); };
+Setting.prototype.get = Setting.prototype.valueOf;
+
+Setting.addMulti = function() {};
+
+global.Setting = Setting;
+
+
+
+	Setting.new({ name: "VERIFY_COLOR_STRICT", val: false });
+	
+	Setting.new({ name: "TEXT_BRIGHTEN", val: false });
+	Setting.new({ name: "TEXT_DARK_HIGHLIGHT", val: true });
+	Setting.new({ name: "FONT_MIN_R", val: 0.5 });
+	Setting.new({ name: "FONT_MIN_G", val: 0.5 });
+	Setting.new({ name: "FONT_MIN_B", val: 0.5 });
+	Setting.new({ name: "FONT_MIN_TOTAL", val: 0.7 });
+	
+	Setting.new({ name: "CHAT_LAYER", val: 0.5 });
+	
+	Setting.new({ name: "TEXT_OUT", val: function(params=undefined){if(params !== undefined) engine.console.style.display=params?"block":"none"; return engine.console.style.display!="none";} });
+	Setting.new({ name: "TEXT_OUT_MODE", val: 1 });
+
+
+	Setting.new({ name: "FULLSCREEN", val: function(params=undefined)
+	{
 		if(params !== undefined) 
 		{ 
 			var bd = document.body;
@@ -70,186 +175,381 @@ settings = {
 			}
 		}
 		return Boolean(window.fullScreen || document.mozFullScreen || document.msFullScreen || document.webkitIsFullScreen || window.outerHeight - window.innerHeight <= 1);
-	},
-	
-	//CAMERA
-	CAMERA_FOV: 60,
-	CAMERA_NEAR_RENDER: 0.04,
-	CAMERA_FAR_RENDER: 2000,
-	
+	}});
+
+	// Camera
+	Setting.new({ name: "CAMERA_FOV", val: 60 });
+	Setting.new({ name: "CAMERA_NEAR_RENDER", val: 0.04 });
+	Setting.new({ name: "CAMERA_FAR_RENDER", val: 2000 });
+
 	// settings for camera types
-	"CAMERA_CUSTOM_BACK": 6,
-	"CAMERA_CUSTOM_BACK_FROMSPEED": 0.5,
-	"CAMERA_CUSTOM_RISE": 4,
-	"CAMERA_CUSTOM_RISE_FROMSPEED": 0.4,
-	"CAMERA_CUSTOM_TURN_SPEED": 4,
-	"CAMERA_CUSTOM_OFFSET": 3,
-	"CAMERA_CUSTOM_OFFSET_FROMSPEED": 0.1,
-	
+	Setting.new({ name: "CAMERA_CUSTOM_BACK", val: 6 });
+	Setting.new({ name: "CAMERA_CUSTOM_BACK_FROMSPEED", val: 0.5 });
+	Setting.new({ name: "CAMERA_CUSTOM_RISE", val: 4 });
+	Setting.new({ name: "CAMERA_CUSTOM_RISE_FROMSPEED", val: 0.4 });
+	Setting.new({ name: "CAMERA_CUSTOM_TURN_SPEED", val: 4 });
+	Setting.new({ name: "CAMERA_CUSTOM_OFFSET", val: 3 });
+	Setting.new({ name: "CAMERA_CUSTOM_OFFSET_FROMSPEED", val: 0.1 });
+
 	//GAME
-	GRID_SIZE: 1,
-	/*FLOOR_RED: 0.75,
-	FLOOR_GREEN: 0.75,
-	FLOOR_BLUE: 0.98,*/
-	FLOOR_RED: 0.03,
-	FLOOR_GREEN: 0.266,
-	FLOOR_BLUE: 0.8,
-	FLOOR_TEXTURE: "textures/floor.png",
-	/*GRID_SIZE: 2,
-	FLOOR_RED: 1,
-	FLOOR_GREEN: 1,
-	FLOOR_BLUE: 1,
-	FLOOR_TEXTURE: "textures/moviepack_t_r_u_e/floor.png",*/
-	/*GRID_SIZE: 1,
-	FLOOR_RED: 0.01,
-	FLOOR_GREEN: 0.14,
-	FLOOR_BLUE: 0.35,
-	FLOOR_TEXTURE: "textures/aaold/floor.png",*/
+	Setting.new({ name: "GRID_SIZE", val: 1 });
+	Setting.new({ name: "ANTIALIAS", val: true });
+	/*Setting.new({ name: "FLOOR_RED", val: 0.75 });
+	Setting.new({ name: "FLOOR_GREEN", val: 0.75 });
+	Setting.new({ name: "FLOOR_BLUE", val: 0.98 });*/
+	Setting.new({ name: "FLOOR_RED", val: 0.03 });
+	Setting.new({ name: "FLOOR_GREEN", val: 0.266 });
+	Setting.new({ name: "FLOOR_BLUE", val: 0.8 });
+	Setting.new({ name: "FLOOR_TEXTURE", val: "textures/floor.png" });
+	/*Setting.new({ name: "GRID_SIZE", val: 2 });
+	Setting.new({ name: "FLOOR_RED", val: 1 });
+	Setting.new({ name: "FLOOR_GREEN", val: 1 });
+	Setting.new({ name: "FLOOR_BLUE", val: 1 });
+	Setting.new({ name: "FLOOR_TEXTURE", val: "textures/moviepack_t_r_u_e/floor.png" });*/
+	/*Setting.new({ name: "GRID_SIZE", val: 1 });
+	Setting.new({ name: "FLOOR_RED", val: 0.01 });
+	Setting.new({ name: "FLOOR_GREEN", val: 0.14 });
+	Setting.new({ name: "FLOOR_BLUE", val: 0.35 });
+	Setting.new({ name: "FLOOR_TEXTURE", val: "textures/aaold/floor.png" });*/
 	
-	FLOOR_MIRROR: false,
-	FLOOR_MIRROR_INT: 1,
+	Setting.new({ name: "FLOOR_MIRROR", val: false });
+	Setting.new({ name: "FLOOR_MIRROR_INT", val: 1 });
 	
-	FLOOR_DETAIL: 3, //0=off, 1=line, 2=good, 3=best
+	Setting.new({ name: "FLOOR_DETAIL", val: 3 }); // 0=off, 1=line, 2=good, 3=best
 	
-	CYCLE_TEXTURES: ["textures/cycle_body.png","textures/cycle_wheel.png"],
+	Setting.new({ name: "CYCLE_TEXTURES", val: ["textures/cycle_body.png","textures/cycle_wheel.png"] });
 	
-	EXPLOSIONS: true,
-	HIGH_RIM: true,
-	HIGH_RIM_HEIGHT: 50,
-	LOW_RIM_HEIGHT: 4,
+	Setting.new({ name: "EXPLOSIONS", val: true });
+	Setting.new({ name: "HIGH_RIM", val: true });
+	Setting.new({ name: "HIGH_RIM_HEIGHT", val: 50 });
+	Setting.new({ name: "LOW_RIM_HEIGHT", val: 4 });
 	
-	RIM_WALL_RED: 0,
-	RIM_WALL_GREEN: 0, // 0.533
-	RIM_WALL_BLUE: 0, // 1
-	RIM_WALL_ALPHA: 0.9,
-	RIM_WALL_COLOR_MODE: 3,
-	RIM_WALL_STRETCH_X: 50,
-	RIM_WALL_STRETCH_Y: 13.5,
-	RIM_WALL_WRAP_Y: false,
-	RIM_WALL_REPEAT_TOP: false,
-	RIM_WALL_TEXTURE: "textures/futurerim.png",
-	RIM_WALL_DEPTH: true,
-	RIM_WALL_LOWEST_HEIGHT: 0,
-	RIM_WALL_BELOW_HEIGHT_COLOR_R: 0,
-	RIM_WALL_BELOW_HEIGHT_COLOR_G: 0,
-	RIM_WALL_BELOW_HEIGHT_COLOR_B: 0,
+	Setting.new({ name: "RIM_WALL_RED", val: 0 });
+	Setting.new({ name: "RIM_WALL_GREEN", val: 0 }); // 0.533
+	Setting.new({ name: "RIM_WALL_BLUE", val: 0 }); // 1
+	Setting.new({ name: "RIM_WALL_ALPHA", val: 0.9 });
+	Setting.new({ name: "RIM_WALL_COLOR_MODE", val: 3 });
+	Setting.new({ name: "RIM_WALL_STRETCH_X", val: 50 });
+	Setting.new({ name: "RIM_WALL_STRETCH_Y", val: 13.5 });
+	Setting.new({ name: "RIM_WALL_WRAP_Y", val: false });
+	Setting.new({ name: "RIM_WALL_REPEAT_TOP", val: false });
+	Setting.new({ name: "RIM_WALL_TEXTURE", val: "textures/futurerim.png" });
+	Setting.new({ name: "RIM_WALL_DEPTH", val: true });
+	Setting.new({ name: "RIM_WALL_LOWEST_HEIGHT", val: 0 });
+	Setting.new({ name: "RIM_WALL_BELOW_HEIGHT_COLOR_R", val: 0 });
+	Setting.new({ name: "RIM_WALL_BELOW_HEIGHT_COLOR_G", val: 0 });
+	Setting.new({ name: "RIM_WALL_BELOW_HEIGHT_COLOR_B", val: 0 });
 	
-	/*RIM_WALL_RED: 1,
-	RIM_WALL_GREEN: 1,
-	RIM_WALL_BLUE: 1,
-	RIM_WALL_ALPHA: 1,
-	RIM_WALL_COLOR_MODE: 0,
-	//RIM_WALL_STRETCH_X: 300,
-	//RIM_WALL_STRETCH_Y: 50,
-	RIM_WALL_STRETCH_X: 128,
-	RIM_WALL_STRETCH_Y: 32,
-	LOW_RIM_HEIGHT: 32,
-	RIM_WALL_WRAP_Y: false,
-	RIM_WALL_TEXTURE: "textures/moviepack_eddkeefe/rim_wall.png",
-	RIM_WALL_LOWEST_HEIGHT: 32,
-	RIM_WALL_BELOW_HEIGHT_COLOR_R: 166/255,
-	RIM_WALL_BELOW_HEIGHT_COLOR_G: 45/255,
-	RIM_WALL_BELOW_HEIGHT_COLOR_B: 237/255,//*/
+	/*Setting.new({ name: "RIM_WALL_RED", val: 1 });
+	Setting.new({ name: "RIM_WALL_GREEN", val: 1 });
+	Setting.new({ name: "RIM_WALL_BLUE", val: 1 });
+	Setting.new({ name: "RIM_WALL_ALPHA", val: 1 });
+	Setting.new({ name: "RIM_WALL_COLOR_MODE", val: 0 });
+	//Setting.new({ name: "RIM_WALL_STRETCH_X", val: 300 });
+	//Setting.new({ name: "RIM_WALL_STRETCH_Y", val: 50 });
+	Setting.new({ name: "RIM_WALL_STRETCH_X", val: 128 });
+	Setting.new({ name: "RIM_WALL_STRETCH_Y", val: 32 });
+	Setting.new({ name: "LOW_RIM_HEIGHT", val: 32 });
+	Setting.new({ name: "RIM_WALL_WRAP_Y", val: false });
+	Setting.new({ name: "RIM_WALL_TEXTURE", val: "textures/moviepack_eddkeefe/rim_wall.png" });
+	Setting.new({ name: "RIM_WALL_LOWEST_HEIGHT", val: 32 });
+	Setting.new({ name: "RIM_WALL_BELOW_HEIGHT_COLOR_R", val: 166/255 });
+	Setting.new({ name: "RIM_WALL_BELOW_HEIGHT_COLOR_G", val: 45/255 });
+	Setting.new({ name: "RIM_WALL_BELOW_HEIGHT_COLOR_B", val: 237/255 });//*/
 	
-	RIM_WALL_RED: 1,
-	RIM_WALL_GREEN: 1,
-	RIM_WALL_BLUE: 1,
-	RIM_WALL_ALPHA: 1,
-	RIM_WALL_COLOR_MODE: 0,
-	//RIM_WALL_STRETCH_X: 300,
-	//RIM_WALL_STRETCH_Y: 50,
-	RIM_WALL_STRETCH_X: 1536,
-	RIM_WALL_STRETCH_Y: 32,
-	HIGH_RIM_HEIGHT: 32,
-	RIM_WALL_WRAP_Y: false,
-	RIM_WALL_TEXTURE: "textures/moviepack_t_r_u_e/movie-rim-wall.png",
-	RIM_WALL_DEPTH: true,
-	RIM_WALL_LOWEST_HEIGHT: 32,
-	/*RIM_WALL_BELOW_HEIGHT_COLOR_R: 188/255,
-	RIM_WALL_BELOW_HEIGHT_COLOR_G: 206/255,
-	RIM_WALL_BELOW_HEIGHT_COLOR_B: 250/255,//*/
-	RIM_WALL_BELOW_HEIGHT_COLOR_R: 0.5,
-	RIM_WALL_BELOW_HEIGHT_COLOR_G: 0.5,
-	RIM_WALL_BELOW_HEIGHT_COLOR_B: 0.7,
+	Setting.new({ name: "RIM_WALL_RED", val: 1 });
+	Setting.new({ name: "RIM_WALL_GREEN", val: 1 });
+	Setting.new({ name: "RIM_WALL_BLUE", val: 1 });
+	Setting.new({ name: "RIM_WALL_ALPHA", val: 1 });
+	Setting.new({ name: "RIM_WALL_COLOR_MODE", val: 0 });
+	//Setting.new({ name: "RIM_WALL_STRETCH_X", val: 300 });
+	//Setting.new({ name: "RIM_WALL_STRETCH_Y", val: 50 });
+	Setting.new({ name: "RIM_WALL_STRETCH_X", val: 1536 });
+	Setting.new({ name: "RIM_WALL_STRETCH_Y", val: 32 });
+	Setting.new({ name: "HIGH_RIM_HEIGHT", val: 32 });
+	Setting.new({ name: "RIM_WALL_WRAP_Y", val: false });
+	Setting.new({ name: "RIM_WALL_TEXTURE", val: "textures/moviepack_t_r_u_e/movie-rim-wall.png" });
+	Setting.new({ name: "RIM_WALL_DEPTH", val: true });
+	Setting.new({ name: "RIM_WALL_LOWEST_HEIGHT", val: 32 });
+	/*Setting.new({ name: "RIM_WALL_BELOW_HEIGHT_COLOR_R", val: 188/255 });
+	Setting.new({ name: "RIM_WALL_BELOW_HEIGHT_COLOR_G", val: 206/255 });
+	Setting.new({ name: "RIM_WALL_BELOW_HEIGHT_COLOR_B", val: 250/255 });//*/
+	Setting.new({ name: "RIM_WALL_BELOW_HEIGHT_COLOR_R", val: 0.5 });
+	Setting.new({ name: "RIM_WALL_BELOW_HEIGHT_COLOR_G", val: 0.5 });
+	Setting.new({ name: "RIM_WALL_BELOW_HEIGHT_COLOR_B", val: 0.7 });
 	
-	COLOR_MODE_3_COLORS: "1,0,0;1,1,0;0,1,0;0,1,1;0,0,1;1,0,1",
-	COLOR_MODE_3_SPEED: 0.2,
+	Setting.new({ name: "COLOR_MODE_3_COLORS", val: "1,0,0;1,1,0;0,1,0;0,1,1;0,0,1;1,0,1" });
+	Setting.new({ name: "COLOR_MODE_3_SPEED", val: 0.2 });
 	
-	ALPHA_BLEND: true,
+	Setting.new({ name: "ALPHA_BLEND", val: true });
 	
-	MENU_RENDER: "img",
+	Setting.new({ name: "MENU_RENDER", val: "img" });
 	
-	REDRAW_MODE: 0,
-	TARGET_FPS: 1,
-	MAX_TARGET_FPS: 1000,
-	//DEDICATED_FPS: Infinity,
-	DEDICATED_FPS: 40,
-	GRAB_SENSORS_ON_TURN: true,
-	CYCLE_SENSORS_RANGE: 100,
-	GAME_LOOP: 0.5,
-	TIME_FACTOR: 1,
+	Setting.new({ name: "REDRAW_MODE", val: 0 });
+	Setting.new({ name: "TARGET_FPS", val: 1 });
+	Setting.new({ name: "MAX_TARGET_FPS", val: 1000 });
+	Setting.new({ name: "DEDICATED_FPS", val: 40 });
+
+	Setting.new({ name: "GRAB_SENSORS_ON_TURN", val: true });
+	Setting.new({ name: "CYCLE_SENSORS_RANGE", val: 100 });
+	Setting.new({ name: "GAME_LOOP", val: 0.5 });
+	Setting.new({ name: "TIME_FACTOR", val: 1 });
 	
-	HUD_MAP: true,
+	Setting.new({ name: "HUD_MAP", val: true });
 	
-	ADMIN_KILL_MESSAGE: true,
+	Setting.new({ name: "ADMIN_KILL_MESSAGE", val: true });
 	
 	//SOUNDS
-	SOUND_QUALITY: 3,
+	Setting.new({ name: "SOUND_QUALITY", val: 3, type: "int" });
 	
-	SOUNDS_INTRO: false,
-	SOUNDS_EXTRO: false,
-	SOUNDS_COUNTDOWN: true,
-	SOUNDS_GO: false,
-	SOUNDS_ZONES: false,
+	Setting.new({ name: "SOUNDS_INTRO", val: false });
+	Setting.new({ name: "SOUNDS_EXTRO", val: false });
+	Setting.new({ name: "SOUNDS_COUNTDOWN", val: true });
+	Setting.new({ name: "SOUNDS_GO", val: false });
+	Setting.new({ name: "SOUNDS_ZONES", val: false });
 	
-	MUSIC: 0,
+	Setting.new({ name: "MUSIC", val: 0 });
 	
 	//ZONES
-	ZONE_HEIGHT: 5,
-	ZONE_SEGMENTS: 11,//arma render only
-	ZONE_SEG_LENGTH: 0.5,//arma render only
-	ZONE_ALPHA: 0.7,
-	ZONE_ALPHA_TOGGLE: false,
-	ZONE_SPIN_SPEED: 0.05,
-	ZONE_RENDER_TYPE: 'arma',//cylinder or arma
-	
+	Setting.new({ name: "ZONE_HEIGHT", val: 5 });
+	Setting.new({ name: "ZONE_SEGMENTS", val: 11 });//arma render only
+	Setting.new({ name: "ZONE_SEG_LENGTH", val: 0.5 });//arma render only
+	Setting.new({ name: "ZONE_ALPHA", val: 0.7 });
+	Setting.new({ name: "ZONE_ALPHA_TOGGLE", val: false });
+	Setting.new({ name: "ZONE_SPIN_SPEED", val: 0.05 });
+	Setting.new({ name: "ZONE_RENDER_TYPE", val: 'arma' });//cylinder or arma
+
 	//player (for armagetron nabs) //can't have people changing these on a server
-	PLAYER_1: function(val) { if(engine.dedicated) return (settings.PLAYER_1 = "Player 1");  if(typeof(val) != "undefined") {settings.players[0].name=val;} return settings.players[0].name; },
-	COLOR_R_1: function(r=undefined) { if(engine.dedicated) return (settings.COLOR_R_1=13); return plnumcolors({r:r}).r },
-	COLOR_G_1: function(g=undefined) { if(engine.dedicated) return (settings.COLOR_G_1=13); return plnumcolors({g:g}).g },
-	COLOR_B_1: function(b=undefined) { if(engine.dedicated) return (settings.COLOR_B_1=0); return plnumcolors({b:b}).b },
+	Setting.new({ name: "PLAYER_1", val: function(val)
+		{ 
+			if(engine.dedicated) return "Player 1";
+			if(typeof(val) != "undefined")
+			{
+				settings.players[0].name=val;
+			} 
+			return settings.players[0].name;
+		} 
+	});
+	Setting.new({ name: "COLOR_R_1", val: function(r=undefined) { if(engine.dedicated) return 13; return plnumcolors({r:r}).r } });
+	Setting.new({ name: "COLOR_G_1", val: function(g=undefined) { if(engine.dedicated) return 13; return plnumcolors({g:g}).g } });
+	Setting.new({ name: "COLOR_B_1", val: function(b=undefined) { if(engine.dedicated) return 0; return plnumcolors({b:b}).b } });
+
+	Setting.new({ name: "BUTTONS_SHOWN", val: 2 });
 	
-	CFG_VERSION: 0,
+	Setting.new({ name: "CFG_VERSION", val: 0 });
 	
-	PLAYER_DEL_HIST_PERROUND: true, //what was this?
+	Setting.new({ name: "PLAYER_DEL_HIST_PERROUND", val: true }); //what was this?
 	
-	TIMESTEP_MAX: 0.2,
+	Setting.new({ name: "TIMESTEP_MAX", val: 0.2 });
 	
 	//debug
-	DEBUG_EVERYONE_IS_AI: false,
-	HACK_TURN_LEFT_WHEN_POSSIBLE: 0,
-	HACK_TURN_RIGHT_WHEN_POSSIBLE: 0,
-	HACK_TURN_SENSOR_DIST: 5,
+	Setting.new({ name: "DEBUG_EVERYONE_IS_AI", val: false });
+	Setting.new({ name: "HACK_TURN_LEFT_WHEN_POSSIBLE", val: 0 });
+	Setting.new({ name: "HACK_TURN_RIGHT_WHEN_POSSIBLE", val: 0 });
+	Setting.new({ name: "HACK_TURN_SENSOR_DIST", val: 5 });
+	Setting.new({ name: "MULTITHREADED", val: false });
 
 	//NETWORK
-	CONNECT_PORT: 5331,
-	CONNECT_HOST: "armagetron.kevinh.us",
-	CONNECT_SSL: true,
-	CONNECT_TYPE: "3dc",
+	Setting.new({ name: "CONNECT_PORT", val: 5331 });
+	Setting.new({ name: "CONNECT_HOST", val: "armagetron.kevinh.us" });
+	Setting.new({ name: "CONNECT_SSL", val: true });
+	Setting.new({ name: "CONNECT_TYPE", val: "3dc" });
 	
-	CYCLE_SMOOTH_TIME: 0.3,
-	CYCLE_SYNC_INTERVAL: 0.1,
-	DEBUG_NETWORK_TURN_WAIT: true,
+	Setting.new({ name: "CYCLE_SMOOTH_TIME", val: 0.3 });
+	Setting.new({ name: "CYCLE_SYNC_INTERVAL", val: 0.1 });
+	Setting.new({ name: "DEBUG_NETWORK_TURN_WAIT", val: true });
 	
-	SERVER_PORT: 5331,
-	SERVER_NAME: "Unnamed Server",
-	SERVER_DNS: "",
-	SERVER_SSL_ENABLED: false,
-	SERVER_SSL_KEY: "",
-	SERVER_SSL_CERT: "",
-};
+	Setting.new({ name: "SERVER_PORT", val: 5331 });
+	Setting.new({ name: "SERVER_NAME", val: "Unnamed Server" });
+	Setting.new({ name: "SERVER_DNS", val: "" });
+	Setting.new({ name: "SERVER_SSL_ENABLED", val: false });
+	Setting.new({ name: "SERVER_SSL_KEY", val: "" });
+	Setting.new({ name: "SERVER_SSL_CERT", val: "" });
+	Setting.new({ name: "MAX_CLIENTS", val: 32 });
 
-if(!Detector.webgl)
+
+
+	Setting.new({ name: "AI_FORCE_BRAKE", val: false }).makeGameSetting();
+	Setting.new({ name: "AI_TEAM", val: false }).makeGameSetting();
+	Setting.new({ name: "AI_DUAL_COLOR_NAME", val: false }).makeGameSetting();
+	Setting.new({ name: "CHATBOT_ALWAYS_ACTIVE", val: false }).makeGameSetting();
+	//CYCLE
+	Setting.new({ name: "CYCLE_ACCEL", val: 10 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_ACCEL_ENEMY", val: 1 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_ACCEL_OFFSET", val: 2 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_ACCEL_RIM", val: 0 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_ACCEL_SELF", val: 1 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_ACCEL_SLINGSHOT", val: 1 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_ACCEL_TEAM", val: 1 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_ACCEL_TUNNEL", val: 1 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_WALL_NEAR", val: 6 }).makeGameSetting();
+
+	Setting.new({ name: "CYCLE_BRAKE", val: 30 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_BRAKE_DEPLETE", val: 1 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_BRAKE_REFILL", val: 0.1 }).makeGameSetting();
+	
+	Setting.new({ name: "CYCLE_BOOST", val: 0 }).makeGameSetting();
+	
+	Setting.new({ name: "CYCLE_JUMP", val: 0.5 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_JUMP", val: 0 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_MIDAIR_JUMP", val: false }).makeGameSetting();
+	Setting.new({ name: "CYCLE_MIDAIR_TURN", val: false }).makeGameSetting();
+	Setting.new({ name: "CYCLE_WALL_RAMP_ENABLE", val: true }).makeGameSetting();
+
+	Setting.new({ name: "CYCLE_DELAY", val: 0.02 }).makeGameSetting();
+
+	Setting.new({ name: "CYCLE_RUBBER", val: 5 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_RUBBER_TIME", val: 10 }).makeGameSetting();
+	//Setting.new({ name: "CYCLE_RUBBER_TIMEBASED", val: 0 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_RUBBER_MINDISTANCE", val: 0.03 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_RUBBER_MINADJUST", val: 0.05 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_RUBBER_DEPLETE_RIM", val: true }).makeGameSetting();
+	Setting.new({ name: "CYCLE_RUBBER_DEPLETE_SELF", val: true }).makeGameSetting();
+	Setting.new({ name: "CYCLE_RUBBER_DEPLETE_ENEMY", val: true }).makeGameSetting();
+
+	Setting.new({ name: "CYCLE_SOUND_SPEED", val: 30 }).makeGameSetting();
+
+	Setting.new({ name: "CYCLE_SPEED", val: 20 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_SPEED_DECAY_ABOVE", val: 0.1 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_SPEED_DECAY_BELOW", val: 5 }).makeGameSetting();
+
+	Setting.new({ name: "CYCLE_SPEED_MAX", val: 0 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_SPEED_MIN", val: 0.25 }).makeGameSetting();
+
+	Setting.new({ name: "CYCLE_START_SPEED", val: 20 }).makeGameSetting();
+
+	Setting.new({ name: "CYCLE_TURN_MEMORY", val: 3 }).makeGameSetting();
+	
+	Setting.new({ name: "CYCLE_TURN_SPEED_FACTOR", val: 0.95 }).makeGameSetting();
+
+	Setting.new({ name: "WALLS_LENGTH", val: 600 }).makeGameSetting();
+	//settings["WALLS_LENGTH"].set(30);
+	
+	Setting.new({ name: "RESPAWN_TIME", val: -1 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_FIRST_SPAWN_PROTECTION", val: false }).makeGameSetting();
+	Setting.new({ name: "CYCLE_WALL_TIME", val: 5 }).makeGameSetting();
+	Setting.new({ name: "CYCLE_INVULNERABILITY_TIME", val: -1 }).makeGameSetting();
+
+	Setting.new({ name: "WALLS_STAY_UP_DELAY", val: 1 }).makeGameSetting();
+	
+	Setting.new({ name: "SP_HUMANS_COUNT", val: 1 }).makeGameSetting();
+	//TEAMS
+	Setting.new({ name: "TEAMS_MAX_PLAYERS", val: 1 }).makeGameSetting();
+	Setting.new({ name: "TEAMS_MIN_PLAYERS", val: 1 }).makeGameSetting();
+	Setting.new({ name: "TEAMS_MAX", val: 16 }).makeGameSetting();
+	Setting.new({ name: "TEAMS_MIN", val: 2 }).makeGameSetting(); //4
+	Setting.new({ name: "TEAM_ALLOW_SHUFFLE_UP", val: 0 }).makeGameSetting();
+	Setting.new({ name: "ALLOW_TEAM_NAME_PLAYER", val: true }).makeGameSetting();
+	Setting.new({ name: "ALLOW_TEAM_NAME_COLOR", val: true }).makeGameSetting();
+	Setting.new({ name: "MIN_PLAYERS", val: 1 }).makeGameSetting();
+	Setting.new({ name: "NUM_AIS", val: 0 }).makeGameSetting();
+	Setting.new({ name: "SP_NUM_AIS", val: 3 }).makeGameSetting();
+	
+	Setting.new({ name: "TEAM_NAME_1", val: "Team Blue" }).makeGameSetting();    //name of team 1
+	Setting.new({ name: "TEAM_RED_1", val: 4 }).makeGameSetting();    //red portion of team 1's color
+	Setting.new({ name: "TEAM_GREEN_1", val: 8 }).makeGameSetting();    //green portion of team 1's color
+	Setting.new({ name: "TEAM_BLUE_1", val: 15 }).makeGameSetting();    //blue portion of team 1's color
+	
+	Setting.new({ name: "TEAM_NAME_2", val: "Team Gold" }).makeGameSetting();    //name of team 2
+	Setting.new({ name: "TEAM_RED_2", val: 15 }).makeGameSetting();    //red portion of team 2's color
+	Setting.new({ name: "TEAM_GREEN_2", val: 15 }).makeGameSetting();    //green portion of team 2's color
+	Setting.new({ name: "TEAM_BLUE_2", val: 4 }).makeGameSetting();    //blue portion of team 2's color
+	
+	Setting.new({ name: "TEAM_NAME_3", val: "Team Red" }).makeGameSetting();    //name of team 3
+	Setting.new({ name: "TEAM_RED_3", val: 15 }).makeGameSetting();    //red portion of team 3's color
+	Setting.new({ name: "TEAM_GREEN_3", val: 4 }).makeGameSetting();    //green portion of team 3's color
+	Setting.new({ name: "TEAM_BLUE_3", val: 4 }).makeGameSetting();    //blue portion of team 3's color
+	
+	Setting.new({ name: "TEAM_NAME_4", val: "Team Green" }).makeGameSetting();    //name of team 4
+	Setting.new({ name: "TEAM_RED_4", val: 4 }).makeGameSetting();    //red portion of team 4's color
+	Setting.new({ name: "TEAM_GREEN_4", val: 15 }).makeGameSetting();    //green portion of team 4's color
+	Setting.new({ name: "TEAM_BLUE_4", val: 4 }).makeGameSetting();    //blue portion of team 4's color
+	
+	Setting.new({ name: "TEAM_NAME_5", val: "Team Violet" }).makeGameSetting();    //name of team 5
+	Setting.new({ name: "TEAM_RED_5", val: 15 }).makeGameSetting();   //red portion of team 5's color
+	Setting.new({ name: "TEAM_GREEN_5", val: 4 }).makeGameSetting();    //green portion of team 5's color
+	Setting.new({ name: "TEAM_BLUE_5", val: 15 }).makeGameSetting();    //blue portion of team 5's color
+	
+	Setting.new({ name: "TEAM_NAME_6", val: "Team Cyan" }).makeGameSetting();    //name of team 6
+	Setting.new({ name: "TEAM_RED_6", val: 4 }).makeGameSetting();    //red portion of team 6's color
+	Setting.new({ name: "TEAM_GREEN_6", val: 15 }).makeGameSetting();    //green portion of team 6's color
+	Setting.new({ name: "TEAM_BLUE_6", val: 15 }).makeGameSetting();    //blue portion of team 6's color
+	
+	Setting.new({ name: "TEAM_NAME_7", val: "Team White" }).makeGameSetting();    //name of team 7
+	Setting.new({ name: "TEAM_RED_7", val: 15 }).makeGameSetting();    //red portion of team 7's color
+	Setting.new({ name: "TEAM_GREEN_7", val: 15 }).makeGameSetting();    //green portion of team 7's color
+	Setting.new({ name: "TEAM_BLUE_7", val: 15 }).makeGameSetting();    //blue portion of team 7's color
+	
+	Setting.new({ name: "TEAM_NAME_8", val: "Team Black" }).makeGameSetting();    //name of team 8
+	Setting.new({ name: "TEAM_RED_8", val: 0 }).makeGameSetting();    //red portion of team 8's color
+	Setting.new({ name: "TEAM_GREEN_8", val: 0 }).makeGameSetting();    //green portion of team 8's color
+	Setting.new({ name: "TEAM_BLUE_8", val: 0 }).makeGameSetting();    //blue portion of team 8's color
+	
+	//MAP
+	Setting.new({ name: "ARENA_AXES", val: 4 }).makeGameSetting();
+	Setting.new({ name: "STRICT_AXES_SPAWN", val: true }).makeGameSetting();
+	Setting.new({ name: "RESOURCE_REPOSITORY_CACHE", val: './cache/resource/' }).makeGameSetting();
+	Setting.new({ name: "MAP_FILE", val: 'Anonymous/polygon/regular/square-1.0.1.aamap.xml' }).makeGameSetting();
+	Setting.new({ name: "MAP_ROTATION", val: "" }).makeGameSetting();
+	Setting.new({ name: "ROTATION_TYPE", val: 0 }).makeGameSetting(); //1:round, 2:match
+	Setting.new({ name: "RESOURCE_REPOSITORY_SERVER", val: 'https://www.armanelgtron.tk/armagetronad/resource/' }).makeGameSetting();
+	//Setting.new({ name: "RESOURCE_REPOSITORY_BACKUP", val: 'http://resource.armagetronad.net/resource/' }).makeGameSetting();
+	Setting.new({ name: "SIZE_FACTOR", val: -3 }).makeGameSetting();
+	Setting.new({ name: "ARENA_BOUNDARY", val: -10 }).makeGameSetting();
+	Setting.new({ name: "ARENA_BOUNDARY_KILLS", val: true }).makeGameSetting();
+	
+	Setting.new({ name: "ZONE_ALPHA_SERVER", val: 1 }).makeGameSetting();
+	
+	//GAME PLAY
+	Setting.new({ name: "GAME_TYPE", val: 1 }).makeGameSetting();
+	Setting.new({ name: "FINISH_TYPE", val: 2 }).makeGameSetting();
+	Setting.new({ name: "LIMIT_ROUNDS", val: 10 }).makeGameSetting();
+	Setting.new({ name: "LIMIT_TIME", val: 30 }).makeGameSetting();
+	Setting.new({ name: "LIMIT_SCORE", val: 100 }).makeGameSetting();
+	
+	Setting.new({ name: "ROUND_WAIT", val: false }).makeGameSetting();
+	
+	//SHOOTING
+	Setting.new({ name: "SHOT_THRESH", val: 2 }).makeGameSetting();
+	
+	//WIN ZONE
+	Setting.new({ name: "WIN_ZONE_DEATHS", val: false }).makeGameSetting();
+	Setting.new({ name: "WIN_ZONE_EXPANSION", val: 1 }).makeGameSetting();
+	Setting.new({ name: "WIN_ZONE_INITIAL_SIZE", val: 5 }).makeGameSetting();
+	Setting.new({ name: "WIN_ZONE_RANDOMNESS", val: 0.8 }).makeGameSetting();
+	Setting.new({ name: "WIN_ZONE_MIN_LAST_DEATH", val: 30 }).makeGameSetting();
+	Setting.new({ name: "WIN_ZONE_MIN_ROUND_TIME", val: Infinity }).makeGameSetting(); //60
+	
+	//FORTRESS
+	Setting.new({ name: "FORTRESS_CONQUEST_RATE", val: 0.5 }).makeGameSetting();
+	Setting.new({ name: "FORTRESS_CONQUEST_DECAY_RATE", val: 0.1 }).makeGameSetting();
+	Setting.new({ name: "BASE_RESPAWN", val: false }).makeGameSetting();
+	
+	//SPAWN
+	Setting.new({ name: "SPAWN_WINGMEN_SIDE", val: 2.75362 }).makeGameSetting();
+	Setting.new({ name: "SPAWN_WINGMEN_BACK", val: 2.202896 }).makeGameSetting();
+	
+	//ROUNDLY
+	Setting.new({ name: "ROUND_COMMAND", val: "" }).makeGameSetting();
+	Setting.new({ name: "ROUND_CONSOLE_MESSAGE", val: "" }).makeGameSetting();
+	Setting.new({ name: "ROUND_CENTER_MESSAGE", val: "" }).makeGameSetting();
+	
+	//TARGET
+	Setting.new({ name: "DEFAULT_TARGET_COMMAND", val: "" }).makeGameSetting();
+	//Setting.new({ name: "TARGET_DECLARE_WINNER", val: true }).makeGameSetting(); 
+	//Setting.new({ name: "TARGET_LIFETIME", val: -1 }).makeGameSetting();
+	Setting.new({ name: "TARGET_INITIAL_SCORE", val: 10 }).makeGameSetting();
+	//Setting.new({ name: "TARGET_SCORE_DEPLETE", val: 2 }).makeGameSetting();
+	//Setting.new({ name: "TARGET_SURVIVE_TIME", val: 10 }).makeGameSetting();
+	
+	//BALL
+	Setting.new({ name: "BALL_SPEED_DECAY", val: 0 }).makeGameSetting();
+	Setting.new({ name: "BALL_SPEED_HIT_DECAY", val: 0 }).makeGameSetting();
+
+//*/
+
+
+function confForSoftwareRenderer()
 {
 	//choose better defaults for the software renderer
 	settings.HIGH_RIM = false;
@@ -260,191 +560,7 @@ if(!Detector.webgl)
 	settings.FLOOR_DETAIL = 2;
 }
 
-game_settings_default = {
-	AI_FORCE_BRAKE: false,
-	AI_TEAM: false,
-	AI_DUAL_COLOR_NAME: false,
-	CHATBOT_ALWAYS_ACTIVE: false,
-	//CYCLE
-	CYCLE_ACCEL: 10,
-	CYCLE_ACCEL_ENEMY: 1,
-	CYCLE_ACCEL_OFFSET: 2,
-	CYCLE_ACCEL_RIM: 0,
-	CYCLE_ACCEL_SELF: 1,
-	CYCLE_ACCEL_SLINGSHOT: 1,
-	CYCLE_ACCEL_TEAM: 1,
-	CYCLE_ACCEL_TUNNEL: 1,
-	CYCLE_WALL_NEAR: 6,
 
-	CYCLE_BRAKE: 30,
-	CYCLE_BRAKE_DEPLETE: 1,
-	CYCLE_BRAKE_REFILL: 0.1,
-	
-	CYCLE_BOOST: 0,
-	
-	CYCLE_JUMP: 0.5,
-	CYCLE_JUMP: 0,
-	CYCLE_MIDAIR_JUMP: false,
-	CYCLE_MIDAIR_TURN: false,
-	CYCLE_WALL_RAMP_ENABLE: true,
-
-	CYCLE_DELAY: 0.02,
-
-	CYCLE_RUBBER: 5,
-	CYCLE_RUBBER_TIME: 10,
-	//CYCLE_RUBBER_TIMEBASED: 0,
-	CYCLE_RUBBER_MINDISTANCE: 0.03,
-	CYCLE_RUBBER_MINADJUST: 0.05,
-	CYCLE_RUBBER_DEPLETE_RIM: true,
-	CYCLE_RUBBER_DEPLETE_SELF: true,
-	CYCLE_RUBBER_DEPLETE_ENEMY: true,
-
-	CYCLE_SOUND_SPEED: 30,
-
-	CYCLE_SPEED: 20,
-	CYCLE_SPEED_DECAY_ABOVE: 0.1,
-	CYCLE_SPEED_DECAY_BELOW: 5,
-
-	CYCLE_SPEED_MAX: 0,
-	CYCLE_SPEED_MIN: 0.25,
-
-	CYCLE_START_SPEED: 20,
-
-	CYCLE_TURN_MEMORY: 3,
-	
-	CYCLE_TURN_SPEED_FACTOR: 0.95,
-
-	WALLS_LENGTH: 600,
-	//WALLS_LENGTH: 30,
-	
-	RESPAWN_TIME: -1,
-	CYCLE_FIRST_SPAWN_PROTECTION: false,
-	CYCLE_WALL_TIME: 5,
-	CYCLE_INVULNERABILITY_TIME: -1,
-
-	WALLS_STAY_UP_DELAY: 1,
-	
-	SP_HUMANS_COUNT: 1,
-	//TEAMS
-	TEAMS_MAX_PLAYERS: 1,
-	TEAMS_MIN_PLAYERS: 1,
-	TEAMS_MAX: 16,
-	//TEAMS_MIN: 4,
-	TEAMS_MIN: 2,
-	TEAM_ALLOW_SHUFFLE_UP: 0,
-	ALLOW_TEAM_NAME_PLAYER: true,
-	ALLOW_TEAM_NAME_COLOR: true,
-	MIN_PLAYERS: 1,
-	NUM_AIS: 0,
-	SP_NUM_AIS: 3,
-	
-	TEAM_NAME_1: "Team Blue",    //name of team 1
-	TEAM_RED_1: 4,    //red portion of team 1's color
-	TEAM_GREEN_1: 8,    //green portion of team 1's color
-	TEAM_BLUE_1: 15,    //blue portion of team 1's color
-	
-	TEAM_NAME_2: "Team Gold",    //name of team 2
-	TEAM_RED_2: 15,    //red portion of team 2's color
-	TEAM_GREEN_2: 15,    //green portion of team 2's color
-	TEAM_BLUE_2: 4,    //blue portion of team 2's color
-	
-	TEAM_NAME_3: "Team Red",    //name of team 3
-	TEAM_RED_3: 15,    //red portion of team 3's color
-	TEAM_GREEN_3: 4,    //green portion of team 3's color
-	TEAM_BLUE_3: 4,    //blue portion of team 3's color
-	
-	TEAM_NAME_4: "Team Green",    //name of team 4
-	TEAM_RED_4: 4,    //red portion of team 4's color
-	TEAM_GREEN_4: 15,    //green portion of team 4's color
-	TEAM_BLUE_4: 4,    //blue portion of team 4's color
-	
-	TEAM_NAME_5: "Team Violet",    //name of team 5
-	TEAM_RED_5: 15,   //red portion of team 5's color
-	TEAM_GREEN_5: 4,    //green portion of team 5's color
-	TEAM_BLUE_5: 15,    //blue portion of team 5's color
-	
-	TEAM_NAME_6: "Team Cyan",    //name of team 6
-	TEAM_RED_6: 4,    //red portion of team 6's color
-	TEAM_GREEN_6: 15,    //green portion of team 6's color
-	TEAM_BLUE_6: 15,    //blue portion of team 6's color
-	
-	TEAM_NAME_7: "Team White",    //name of team 7
-	TEAM_RED_7: 15,    //red portion of team 7's color
-	TEAM_GREEN_7: 15,    //green portion of team 7's color
-	TEAM_BLUE_7: 15,    //blue portion of team 7's color
-	
-	TEAM_NAME_8: "Team Black",    //name of team 8
-	TEAM_RED_8: 0,    //red portion of team 8's color
-	TEAM_GREEN_8: 0,    //green portion of team 8's color
-	TEAM_BLUE_8: 0,    //blue portion of team 8's color
-	
-	//MAP
-	ARENA_AXES: 4,
-	STRICT_AXES_SPAWN: true,
-	RESOURCE_REPOSITORY_CACHE: './cache/resource/',
-	MAP_FILE: 'Anonymous/polygon/regular/square-1.0.1.aamap.xml',
-	MAP_ROTATION: "",
-	ROTATION_TYPE: 0, //1:round, 2:match
-	RESOURCE_REPOSITORY_SERVER: 'https://www.armanelgtron.tk/armagetronad/resource/',
-	//RESOURCE_REPOSITORY_BACKUP: 'http://resource.armagetronad.net/resource/',
-	SIZE_FACTOR: -3,
-	ARENA_BOUNDARY: -10,
-	ARENA_BOUNDARY_KILLS: true,
-	
-	ZONE_ALPHA_SERVER: 1,
-	
-	//GAME PLAY
-	GAME_TYPE: 1,
-	FINISH_TYPE: 2,
-	LIMIT_ROUNDS: 10,
-	LIMIT_TIME: 30,
-	LIMIT_SCORE: 100,
-	
-	ROUND_WAIT: false,
-	
-	//SHOOTING
-	SHOT_THRESH: 2,
-	
-	//WIN ZONE
-	WIN_ZONE_DEATHS: false,
-	WIN_ZONE_EXPANSION: 1,
-	WIN_ZONE_INITIAL_SIZE: 5,
-	WIN_ZONE_RANDOMNESS: 0.8,
-	WIN_ZONE_MIN_LAST_DEATH: 30,
-	WIN_ZONE_MIN_ROUND_TIME: Infinity, //60
-	
-	//FORTRESS
-	FORTRESS_CONQUEST_RATE: 0.5,
-	FORTRESS_CONQUEST_DECAY_RATE: 0.1,
-	BASE_RESPAWN: false,
-	
-	//SPAWN
-	SPAWN_WINGMEN_SIDE: 2.75362,
-	SPAWN_WINGMEN_BACK: 2.202896,
-	
-	//ROUNDLY
-	ROUND_COMMAND: "",
-	ROUND_CONSOLE_MESSAGE: "",
-	ROUND_CENTER_MESSAGE: "",
-	
-	//TARGET
-	DEFAULT_TARGET_COMMAND: "",
-	//TARGET_DECLARE_WINNER: true, 
-	//TARGET_LIFETIME: -1,
-	TARGET_INITIAL_SCORE: 10,
-	//TARGET_SCORE_DEPLETE: 2,
-	//TARGET_SURVIVE_TIME: 10,
-	
-	//BALL
-	BALL_SPEED_DECAY: 0,
-	BALL_SPEED_HIT_DECAY: 0,
-};
-
-sets = Object.keys(game_settings_default);
-for(var i=0;i<sets.length;i++)
-{
-	settings[sets[i]] = game_settings_default[sets[i]];
-}
 
 //possible admin commands (methods)
 commands = {
@@ -1040,6 +1156,7 @@ function init_key(x=false) // ?
 settings.players = [];
 settings.player = settings.players[0] = {
 		name: 'Player 1',
+		teamName: '',
 		cycleColor: '#dddd00',
 		tailColor: '#dddd00',
 		engineType: 5,
@@ -1192,30 +1309,31 @@ function chsetting(setting,value,silent=false,txt="",pretxt="")
 		var from = event[0][event[1]];
 		var isfunction = (typeof(from) == "function");
 		if(isfunction) from = event[0][event[1]]();
+		var to;
 		
 		if(typeof(value) != "undefined" && value != "")
 		{
-			switch(typeof(from))
+			switch(typeof(event[0][event[1]]))
 			{
 				case "number":
-					var to = parseFloat(value);
+					to = parseFloat(value);
 					if(isNaN(to))
 						to = 0;
 					break;
 				case "string":
-					var to = ""+value;
+					to = ""+value;
 					break;
 				case "boolean":
 					var int = parseInt(value);
 					if(isNaN(int))
-						var to = value[0]!="f"&&value[0]!="n";
+						to = value[0]!="f"&&value[0]!="n";
 					else
-						var to = Boolean(int);
+						to = Boolean(int);
 					break;
 				case "object":
 					silent = true;
 					from = JSON.stringify(settings[uservars[i]]);
-					var to = JSON.parse(value);
+					to = JSON.parse(value);
 					break;
 				default:
 					engine.console.print("Unknown/unimplemented setting type "+typeof(event[0][event[1]])+".\n",false);
