@@ -91,7 +91,11 @@ class Setting
 		
 		this.val = val;
 		
-		if(this.callback) this.callback();
+		if(this.callback)
+		{
+			var that = this;
+			setTimeout(function() { that.callback(); }, 0);
+		}
 	}
 	valueOf()
 	{
@@ -1172,6 +1176,7 @@ settings.player = settings.players[0] = {
 		tailColor: '#dddd00',
 		engineType: 5,
 		spectating: false,
+		nextTeam: null,
 };
 
 function applysettings(array1)
