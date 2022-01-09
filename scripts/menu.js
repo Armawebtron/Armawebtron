@@ -67,18 +67,20 @@ function menuSelect(direction)
 	{
 		if(hasClass(themenu[x],'menu-active')) selectedItem = x; //find which one is selected
 	}
+	var lastSelected = selectedItem;
 	
 	switch(direction)
 	{
 		//change menu position
 		case "up":
-			selectedItem--;
+			selectedItem = menuFindSelectable(selectedItem, -1);
 			if(selectedItem < 0) selectedItem = themenu.length-1; //wrap to last item
 			hoverSelect(themenu[selectedItem]);
 			break;
 		case "down":
-			selectedItem++;
-			if(selectedItem >= themenu.length) selectedItem = 0; //wrap to first item
+			selectedItem = menuFindSelectable(selectedItem, +1);
+			console.log(selectedItem);
+			if(selectedItem >= themenu.length) selectedItem = menuFindSelectable(0, 1); //wrap to first item
 			hoverSelect(themenu[selectedItem]);
 			break;
 		case "esc":
@@ -97,6 +99,19 @@ function menuSelect(direction)
 			changeMenuItem(themenu[selectedItem].id,1,false,"key:"+direction);
 			break;
 	}
+}
+
+function menuFindSelectable(selectedItem, it)
+{
+	var themenu = document.getElementById('menuList').childNodes;
+	for(var x=selectedItem+it;x<themenu.length;x+=it)
+	{
+		if(!themenu[x] || themenu[x].id)
+		{
+			return x;
+		}
+	}
+	return themenu.length;
 }
 
 function menuFindPrevSelectable()
@@ -162,12 +177,23 @@ function parseItem(cmenu,item)
 	for(var a=item.attributes.length-1;a>=0;--a)
 	{
 		if(!item.attributes[a].valueReal) item.attributes[a].valueReal = item.attributes[a].value;
-		item.attributes[a].value = item.attributes[a].valueReal.replace(new RegExp("\\$\\((.+)\\)",'g'),
-		function(x, x1)
+		item.attributes[a].value = item.attributes[a].valueReal;
+		while(item.attributes[a].value.match(new RegExp("\\$\\((.+)\\)",'g')))
 		{
-			var s = getVarFromString(x1);
-			return s[0][s[1]];
-		});
+			item.attributes[a].value = item.attributes[a].value.replace(new RegExp("\\$\\(([^\\$()]+)\\)",'g'),
+			function(x, x1)
+			{
+				try
+				{
+					var s = getVarFromString(x1);
+					return s[0][s[1]];
+				}
+				catch(e)
+				{
+					console.error(e);
+				}
+			});
+		}
 	}
 	
 	var parent = document.createElement("LI");
@@ -480,6 +506,7 @@ function menu(act,from=false)
 								}
 							}
 						}
+						if(!selectedItem) selectedItem = menuFindSelectable(selectedItem-1, 1);
 						hoverSelect(document.getElementById("menuList").children[selectedItem])
 						if(action == "menu") engine.menus.push(cmenu.attributes.id.value);
 						return true;
