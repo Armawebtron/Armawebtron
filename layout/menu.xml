@@ -292,10 +292,29 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA."
 		<Item type="exitmenu" text="Return to Game"/>
 	</Menu>
 		<Menu id="team" title="Change Teams">
-			<!-- script to dynamically generate items-->
-			<Item type="list" var="player.spectating" text="Spectator Mode" onenter="KILL_ALL">
-				<Option value="false" text="Off" /> <Option value="true" text="On" />
-			</Item>
+			<Item type="text" text="Current team: $(engine.players.$(engine.activePlayer).team.name)" />
+			<Item type="text" text="Next team: $(engine.teams.$(player.nextTeam).name)" />
+			<Item type="text" text="&amp;nbsp;" />
+			
+			<Item if="settings.player.spectating"
+				type="js" onenter="menu('exitmenu'); settings.player.spectating = false;" 
+				text="Leave spectator mode"
+			/>
+			
+			<Item if="!settings.player.spectating"
+				type="js" onenter="menu('exitmenu'); settings.player.spectating = true; settings.player.nextTeam = null;" 
+				text="Join spectator mode"
+			/>
+			
+			<Foreach var="engine.teams" as="n">
+				<Item if="
+						engine.teams[$(n)] !== engine.players[engine.activePlayer].team
+					"
+					type="js" onenter="menu('exitmenu'); settings.player.spectating = false; settings.player.nextTeam = $(n);" 
+					text="Join $(engine.teams.$(n).name)"
+				/>
+			</Foreach>
+			
 			<Item type="exitmenu" text="&lt;- Go Back"/>
 		</Menu>
 	<Menu id="vote" title="Vote" exitmenu="menu('exitmenu');vote(voteopt)"> <!--Future implementation?-->
