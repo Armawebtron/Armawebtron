@@ -20,16 +20,57 @@
 //resize window listener function
 var resizeWindow = function()
 {
-	if(engine.renderer)
-	{
-		engine.renderer.setSize(window.innerWidth,window.innerHeight);
-		engine.renderer.render(engine.scene, engine.camera);
-	}
 	if(engine.camera)
 	{
 		engine.camera.aspect = window.innerWidth / window.innerHeight;
 		engine.camera.updateProjectionMatrix();
 	}
+	if(engine.renderer)
+	{
+		engine.renderer.setSize(window.innerWidth,window.innerHeight);
+		engine.renderer.context.canvas.style.width = window.innerWidth+"px";
+		engine.renderer.context.canvas.style.height = window.innerHeight+"px";
+		engine.renderer.render(engine.scene, engine.camera);
+	}
+	if(engine.composer)
+	{
+		initRenderer();
+	}
+};
+
+var sfC = {getMaxAnisotropy:function(){return 1;}};
+
+window.initRenderer = function()
+{
+	if(engine.renderer) try
+	{
+		document.body.removeChild(engine.renderer.domElement);
+	}
+	catch(e)
+	{
+		console.error(e);
+	}
+	
+	engine.usingPostProcessing = false;
+	
+	//set renderer after detecting available renderer
+	if(Detector.webgl)
+	{
+		engine.renderer = new THREE.WebGLRenderer({ 
+			antialias: settings.ANTIALIAS,
+		});
+		engine.usingWebgl = true;
+	}
+	else
+	{
+		confForSoftwareRenderer();
+		engine.renderer = new THREE.SoftwareRenderer();
+		engine.usingWebgl = false;
+		engine.renderer.capabilities = sfC;
+	}
+	resizeWindow();
+	
+	document.body.appendChild(engine.renderer.domElement);
 };
 
 window.init = function() 
@@ -37,16 +78,9 @@ window.init = function()
 	//let's load settings first.
 	loadsettingcfgs();
 	window.onbeforeunload = saveusercfg;
-	if(!engine.dedicated)
-	{
-		//set renderer after detecting available renderer
-		if (Detector.webgl) { engine.renderer = new THREE.WebGLRenderer({ antialias: settings.ANTIALIAS });}
-		else { engine.renderer = new THREE.SoftwareRenderer(); engine.usingWebgl = false; }
-		engine.renderer.setSize(window.innerWidth, window.innerHeight);
-		document.body.appendChild(engine.renderer.domElement);
-	}
 	engine.scene = new THREE.Scene();
 	if(engine.dedicated) return;
+	initRenderer();
 	if(!engine.audio && settings.SOUND_QUALITY > 0) try { initSound(); }
 	catch(e) { console.error(e); alert("Sound could not be initialized!"); }
 	loadTextures();
