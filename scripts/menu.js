@@ -292,6 +292,9 @@ function parseItem(cmenu,item)
 				case "submenu":
 					parent.setAttribute("id","menu:"+item.attributes.onenter.value);
 					break;
+				case "submenuDynamic":
+					parent.setAttribute("id","dynamic:"+cmenu.attributes.id.value+":"+item.attributes.onenter.value);
+					break;
 				case "js":
 					parent.setAttribute("id","js:"+item.attributes.onenter.value);
 					break;
@@ -315,6 +318,10 @@ function parseItem(cmenu,item)
 	}
 	element.setAttribute("onmousemove","hoverSelect(this.parentNode)");
 	element.setAttribute("onclick","menu(this.parentNode.id)");
+	if( (""+parent.getAttribute("id")).indexOf("js:") === 0 )
+	{
+		element.setAttribute("onclick",(""+parent.getAttribute("id")).slice(3));
+	}
 	element.appendChild(text);
 	if(input !== false) element.appendChild(input);
 	parent.appendChild(element);
@@ -352,12 +359,19 @@ function menu(act,from=false)
 	switch(action)
 	{
 		case "menu":
+		case "dynamic":
 			engine.concatch = engine.msgcatch = undefined;
 			document.getElementById("inputbuttons").style.display = "none";
 			document.getElementById('menu').innerHTML = "<h1>I don't know either</h1>";
 			var doc = engine.menu.getElementsByTagName("Menus");
 			if(doc.length > 0)
 			{
+				var dynamic;
+				if(action == "dynamic")
+				{
+					dynamic = "dynamic:"+split[1]+":"+split[2];
+				}
+				
 				var menus = doc[0].getElementsByTagName("Menu");
 				for(var x=0;x<menus.length;x++)
 				{
@@ -379,6 +393,36 @@ function menu(act,from=false)
 									if(!item.attributes.if || menuIf(item.attributes.if.value)) 
 									{
 										list.appendChild(parseItem(cmenu,item));
+									}
+									break;
+								case "ItemsDynamic":
+									var comp = item.attributes.menu.value;
+									if( action == "dynamic" ) comp = split[2];
+									dynamic = "dynamic:"+split[1]+":"+comp;
+									for(var s=0;s<menus.length;++s)
+									{
+										var csmenu = menus[s];
+										if( csmenu.attributes.id.value == comp )
+										{
+											console.log(comp);
+											item.attributes.menu.value = comp;
+											
+											for(var si=0;si<csmenu.children.length;++si)
+											{
+												var sitem = csmenu.children[si];
+												switch(sitem.nodeName)
+												{
+													case "Item":
+														if( !sitem.attributes.if || menuIf(sitem.attributes.if.value) )
+														{
+															list.appendChild(parseItem(csmenu,sitem));
+														}
+														break;
+												}
+											}
+											
+											break;
+										}
 									}
 									break;
 								case "Foreach":
@@ -410,8 +454,20 @@ function menu(act,from=false)
 								if(exitmenu == themenu[x].id) selectedItem = x;
 							}
 						}
+						else if(dynamic)
+						{
+							var themenu = document.getElementById('menuList').childNodes;
+							for(var x=0;x<themenu.length;x++)
+							{
+								if(dynamic == themenu[x].id)
+								{
+									themenu[x].style.color = "#ff8800";
+									selectedItem = x;
+								}
+							}
+						}
 						hoverSelect(document.getElementById("menuList").children[selectedItem])
-						engine.menus.push(cmenu.attributes.id.value);
+						if(action == "menu") engine.menus.push(cmenu.attributes.id.value);
 						return true;
 					}
 				}

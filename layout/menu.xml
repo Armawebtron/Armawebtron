@@ -159,11 +159,15 @@
 	
 	<!-- Configuration -->
 	<Menu id="system" title="Configure Game">
-		<Item type="submenu" onenter="screen" text="Configure Display"/>
-		<Item type="submenu" onenter="display" text="Configure Visuals"/>
-		<Item type="submenu" onenter="sound" text="Configure the Sound"/>
-		<Item type="submenu" onenter="other" text="Misc Settings"/>
-		<Item type="exitmenu" text="&lt;- Go Back"/>
+		<Item type="submenuDynamic" onenter="display" text="Visuals" style="position:absolute;left:5%;top:105px;font-size:20pt"/>
+		<Item type="submenuDynamic" onenter="screen" text="Screen" style="position:absolute;left:31%;top:105px;font-size:20pt"/>
+		<Item type="submenuDynamic" onenter="sound" text="Sound" style="position:absolute;left:58%;top:105px;font-size:20pt"/>
+		<Item type="submenuDynamic" onenter="other" text="Other" style="position:absolute;right:5%;top:105px;font-size:20pt"/>
+		<Item type="text" text="&amp;nbsp;" />
+		
+		<ItemsDynamic name="configSubmenus" menu="display" />
+		
+		<Item type="exitmenu" text="&lt;-" style="position:absolute;top:20px;left:20px;"/>
 	</Menu>
 		<Menu id="screen" title="Screen Mode">
 			<Item type="list" var="FULLSCREEN" text="Fullscreen (F11)" title="It's recommended that you use F11 instead of this fullscreen option. It is, however, left in for mobile touchscreen devices.">
@@ -173,37 +177,28 @@
 				<Option value="1" text="Off" /> <Option value="0" text="On" />
 			</Item>
 			<Item type="num" range="1,Infinity" var="MAX_TARGET_FPS" text="Max Target FPS" />
-			<Item type="exitmenu" text="&lt;- Go Back"/>
+			<!--<Item type="exitmenu" text="&lt;- Go Back"/>-->
 		</Menu>
 		<Menu id="display" title="Visual Settings">
-			<Item type="submenu" onenter="detail" text="Detail Settings"/>
-			<Item type="submenu" onenter="visual_prefs" text="Other Preferences"/>
-			<Item type="exitmenu" text="&lt;- Go Back"/>
+			<Item type="list" var="FLOOR_DETAIL" text="Floor Detail" title="">
+				<Option value="0" text="No Grid" />
+				<Option value="1" text="Line Grid" />
+				<Option value="2" text="Textured Floor (Standard quality)" />
+				<Option value="3" text="Textured Floor (Maximum quality)" />
+			</Item>
+			<Item type="list" call="aamenurender_nocallonreq" text="Menu Background Rendering" title="How the background is rendered. Default: Image">
+				<Option value="img" text="Image" />
+				<Option value="css" text="CSS" />
+				<Option value="css_rot" text="CSS+Rotation" />
+			</Item>
+			<Item type="list" var="HIGH_RIM" text="High Rims">
+				<Option value="false" text="Off" /> <Option value="true" text="On" />
+			</Item>
+			<Item type="list" var="EXPLOSION" text="Explosions">
+				<Option value="false" text="Off" /> <Option value="true" text="On" />
+			</Item>
+			<Item type="list" var="engine.view" from="engine.views" text="Current Camera" />
 		</Menu>
-			<Menu id="detail" title="Detail Settings">
-				<Item type="list" var="FLOOR_DETAIL" text="Floor Detail" title="">
-					<Option value="0" text="No Grid" />
-					<Option value="1" text="Line Grid" />
-					<Option value="2" text="Textured Floor (Standard quality)" />
-					<Option value="3" text="Textured Floor (Maximum quality)" />
-				</Item>
-				<Item type="list" call="aamenurender_nocallonreq" text="Menu Background Rendering" title="How the background is rendered. Default: Image">
-					<Option value="img" text="Image" />
-					<Option value="css" text="CSS" />
-					<Option value="css_rot" text="CSS+Rotation" />
-				</Item>
-				<Item type="exitmenu" text="&lt;- Go Back"/>
-			</Menu>
-			<Menu id="visual_prefs" title="Preferences">
-				<Item type="list" var="HIGH_RIM" text="High Rims">
-					<Option value="false" text="Off" /> <Option value="true" text="On" />
-				</Item>
-				<Item type="list" var="EXPLOSION" text="Explosions">
-					<Option value="false" text="Off" /> <Option value="true" text="On" />
-				</Item>
-				<Item type="list" var="engine.view" from="engine.views" text="Current Camera" />
-				<Item type="exitmenu" text="&lt;- Go Back"/>
-			</Menu>
 		<Menu id="sound" title="Sound Configuration">
 			<Item type="list" var="SOUND_QUALITY" text="Sound Quality">
 					<Option value="0" text="Off" />
@@ -215,12 +210,12 @@
 				<Option value="3" text="Tr2n Origins" />
 				<Option value="4" text="glTron" />
 			</Item>
-			<Item type="exitmenu" text="&lt;- Go Back"/>
+			<!--<Item type="exitmenu" text="&lt;- Go Back"/>-->
 		</Menu>
 		<Menu id="other" title="Misc Configuration">
 			<Item type="submenu" onenter="display_tweaks" text="Tweaks"/>
 			<Item type="submenu" onenter="global_input_conf" text="Global Keys"/>
-			<Item type="exitmenu" text="&lt;- Go Back"/>
+			<!--<Item type="exitmenu" text="&lt;- Go Back"/>-->
 		</Menu>
 			<Menu id="display_tweaks" title="Game Tweaks">
 				<Item type="list" var="GAME_LOOP" text="Run game loop">
