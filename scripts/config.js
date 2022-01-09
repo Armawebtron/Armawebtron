@@ -33,6 +33,7 @@ class Setting
 				this.val = conf.val;
 				this.callback = conf.callback;
 				this.type = conf.type;
+				this.min = conf.min; this.max = conf.max;
 				break;
 		}
 		
@@ -56,9 +57,9 @@ class Setting
 				this.val(val);
 				break;
 			case "int":
-				if(window.BigInt)
+				/*if(window.BigInt)
 					this.setDirect(BigInt(val));
-				else
+				else*/
 					this.setDirect(parseInt(val));
 				break;
 			case "boolean":
@@ -79,8 +80,18 @@ class Setting
 	}
 	setDirect(val)
 	{ 
+		if(this.min !== undefined && val < this.min)
+		{
+			val = this.min;
+		}
+		if(this.max !== undefined && val > this.max)
+		{
+			val = this.max;
+		}
+		
 		this.val = val;
-		//settings[this.name] = this.val;
+		
+		if(this.callback) this.callback();
 	}
 	valueOf()
 	{
@@ -179,9 +190,9 @@ global.Setting = Setting;
 	}});
 
 	// Camera
-	Setting.new({ name: "CAMERA_FOV", val: 60 });
-	Setting.new({ name: "CAMERA_NEAR_RENDER", val: 0.04 });
-	Setting.new({ name: "CAMERA_FAR_RENDER", val: 2000 });
+	Setting.new({ name: "CAMERA_FOV", val: 60, callback: function() {if(engine.camera){engine.camera.fov=settings.CAMERA_FOV;engine.camera.updateProjectionMatrix()}} });
+	Setting.new({ name: "CAMERA_NEAR_RENDER", val: 0.04, callback: function() {if(engine.camera){engine.camera.near=settings.CAMERA_NEAR_RENDER;engine.camera.updateProjectionMatrix()}} });
+	Setting.new({ name: "CAMERA_FAR_RENDER", val: 2000, callback: function() {if(engine.camera){engine.camera.far=settings.CAMERA_FAR_RENDER;engine.camera.updateProjectionMatrix()}} });
 
 	// settings for camera types
 	Setting.new({ name: "CAMERA_CUSTOM_BACK", val: 6 });
@@ -192,15 +203,16 @@ global.Setting = Setting;
 	Setting.new({ name: "CAMERA_CUSTOM_OFFSET", val: 3 });
 	Setting.new({ name: "CAMERA_CUSTOM_OFFSET_FROMSPEED", val: 0.1 });
 
-	//GAME
+	// graphical quality and settings
+	Setting.new({ name: "ANTIALIAS", val: true, callback: function() { initRenderer(); } });
+	
 	Setting.new({ name: "GRID_SIZE", val: 1 });
-	Setting.new({ name: "ANTIALIAS", val: true });
 	/*Setting.new({ name: "FLOOR_RED", val: 0.75 });
 	Setting.new({ name: "FLOOR_GREEN", val: 0.75 });
 	Setting.new({ name: "FLOOR_BLUE", val: 0.98 });*/
-	Setting.new({ name: "FLOOR_RED", val: 0.03 });
-	Setting.new({ name: "FLOOR_GREEN", val: 0.266 });
-	Setting.new({ name: "FLOOR_BLUE", val: 0.8 });
+	Setting.new({ name: "FLOOR_RED", val: 0.03, callback: updategrid });
+	Setting.new({ name: "FLOOR_GREEN", val: 0.266, callback: updategrid });
+	Setting.new({ name: "FLOOR_BLUE", val: 0.8, callback: updategrid });
 	Setting.new({ name: "FLOOR_TEXTURE", val: "textures/floor.png" });
 	/*Setting.new({ name: "GRID_SIZE", val: 2 });
 	Setting.new({ name: "FLOOR_RED", val: 1 });
@@ -296,12 +308,50 @@ global.Setting = Setting;
 	Setting.new({ name: "GAME_LOOP", val: 0.5 });
 	Setting.new({ name: "TIME_FACTOR", val: 1 });
 	
-	Setting.new({ name: "HUD_MAP", val: true });
+	Setting.new({ name: "HUD_MAP", val: true, callback: function()
+	{
+		document.getElementById("canvas").style.display = settings.HUD_MAP?"block":"none";
+	}});
 	
 	Setting.new({ name: "ADMIN_KILL_MESSAGE", val: true });
 	
 	//SOUNDS
-	Setting.new({ name: "SOUND_QUALITY", val: 3, type: "int" });
+	Setting.new({ name: "SOUND_QUALITY", val: 3, type: "int", 
+		min: 0, max: 3,
+		callback: function()
+		{
+			if(!engine.audio && settings.SOUND_QUALITY > 0)
+			{
+				try { initSound(); }
+				catch(e)
+				{
+					console.error(e);
+					engine.console.print("An error occurred while enabling sound. If your browser supports it, this may be a bug.\n",false);
+				}
+			}
+			if(engine.audio && settings.SOUND_QUALITY == 0)
+			{
+				engine.audio.stopCycles();
+				
+				return;
+			}
+			var p;
+			switch(settings.SOUND_QUALITY)
+			{
+				case 1: p="HRTF"; engine.retroSound = true; break;
+				case 2: p="HRTF"; engine.retroSound = true; break;
+				case 3: p="equalpower"; engine.retroSound = false; break;
+			}
+			for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x])
+			{
+				if(engine.players[x].audio)
+				{
+					engine.players[x].audio.panner.panningMode = p;
+				}
+			}
+			
+		},
+	});
 	
 	Setting.new({ name: "SOUNDS_INTRO", val: false });
 	Setting.new({ name: "SOUNDS_EXTRO", val: false });
@@ -487,7 +537,7 @@ global.Setting = Setting;
 	Setting.new({ name: "TEAM_BLUE_8", val: 0 }).makeGameSetting();    //blue portion of team 8's color
 	
 	//MAP
-	Setting.new({ name: "ARENA_AXES", val: 4 }).makeGameSetting();
+	Setting.new({ name: "ARENA_AXES", val: 4, max: 65535 }).makeGameSetting();
 	Setting.new({ name: "STRICT_AXES_SPAWN", val: true }).makeGameSetting();
 	Setting.new({ name: "RESOURCE_REPOSITORY_CACHE", val: './cache/resource/' }).makeGameSetting();
 	Setting.new({ name: "MAP_FILE", val: 'Anonymous/polygon/regular/square-1.0.1.aamap.xml' }).makeGameSetting();
@@ -651,46 +701,6 @@ commands = {
 			if( sets[i].indexOf("instant") == 0 || typeof(settings[name][sets[i]]) != "undefined" )
 				settings[name][sets[i]] = cfg[sets[i]];
 		}
-	},
-	FLOOR_RED: updategrid, FLOOR_GREEN: updategrid, FLOOR_BLUE: updategrid, GRID_SIZE: updategrid,
-	CAMERA_FOV: function() {if(engine.camera){engine.camera.fov=settings.CAMERA_FOV;engine.camera.updateProjectionMatrix()}},
-	CAMERA_NEAR_RENDER: function() {if(engine.camera){engine.camera.near=settings.CAMERA_NEAR_RENDER;engine.camera.updateProjectionMatrix()}},
-	CAMERA_FAR_RENDER: function() {if(engine.camera){engine.camera.far=settings.CAMERA_FAR_RENDER;engine.camera.updateProjectionMatrix()}},
-	SOUND_QUALITY: function()
-	{
-		settings.SOUND_QUALITY = parseInt(settings.SOUND_QUALITY);
-		if(settings.SOUND_QUALITY > 3) settings.SOUND_QUALITY = 3;
-		if(!engine.audio && settings.SOUND_QUALITY > 0)
-		{
-			try { initSound(); }
-			catch(e)
-			{
-				console.error(e);
-				engine.console.print("An error occurred while enabling sound. If your browser supports it, this may be a bug.\n",false);
-			}
-		}
-		if(settings.SOUND_QUALITY < 0) settings.SOUND_QUALITY = 0;
-		if(engine.audio && settings.SOUND_QUALITY == 0)
-		{
-			engine.audio.stopCycles();
-			
-			return;
-		}
-		switch(settings.SOUND_QUALITY)
-		{
-			case 1: p="HRTF"; engine.retroSound = true; break;
-			case 2: p="HRTF"; engine.retroSound = true; break;
-			case 3: p="equalpower"; engine.retroSound = false; break;
-		}
-		for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x])
-		{
-			engine.players[x].audio.panner.panningMode = p;
-		}
-		
-	},
-	HUD_MAP: function()
-	{
-		document.getElementById("canvas").style.display = settings.HUD_MAP?"block":"none";
 	},
 	START_NEW_MATCH: function()
 	{
@@ -1321,6 +1331,16 @@ function chsetting(setting,value,silent=false,txt="",pretxt="")
 					if(isNaN(to))
 						to = 0;
 					break;
+				case "bigint":
+					try { to = BigInt(value); }
+					catch(e)
+					{
+						try { to = BigInt(parseInt(value)); }
+						catch(e)
+						{
+							to = BigInt(0);
+						}
+					}
 				case "string":
 					to = ""+value;
 					break;
@@ -1342,6 +1362,7 @@ function chsetting(setting,value,silent=false,txt="",pretxt="")
 			}
 			if(isfunction) event[0][event[1]](to);
 			else event[0][event[1]] = to;
+			to = event[0][event[1]];
 			
 			if(from != to)
 			{
