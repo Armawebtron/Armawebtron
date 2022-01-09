@@ -159,6 +159,17 @@ function menuIf(syntax)
 
 function parseItem(cmenu,item)
 {
+	for(var a=item.attributes.length-1;a>=0;--a)
+	{
+		if(!item.attributes[a].valueReal) item.attributes[a].valueReal = item.attributes[a].value;
+		item.attributes[a].value = item.attributes[a].valueReal.replace(new RegExp("\\$\\((.+)\\)",'g'),
+		function(x, x1)
+		{
+			var s = getVarFromString(x1);
+			return s[0][s[1]];
+		});
+	}
+	
 	var parent = document.createElement("LI");
 	var element = document.createElement("A");
 	//var text = document.createTextNode(item.attributes.text.value);
@@ -438,7 +449,10 @@ function menu(act,from=false)
 												node.attributes[a].value = node.attributes[a].value.replace(new RegExp("\\$\\("+item.attributes.as.value+"\\)",'g'),y);
 											}
 											
-											list.appendChild(parseItem(cmenu,node));
+											if( !node.attributes.if || menuIf(node.attributes.if.value) )
+											{
+												list.appendChild(parseItem(cmenu,node));
+											}
 										}
 									}
 									break;
