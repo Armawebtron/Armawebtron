@@ -121,6 +121,7 @@ class Setting
 			Object.defineProperty(settings, this.name, {
 				get: function()  { return that.valueOf(); },
 				set: function(n) { return that.set(n); },
+				enumerable: true,
 			});
 		}
 
