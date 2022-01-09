@@ -886,7 +886,7 @@ class ServerClient3dc
 		this.r = r; // change this
 		
 		var self = this;
-		this.connection.on("message",function(e){self.handler(e);});
+		this.connection.on("message",function(e){self.handler(""+e);});
 		this.connection.on("pong",function(e){self.onPong(e);});
 		this.connection.on("close",function(e){self.onClose(e);});
 		
