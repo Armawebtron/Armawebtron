@@ -180,16 +180,15 @@
 			<!--<Item type="exitmenu" text="&lt;- Go Back"/>-->
 		</Menu>
 		<Menu id="display" title="Visual Settings">
+			<Item type="list" var="engine.view" from="engine.views" text="Current Camera" />
 			<Item type="list" var="FLOOR_DETAIL" text="Floor Detail" title="">
 				<Option value="0" text="No Grid" />
 				<Option value="1" text="Line Grid" />
 				<Option value="2" text="Textured Floor (Standard quality)" />
 				<Option value="3" text="Textured Floor (Maximum quality)" />
 			</Item>
-			<Item type="list" call="aamenurender_nocallonreq" text="Menu Background Rendering" title="How the background is rendered. Default: Image">
-				<Option value="img" text="Image" />
-				<Option value="css" text="CSS" />
-				<Option value="css_rot" text="CSS+Rotation" />
+			<Item type="list" var="ANTIALIAS" text="Anti-aliasing">
+				<Option value="false" text="Off" /> <Option value="true" text="On" />
 			</Item>
 			<Item type="list" var="HIGH_RIM" text="High Rims">
 				<Option value="false" text="Off" /> <Option value="true" text="On" />
@@ -197,7 +196,11 @@
 			<Item type="list" var="EXPLOSION" text="Explosions">
 				<Option value="false" text="Off" /> <Option value="true" text="On" />
 			</Item>
-			<Item type="list" var="engine.view" from="engine.views" text="Current Camera" />
+			<Item type="list" call="aamenurender_nocallonreq" text="Menu Background Rendering" title="How the background is rendered. Default: Image">
+				<Option value="img" text="Image" />
+				<Option value="css" text="CSS" />
+				<Option value="css_rot" text="CSS+Rotation" />
+			</Item>
 		</Menu>
 		<Menu id="sound" title="Sound Configuration">
 			<Item type="list" var="SOUND_QUALITY" text="Sound Quality">
