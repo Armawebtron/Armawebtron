@@ -1063,6 +1063,7 @@ class ServerClient3dc
 	onClose()
 	{
 		clearInterval(this.gtimeid);
+		clearTimeout(this.pingTimer);
 		
 		var id;
 		for(var i=this.server.clients.length-1;i>=0;--i)
@@ -1132,7 +1133,7 @@ class ServerClient3dc
 			engine.console.print("User "+this.netid+" timed out.\n",this.netid);
 			this.send({type:_3dc_loginDenial,msg:"You timed out."});
 			var self = this;
-			setTimeout(function(){self.connection.terminate()},250);
+			setTimeout(function(){self.connection.terminate();self.onLeave()},250);
 			return;
 		}
 		
@@ -1141,10 +1142,11 @@ class ServerClient3dc
 		this.lastPingTime = performance.now();
 		
 		var self = this;
-		setTimeout(function(){self.doPing()},30000);
+		this.pingTimer = setTimeout(function(){self.doPing()},30000);
 	}
 	senddata(type=1)
 	{
+		if(this.netid === -1) return;
 		var data = [],cd,cycle;
 		switch(type)
 		{
