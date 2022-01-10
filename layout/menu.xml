@@ -187,7 +187,17 @@
 				<Option value="2" text="Textured Floor (Standard quality)" />
 				<Option value="3" text="Textured Floor (Maximum quality)" />
 			</Item>
-			<Item type="list" var="ANTIALIAS" text="Anti-aliasing">
+			<Item type="list" var="POSTPROCESSING" text="Post-processing" 
+				call="(function(v) { if(v) { settings.POSTPROCESSING = (v=='true'); menu('reload'); } return settings.POSTPROCESSING; })">
+				<Option value="false" text="Off" /> <Option value="true" text="On" />
+			</Item>
+			<Item type="list" var="ANTIALIAS" text="Anti-aliasing" if="!settings.POSTPROCESSING">
+				<Option value="false" text="Off" /> <Option value="true" text="On" />
+			</Item>
+			<Item type="list" var="POSTPROCESSING_FXAA" text="FXAA Anti-aliasing" if="settings.POSTPROCESSING">
+				<Option value="false" text="Off" /> <Option value="true" text="On" />
+			</Item>
+			<Item type="list" var="POSTPROCESSING" text="Bloom effect" if="settings.POSTPROCESSING">
 				<Option value="false" text="Off" /> <Option value="true" text="On" />
 			</Item>
 			<Item type="list" var="HIGH_RIM" text="High Rims">
