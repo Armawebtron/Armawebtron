@@ -156,6 +156,18 @@ global.httpGetAsync = function(url,callback,errcb=false) //! gets HTTP requests 
 	}
 }
 
+global.include = function(file, onload, onerror)
+{
+	var script = document.createElement("script");
+	script.src = file;
+	script.type = "text/javascript";
+	script.defer = true;
+	if(onload) script.onload = onload;
+	if(onerror) script.onerror = onerror;
+	
+	(document.getElementsByTagName('head')[0]).appendChild(script);
+};
+
 global.xmlify = function(string) //! Gets XML object from string.
 {
 	var val;

@@ -144,6 +144,11 @@ game.newRound = function()
 	engine.camera.up = new THREE.Vector3(0,0,1); //Z is up, X and Y is l+r and b+f
 	//engine.camera.position.set(247, 247, 3);
 	
+	if(engine.composer)
+	{
+		engine.composer.addRenderPass();
+	}
+	
 	engine.viewTarget = engine.activePlayer;
 	
 	//engine.cameraOrbit = new THREE.OrbitControls(engine.camera);

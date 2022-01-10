@@ -34,7 +34,7 @@ var resizeWindow = function()
 	}
 	if(engine.composer)
 	{
-		initRenderer();
+		engine.composer.setSize(window.innerWidth,window.innerHeight);
 	}
 };
 
@@ -57,9 +57,84 @@ window.initRenderer = function()
 	if(Detector.webgl)
 	{
 		engine.renderer = new THREE.WebGLRenderer({ 
-			antialias: settings.ANTIALIAS,
+			antialias: settings.ANTIALIAS && !settings.POSTPROCESSING,
 		});
 		engine.usingWebgl = true;
+		if(settings.POSTPROCESSING)
+		{
+			if(!THREE.EffectComposer)
+			{
+				engine.console.print("Loading post-processing composer...\n");
+				include("scripts/lib/PostProcessing/EffectComposer.js", initRenderer);
+				return;
+			}
+			if(!THREE.ShaderPass)
+			{
+				engine.console.print("Loading post-processing shader pass...\n");
+				include("scripts/lib/PostProcessing/ShaderPass.js", initRenderer);
+				return;
+			}
+			if(!THREE.RenderPass)
+			{
+				engine.console.print("Loading post-processing render pass...\n");
+				include("scripts/lib/PostProcessing/RenderPass.js", initRenderer);
+				return;
+			}
+			if( settings.POSTPROCESSING_FXAA && !THREE.FXAAShader )
+			{
+				engine.console.print("Loading FXAA Shader...\n");
+				include("scripts/lib/PostProcessing/FXAAShader.js", initRenderer);
+				return;
+			}
+			if( settings.POSTPROCESSING_BLOOM && !THREE.UnrealBloomPass )
+			{
+				engine.console.print("Loading post-processing bloom pass...\n");
+				include("scripts/lib/PostProcessing/UnrealBloomPass.js", initRenderer);
+				return;
+			}
+			
+			engine.composer = new THREE.EffectComposer( engine.renderer );
+			engine.composer.addRenderPass = function()
+			{
+				if( engine.composer.passes[0] instanceof THREE.RenderPass )
+				{
+					engine.composer.passes[0].scene = engine.scene;
+					engine.composer.passes[0].camera = engine.camera;
+				}
+				else
+				{
+					engine.composer.passes.unshift( new THREE.RenderPass( engine.scene, engine.camera ) )
+				}
+				
+				if(engine.composer.bokeh)
+				{
+					engine.composer.bokeh.scene = engine.scene;
+					engine.composer.bokeh.camera = engine.camera;
+				}
+				
+			};
+			if( engine.scene && engine.camera )
+			{
+				engine.composer.addRenderPass();
+			}
+			
+			if( settings.POSTPROCESSING_BLOOM )
+			{
+				engine.composer.bloom = new THREE.UnrealBloomPass( { x: window.innerWidth, y: window.innerHeight } );
+				engine.composer.addPass( engine.composer.bloom );
+				
+				engine.composer.bloom.threshold = 0.1;
+				engine.composer.bloom.strength = 0.5;
+				engine.composer.bloom.radius = 0;
+			}
+			
+			if( settings.POSTPROCESSING_FXAA )
+			{
+				engine.composer.addPass( new THREE.ShaderPass( THREE.FXAAShader ) );
+			}
+			
+			engine.usingPostProcessing = true;
+		}
 	}
 	else
 	{
@@ -86,6 +161,7 @@ window.init = function()
 	loadTextures();
 	window.addEventListener('touchstart',touchControl);
 	window.addEventListener('resize',resizeWindow);
+	window.addEventListener("resize",function() { if(engine.composer) initRenderer(); } );
 }
 
 

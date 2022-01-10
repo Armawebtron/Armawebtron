@@ -208,7 +208,12 @@ global.Setting = Setting;
 	Setting.new({ name: "CAMERA_CUSTOM_OFFSET_FROMSPEED", val: 0.1 });
 
 	// graphical quality and settings
-	Setting.new({ name: "ANTIALIAS", val: true, callback: function() { initRenderer(); } });
+	var renderSettingChanged = function() { if(window.initRenderer) initRenderer(); };
+	Setting.new({ name: "ANTIALIAS", val: true, callback: renderSettingChanged });
+	Setting.new({ name: "POSTPROCESSING", val: false, callback: renderSettingChanged });
+	Setting.new({ name: "POSTPROCESSING_BLOOM", val: true, callback: renderSettingChanged });
+	Setting.new({ name: "POSTPROCESSING_DEPTH", val: false, callback: renderSettingChanged });
+	Setting.new({ name: "POSTPROCESSING_FXAA", val: true, callback: renderSettingChanged });
 	
 	Setting.new({ name: "GRID_SIZE", val: 1 });
 	/*Setting.new({ name: "FLOOR_RED", val: 0.75 });

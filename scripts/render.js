@@ -300,10 +300,12 @@ function draw()
 	if(engine.audio) engine.audio.audioMixing();
 	
 	//renderer switch for post processing
-	if (engine.usingPostProcessing) {
+	if (engine.usingPostProcessing)
+	{
 		engine.composer.render();//new render? for post processing
 	}
-	else {
+	else
+	{
 		engine.renderer.render(engine.scene, engine.camera);
 	}
 	engine.framesCount++;
