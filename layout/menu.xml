@@ -197,7 +197,7 @@
 			<Item type="list" var="POSTPROCESSING_FXAA" text="FXAA Anti-aliasing" if="settings.POSTPROCESSING">
 				<Option value="false" text="Off" /> <Option value="true" text="On" />
 			</Item>
-			<Item type="list" var="POSTPROCESSING" text="Bloom effect" if="settings.POSTPROCESSING">
+			<Item type="list" var="POSTPROCESSING_BLOOM" text="Bloom effect" if="settings.POSTPROCESSING">
 				<Option value="false" text="Off" /> <Option value="true" text="On" />
 			</Item>
 			<Item type="list" var="HIGH_RIM" text="High Rims">
