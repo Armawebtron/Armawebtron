@@ -382,7 +382,6 @@ function menu(act,from=false)
 		engine.menus.splice(engine.menus.length-1,1);
 		var themenu = document.getElementById('menuList').childNodes;
 		//detect menu position
-		var selectedItem = -1;
 		for(var x=0;x<themenu.length;x++)
 		{
 			if(hasClass(themenu[x],'menu-active')) selectedItem = x; //find which one is selected
@@ -494,7 +493,7 @@ function menu(act,from=false)
 								if(exitmenu == themenu[x].id) selectedItem = x;
 							}
 						}
-						else if(dynamic)
+						if(dynamic)
 						{
 							var themenu = document.getElementById('menuList').childNodes;
 							for(var x=0;x<themenu.length;x++)
@@ -502,7 +501,10 @@ function menu(act,from=false)
 								if(dynamic == themenu[x].id)
 								{
 									themenu[x].style.color = "#ff8800";
-									selectedItem = x;
+									if( ract != "reload" && ract != "exitmenu" )
+									{
+										selectedItem = x;
+									}
 								}
 							}
 						}
