@@ -1078,11 +1078,9 @@ class ServerClient3dc
 		this.server.clients.splice(id,1);
 		engine.console.print("User "+this.netid+" disconnected: "+this.r.connection.remoteAddress+"\n",false);
 		
-		if(window.svr.clients.length == 0)
+		if( window.svr.clients.length == 0 && global.serverSleep )
 		{
-			settings.players.splice(0);
-			roundEndForce();
-			engine.console.print("Nobody online, sleeping...\n");
+			global.serverSleep();
 		}
 		this.netid = -1;
 	}
