@@ -242,12 +242,24 @@ global.getDarkBGFromHex = function(hex)
 		return "none";
 }
 
+global.getColorRegex = function()
+{
+	if(settings.VERIFY_COLOR_STRICT)
+	{
+		return /0x([0-9A-Fa-f]{6}|RESETT)(.*?)(?=0x(?:[0-9A-Fa-f]{6}|RESETT)|$)/gm;
+	}
+	else
+	{
+		return /0x(.{6})(.*?)(?=0x(?:.{6})|$)/gm;
+	}
+}
+
 global.replaceColors = function(str,stripCodes=true) //! Get HTML for Armagetron color codes
 {
 	if(typeof(str) == "undefined") return typeof(str);
 	var dark = "class=darktext";
 	//Capitals are allowed because the processes here can handle them
-	str = str.replace(settings.VERIFY_COLOR_STRICT?/0x([0-9A-Fa-f]{6}|RESETT)(.*?)(?=0x(?:[0-9A-Fa-f]{6}|RESETT)|$)/gm : /0x(.{6})(.*?)(?=0x(?:.{6})|$)/gm, 
+	str = str.replace(getColorRegex(), 
 		function(x)
 		{
 			if(x.substr(2,6) == "RESETT")
@@ -258,11 +270,11 @@ global.replaceColors = function(str,stripCodes=true) //! Get HTML for Armagetron
 			{
 				//var darkI1="class=lighttext";
 				var darkI1="";
-				var r=parseInt(x[2]+x[3],16),g=parseInt(x[4]+x[5],16),b=parseInt(x[6]+x[7],16);
-				//NOTE: unless using regex, javascript only replaces the first occurance
-				if(isNaN(r)){if(isNaN(parseInt(x[2],16)))x=x.replace(x[2],"0");if(isNaN(parseInt(x[3],16)))x=x.replace(x[3],"0");r=parseInt(x[2]+x[3],16)}
-				if(isNaN(g)){if(isNaN(parseInt(x[4],16)))x=x.replace(x[4],"0");if(isNaN(parseInt(x[5],16)))x=x.replace(x[5],"0");g=parseInt(x[4]+x[5],16)}
-				if(isNaN(b)){if(isNaN(parseInt(x[6],16)))x=x.replace(x[6],"0");if(isNaN(parseInt(x[7],16)))x=x.replace(x[7],"0");b=parseInt(x[6]+x[7],16)}
+				
+				var r = ((hexdec(x[2]+'0')||0)+(hexdec(x[3])||0)),
+					g = ((hexdec(x[4]+'0')||0)+(hexdec(x[5])||0)),
+					b = ((hexdec(x[6]+'0')||0)+(hexdec(x[7])||0));
+				
 				if(colorIsDark(r,g,b))
 				{
 					if(settings.TEXT_DARK_HIGHLIGHT)
@@ -290,7 +302,8 @@ global.replaceColors = function(str,stripCodes=true) //! Get HTML for Armagetron
 
 global.removeColors = function(str)
 {
-	return str.replace(settings.VERIFY_COLOR_STRICT?/0x([0-9A-Fa-f]{6}|RESETT)(.*?)(?=0x(?:[0-9A-Fa-f]{6}|RESETT)|$)/gm : /0x(.{6})(.*?)(?=0x(?:.{6})|$)/gm,function(x){return x.substr(8)});
+	return str.replace(getColorRegex(),function(x){return x.substr(8)});
+}
 }
 
 global.guessColor = function($hexCycle,$hexTrail) //! will hopefully find the best result matching both colors...
