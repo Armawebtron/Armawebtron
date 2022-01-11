@@ -36,6 +36,12 @@ var resizeWindow = function()
 	{
 		engine.composer.setSize(window.innerWidth,window.innerHeight);
 	}
+	if(engine.extraCanvas)
+	{
+		engine.extraCanvas.width = window.innerWidth;
+		engine.extraCanvas.height = window.innerHeight;
+		engine.extraCanvas.ctx = engine.extraCanvas.getContext("2d");
+	}
 };
 
 var sfC = {getMaxAnisotropy:function(){return 1;}};
@@ -155,6 +161,7 @@ window.init = function()
 	window.onbeforeunload = saveusercfg;
 	engine.scene = new THREE.Scene();
 	if(engine.dedicated) return;
+	engine.extraCanvas = document.getElementById("extraCanvas");
 	initRenderer();
 	if(!engine.audio && settings.SOUND_QUALITY > 0) try { initSound(); }
 	catch(e) { console.error(e); alert("Sound could not be initialized!"); }

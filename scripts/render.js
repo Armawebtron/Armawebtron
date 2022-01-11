@@ -103,7 +103,9 @@ function draw()
 	//updateHUD("current_framerate_now",1000/delta);
 	updateHUD("current_frametime",delta);
 	var timeElapsed = (timenow - engine.timeStart)-engine.totalPauseTime-4000;
-		
+	
+	if(engine.extraCanvas) engine.extraCanvas.ctx.clearRect(0, 0, engine.extraCanvas.width, engine.extraCanvas.height);
+	
 	if(engine.zones) for(var x=engine.zones.children.length-1;x>=0;--x)
 	{
 		//zones spin
@@ -296,6 +298,52 @@ function draw()
 	
 	/*if(engine.players[engine.viewTarget].alive)*/ 
 	cameraView(cycle,frametime*engine.timemult);
+	
+	if( settings.FADEOUT_NAME_DELAY >= 0 && engine.extraCanvas )
+	{
+		var hW = engine.extraCanvas.width/2;
+		var hH = engine.extraCanvas.height/2;
+		
+		for(var x=engine.players.length;x>=0;--x) if(engine.players[x])
+		{
+			if(x == engine.activePlayer) continue;
+			
+			var cycle = engine.players[x];
+			if(!cycle.alive) continue;
+			
+			var pos = cycle.position.clone();
+			
+			var screenPos = new THREE.Matrix4();
+			screenPos.multiplyMatrices( engine.camera.projectionMatrix, engine.camera.matrixWorldInverse );
+			pos.applyMatrix4( screenPos );
+			
+			if( pos.x > -1 && pos.x < 1 && pos.y > -1 && pos.y < 1 )
+			{
+				if( !cycle.textVisible )
+				{
+					cycle.textVisible = ( performance.now() / 1000);
+				}
+			}
+			else
+			{
+				cycle.textVisible = false;
+			}
+			
+			if( cycle.textVisible && ( cycle.textVisible + settings.FADEOUT_NAME_DELAY ) > ( performance.now() / 1000) )
+			{
+				var alpha = ( cycle.textVisible + settings.FADEOUT_NAME_DELAY - 1 ) - ( performance.now() / 1000);
+				if( alpha > 1 ) alpha = 1;
+				if( alpha < 0 ) alpha = 0;
+				
+				engine.extraCanvas.ctx.font = "16px Armagetronad";
+				engine.extraCanvas.ctx.textAlign = "center";
+				engine.extraCanvas.ctx.renderColorText(
+					cycle.getColoredName(), 
+					(hW*(pos.x+1)), ((hH*(-pos.y+1))-24),
+					1, 1, 1, alpha);
+			}
+		}
+	}
 	
 	if(engine.audio) engine.audio.audioMixing();
 	

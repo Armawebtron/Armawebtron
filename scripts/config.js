@@ -207,6 +207,8 @@ global.Setting = Setting;
 	Setting.new({ name: "CAMERA_CUSTOM_OFFSET", val: 3 });
 	Setting.new({ name: "CAMERA_CUSTOM_OFFSET_FROMSPEED", val: 0.1 });
 
+	Setting.new({ name: "FADEOUT_NAME_DELAY", val: 5 });
+
 	// graphical quality and settings
 	var renderSettingChanged = function() { if(window.initRenderer) initRenderer(); };
 	Setting.new({ name: "ANTIALIAS", val: true, callback: renderSettingChanged });
