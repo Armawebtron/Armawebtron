@@ -146,6 +146,7 @@ function menuFindNextSelectable()
 
 function hoverSelect(item) 
 { 
+	if(!item) return;
 	var themenu = document.getElementById('menuList').childNodes;
 	for(var x=0;x<themenu.length;x++)
 	{
