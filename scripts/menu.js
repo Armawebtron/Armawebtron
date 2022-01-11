@@ -49,7 +49,7 @@ function changeMenuItem(name,add,wrap=false,from=false,ref=false)
 		if(value > actmenu.max) if(wrap) value = actmenu.min; else value = actmenu.max;
 		if(value < actmenu.min) if(wrap) value = actmenu.max; else value = actmenu.min;
 		elem.innerText = value;
-		chsetting(actsp[1],value);
+		chsetting(actsp[1],value,true);
 	}
 }
 
@@ -291,6 +291,7 @@ function parseItem(cmenu,item)
 					if(item.attributes.add) add = item.attributes.add.value;
 					else add = 1;
 					parent.min = min; parent.max = max; parent.add = add;
+					input.setAttribute("oninput","chsetting(\""+item.attributes.var.value+"\",this.innerText,true)");
 					break;
 				case "color":
 					//input.style.color=input.innerText;
