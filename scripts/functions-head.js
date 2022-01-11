@@ -304,6 +304,78 @@ global.removeColors = function(str)
 {
 	return str.replace(getColorRegex(),function(x){return x.substr(8)});
 }
+
+if(typeof(CanvasRenderingContext2D) !== "undefined")
+{
+	CanvasRenderingContext2D.prototype.renderColorText = function(text, x, y, br=1, bg=1, bb=1, a=1)
+	{
+		text = ""+text;
+		
+		// FIXME: right now, this function just abuses the fact
+		// that the standard font is monospace
+		
+		var tmp = new Array(removeColors(text).length);
+		
+		var fillStyle = this.fillStyle,
+			shadowBlur = this.shadowBlur,
+			shadowColor = this.shadowColor;
+		
+		var i = 0;
+		var e, reg = getColorRegex();
+		
+		while((e=reg.exec(text)))
+		{
+			tmp.fill(' ');
+			
+			var r = 255, g = 255, b = 255;
+			if(e[1] != "RESETT")
+			{
+				r = ((hexdec(e[0][2]+'0')||0)+(hexdec(e[0][3])||0));
+				g = ((hexdec(e[0][4]+'0')||0)+(hexdec(e[0][5])||0));
+				b = ((hexdec(e[0][6]+'0')||0)+(hexdec(e[0][7])||0));
+			}
+			
+			this.shadowBlur = shadowBlur;
+			this.shadowColor = shadowColor;
+			
+			if(colorIsDark(r,g,b))
+			{
+				if(settings.TEXT_DARK_HIGHLIGHT)
+				{
+					this.shadowBlur = 6;
+					this.shadowColor = "white";
+				}
+				if(settings.TEXT_BRIGHTEN)
+				{
+					if(r < settings.FONT_MIN_R) r += settings.FONT_MIN_R;
+					if(g < settings.FONT_MIN_G) g += settings.FONT_MIN_G;
+					if(b < settings.FONT_MIN_B) b += settings.FONT_MIN_B;
+					if(colorIsDark(r,g,b))
+					{
+						r += settings.FONT_MIN_TOTAL/3;
+						g += settings.FONT_MIN_TOTAL/3;
+						b += settings.FONT_MIN_TOTAL/3;
+					}
+				}
+			}
+			
+			this.fillStyle = "rgba("+(r*br)+", "+(g*bg)+", "+(b*bb)+", "+a+")";
+			
+			var arg = [ i, e[2].length ];
+			Array.prototype.push.apply(arg, (e[2]).split(""));
+			Array.prototype.splice.apply(tmp, arg);
+			
+			//console.log( tmp.join(""), e.index, reg.lastIndex, i );
+			
+			i += e[2].length;
+			
+			this.fillText(tmp.join(""), x, y);
+		}
+		
+		this.fillStyle = fillStyle;
+		this.shadowBlur = shadowBlur;
+		this.shadowColor = shadowColor;
+	};
 }
 
 global.guessColor = function($hexCycle,$hexTrail) //! will hopefully find the best result matching both colors...
