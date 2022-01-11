@@ -234,8 +234,8 @@ global.Setting = Setting;
 	Setting.new({ name: "FLOOR_BLUE", val: 0.35 });
 	Setting.new({ name: "FLOOR_TEXTURE", val: "textures/aaold/floor.png" });*/
 	
-	Setting.new({ name: "FLOOR_MIRROR", val: false });
-	Setting.new({ name: "FLOOR_MIRROR_INT", val: 1 });
+	Setting.new({ name: "FLOOR_MIRROR", val: false, callback: updategrid });
+	Setting.new({ name: "FLOOR_MIRROR_INT", val: 0.05, callback: updategrid });
 	
 	Setting.new({ name: "FLOOR_DETAIL", val: 3 }); // 0=off, 1=line, 2=good, 3=best
 	

@@ -99,7 +99,28 @@ window.buildGrid = function()
 			
 			var color = new THREE.Color(settings.FLOOR_RED,settings.FLOOR_GREEN,settings.FLOOR_BLUE);
 			var floorMaterial = new THREE.MeshBasicMaterial( { color:color, map: floorTexture,/* transparent: settings.ALPHA_BLEND /*, side: THREE.DoubleSide*/} );
-
+			
+			if(settings.FLOOR_MIRROR)
+			{
+				engine.grid.mirror = new THREE.Reflector( (new THREE.PlaneGeometry( logicalWidth, logicalHeight )), {
+					clipBias: 0.003,
+					textureWidth: window.innerWidth,
+					textureHeight: window.innerHeight,
+					color: 0x777777
+				} );
+				
+				engine.grid.mirror.position.set(
+					engine.logicalBox.center.x * engine.REAL_ARENA_SIZE_FACTOR, 
+					engine.logicalBox.center.y * engine.REAL_ARENA_SIZE_FACTOR, 
+					-0.025
+				);
+				
+				floorMaterial.transparent = true;
+				floorMaterial.opacity = 1-settings.FLOOR_MIRROR_INT;
+				
+				engine.grid.add(engine.grid.mirror);
+			}
+			
 			
 			floorMaterial.needsUpdate = true;//is this needed?
 			var floorGeometry = new THREE.PlaneBufferGeometry(logicalWidth*settings.GRID_SIZE,logicalHeight*settings.GRID_SIZE,1,1);
@@ -110,17 +131,6 @@ window.buildGrid = function()
 			//grid_object.scale.set(settings.GRID_SIZE,settings.GRID_SIZE,1);
 			//console.log("gridx: "+grid_object.position.x+"  gridy: "+grid_object.position.y);
 			grid_object.geometry.dynamic = true;//is this needed?
-			
-			if(settings.FLOOR_MIRROR)
-			{
-				engine.grid.mirror = grid_object.clone();
-				engine.grid.mirror.position.z -= 1/100;
-				engine.grid.reflection = new THREE.CubeCamera(0.01,100000,128);
-				engine.scene.add(engine.grid.reflection);
-				floorMaterial.envMap = engine.grid.reflection.renderTarget;
-				engine.grid.reflection.position.copy(grid_object.position);
-				//engine.grid.reflection.position.z = -250;
-			}
 		}
 		grid_object.position.z = -2/100;//move down 2/100 units for render glitch
 	}
