@@ -120,6 +120,7 @@ function draw()
 		}
 	}
 	
+	var soundEnabled = ( engine.audio && engine.audio.destination.numberOfOutputs > 0 );
 	for(var x=engine.players.length-1;x>=0;x--) if(engine.players[x] !== undefined)
 	{ //cycle un-tilting
 		var cycle=engine.players[x];
@@ -147,7 +148,10 @@ function draw()
 			cycle.model.children[2].rotation.y += (deg2rad(cycle.model.rotaon.back * cycle.speed) * frametime);
 		}
 		//sound
-		if(engine.audio) engine.audio.mixCycle(cycle);
+		if( soundEnabled )
+		{
+			engine.audio.mixCycle(cycle);
+		}
 	}
 	
 	if(settings.WALLS_STAY_UP_DELAY >= 0)
