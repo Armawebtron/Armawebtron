@@ -86,6 +86,8 @@ engine.audio.toggleSoundType = function() //safely changes the sound panners in 
 engine.audio.posMult = 0.2;
 engine.audio.mixCycle = function(cycle)
 {
+	if(!cycle.alive) return;
+	
 	if(cycle.engineSound !== undefined)
 	{
 		cycle.engineSound.playbackRate.value = cycle.speed / settings.CYCLE_SOUND_SPEED;
