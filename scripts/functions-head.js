@@ -468,7 +468,7 @@ global.colorStr = function(c,b="#")
 		case "number":
 			var color = c.toString(16);
 			color = ("0".repeat(6-color.length))+color;
-			return b+color+this.name;
+			return b+color;
 		default:
 			console.warn("Can't get color");
 			return b+"ffffff";
