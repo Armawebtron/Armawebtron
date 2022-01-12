@@ -106,7 +106,7 @@ function draw()
 	
 	if(engine.extraCanvas) engine.extraCanvas.ctx.clearRect(0, 0, engine.extraCanvas.width, engine.extraCanvas.height);
 	
-	if(engine.zones) for(var x=engine.zones.children.length-1;x>=0;--x)
+	if(engine.zones && engine.gtime > 0) for(var x=engine.zones.children.length-1;x>=0;--x)
 	{
 		//zones spin
 		switch(settings.ZONE_RENDER_TYPE)
