@@ -303,10 +303,12 @@ function draw()
 	/*if(engine.players[engine.viewTarget].alive)*/ 
 	cameraView(cycle,frametime*engine.timemult);
 	
-	if( settings.FADEOUT_NAME_DELAY >= 0 && engine.extraCanvas )
+	if( engine.extraCanvas )
 	{
 		var hW = engine.extraCanvas.width/2;
 		var hH = engine.extraCanvas.height/2;
+		
+		var xdir, ydir;
 		
 		for(var x=engine.players.length;x>=0;--x) if(engine.players[x])
 		{
@@ -317,9 +319,16 @@ function draw()
 			
 			var pos = cycle.position.clone();
 			
+			// so the tilting doesn't affect the name position
+			xdir = cycle.rotation.x; ydir = cycle.rotation.y;
+			cycle.rotation.x = cycle.rotation.y = 0;
+			
 			var screenPos = new THREE.Matrix4();
 			screenPos.multiplyMatrices( engine.camera.projectionMatrix, engine.camera.matrixWorldInverse );
 			pos.applyMatrix4( screenPos );
+			
+			// store the rotation
+			cycle.rotation.x = xdir; cycle.rotation.y = ydir;
 			
 			if( pos.x > -1 && pos.x < 1 && pos.y > -1 && pos.y < 1 )
 			{
@@ -333,18 +342,25 @@ function draw()
 				cycle.textVisible = false;
 			}
 			
-			if( cycle.textVisible && ( cycle.textVisible + settings.FADEOUT_NAME_DELAY ) > ( performance.now() / 1000) )
+			if( cycle.textVisible && ( settings.FADEOUT_NAME_DELAY < 0 || ( cycle.textVisible + settings.FADEOUT_NAME_DELAY ) > ( performance.now() / 1000) ) )
 			{
-				var alpha = ( cycle.textVisible + settings.FADEOUT_NAME_DELAY - 1 ) - ( performance.now() / 1000);
+				var alpha = 1;
+				if( settings.FADEOUT_NAME_DELAY > 0 )
+					alpha = ( cycle.textVisible + settings.FADEOUT_NAME_DELAY - 1 ) - ( performance.now() / 1000);
 				if( alpha > 1 ) alpha = 1;
 				if( alpha < 0 ) alpha = 0;
 				
+				// nothing to draw...
+				if( alpha == 0 ) continue;
+				
 				engine.extraCanvas.ctx.font = "16px Armagetronad";
 				engine.extraCanvas.ctx.textAlign = "center";
+				
 				engine.extraCanvas.ctx.renderColorText(
 					cycle.getColoredName(), 
-					(hW*(pos.x+1)), ((hH*(-pos.y+1))-24),
-					1, 1, 1, alpha);
+					(hW*((1.03*pos.x)+1)), ((hH*(-(0.975*pos.y)+1))-28),
+					1, 1, 1, alpha
+				);
 			}
 		}
 	}
