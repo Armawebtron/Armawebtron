@@ -452,6 +452,7 @@ updateHUD.failed = {};
 
 function draw2d_canvas() //TODO: have an svg output option
 {
+	var timeStart = performance.now();
 	var canvas = document.getElementById("canvas");
 	if(!canvas) return;
 	var ctx = canvas.getContext("2d");
@@ -548,7 +549,11 @@ function draw2d_canvas() //TODO: have an svg output option
 			}
 		}
 	}
-	draw2dmap = true;
+	var impact = performance.now() - timeStart;
+	if(impact > 1)
+		setTimeout(function(){draw2dmap = true;}, impact*5);
+	else
+		draw2dmap = true;
 }
 
 
