@@ -252,7 +252,7 @@ function buildWall(pointArray, height) {//builds a single <Wall> tag
 
 		if(engine.usingWebgl) 
 		{
-			var maxAnisotropy = engine.renderer.getMaxAnisotropy();
+			var maxAnisotropy = engine.renderer.capabilities.getMaxAnisotropy();
 			wallTexture.anisotropy = maxAnisotropy;
 		}
 		
