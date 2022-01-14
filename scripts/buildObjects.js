@@ -32,6 +32,9 @@ function loadTextures()
 	engine.textures.cycle_body = new THREE.TextureLoader().load(relPath(settings.CYCLE_TEXTURES[0],"images"));
 	engine.textures.cycle_wheel = new THREE.TextureLoader().load(relPath(settings.CYCLE_TEXTURES[1],"images"))
 	engine.textures.cycle_shadow = new THREE.TextureLoader().load('images/textures/shadow.png')
+	
+	engine.textures.particle = new THREE.TextureLoader().load("images/textures/particle.png");
+	engine.textures.circleExpl = new THREE.TextureLoader().load("images/textures/explosion.png");
 }
 
 //GRID
@@ -699,12 +702,6 @@ class cycleWall
 
 function lineExplosion(pos,color1=0xffffff,color2=color1)
 {
-	if(typeof(pos) != "object") pos = {x:0,y:0,z:0};
-	else if(typeof(pos.x) == "undefined") pos.x = 0;
-	else if(typeof(pos.y) == "undefined") pos.y = 0;
-	else if(typeof(pos.z) == "undefined") pos.z = 0;
-	if(!settings.EXPLOSIONS) return false;
-	
 	var group = new THREE.Group();
 	
 	var expvec = [
@@ -751,13 +748,100 @@ function lineExplosion(pos,color1=0xffffff,color2=color1)
 		line.position.set(pos.x,pos.y,pos.z); line.scale.set(0,0,0);
 		group.add(line);
 	}
+	group.explType = 0;
 	engine.expl.push(group);
 	engine.scene.add(group);
 }
 function zmanCircleExplosion(pos,color1=0xffffff,color2=color1)
 {
+	var texture = new THREE.MeshBasicMaterial({
+		color: 0xFFFFFF,
+		map: engine.textures.circleExpl,
+		transparent: settings.ALPHA_BLEND,
+		opacity: 1,
+	});
 	
+	var obj = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), texture );
+	obj.position.set(pos.x, pos.y, pos.z);
+	
+	obj.explType = 1;
+	engine.expl.push(obj);
+	engine.scene.add(obj);
+}
+function particleExplosion(pos,color1=0xffffff,color2=color1)
+{
+	var useImage = (settings.ALPHA_BLEND && engine.textures.particle.image);
+	
+	var color = new THREE.Color(color1);
+	color.r += 0.1;
+	color.g += 0.1;
+	color.b += 0.1;
+	
+	var matSettings = {
+		color: color,
+		size: useImage?0.4:0.15,
+		map: useImage?engine.textures.particle:undefined,
+		transparent: settings.ALPHA_BLEND,
+		blending: THREE.AdditiveBlending,
+		opacity: 1,
+		depthWrite: false,
+	};
+	
+	var particleCount = 1000/2;
+	
+	for(var i=2;i>0;--i)
+	{
+		//particleCount = 1000+Math.ceil(5000*Math.random());
+		
+		var particles = new THREE.Geometry();
+		var pMaterial = new THREE.PointsMaterial(matSettings);
+		
+		for(var p=particleCount-1;p>=0;--p)
+		{
+			var particle = new THREE.Vector3(pos.x, pos.y, pos.z);
+			//particle.xdir = Math.random()*40-20;
+			//particle.ydir = Math.random()*40-20;
+			particle.zdir = Math.random()*33;
+			var rad = Math.random()*pi(2);
+			particle.xdir = Math.cos(rad)*(Math.random()*40);
+			particle.ydir = Math.sin(rad)*(Math.random()*40);
+			//particle.zdir = 160/pointDistance(0, 0, particle.xdir, particle.ydir);
+			particles.vertices.push(particle);
+		}
+		
+		particleSystem = new THREE.Points(particles, pMaterial);
+		
+		particles.computeBoundingSphere();
+		particles.boundingSphere.radius = 160;
+		
+		particleSystem.explType = 2;
+		
+		engine.expl.push(particleSystem);
+		engine.scene.add(particleSystem);
+		
+		if(i == 2)
+		{
+			matSettings.color = new THREE.Color(color2);
+			color.r += 0.1;
+			color.g += 0.1;
+			color.b += 0.1;
+		}
+	}
 }
 
-spawnExplosion = lineExplosion;
-//spawnExplosion = zmanCircleExplosion;
+window.spawnExplosion = function(pos,color1=0xffffff,color2=color1)
+{
+	if(!settings.EXPLOSIONS) return false;
+	
+	if(typeof(pos) != "object") pos = {x:0,y:0,z:0};
+	else if(typeof(pos.x) == "undefined") pos.x = 0;
+	else if(typeof(pos.y) == "undefined") pos.y = 0;
+	else if(typeof(pos.z) == "undefined") pos.z = 0;
+	
+	switch(settings.EXPLOSION_TYPE)
+	{
+		case 0: lineExplosion(pos, color1, color2); break;
+		case 1: zmanCircleExplosion(pos, color1, color2); break;
+		case 2: particleExplosion(pos, color1, color2); break;
+	}
+};

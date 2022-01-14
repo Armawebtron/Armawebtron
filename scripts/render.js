@@ -174,6 +174,9 @@ function draw()
 	
 	for(var x=engine.expl.length-1;x>=0;x--)
 	{
+	switch(engine.expl[x].explType)
+	{
+	case 0:
 		if(engine.expl[x].children[0].material.opacity <= 0)
 		{
 			engine.scene.remove(engine.expl[x]);
@@ -186,8 +189,79 @@ function draw()
 			if(engine.expl[x].children[y].scale.z > 10)
 			{
 				engine.expl[x].children[y].material.opacity -= frametime/25;
+				if(engine.expl[x].children[y].material.opacity < 0.5 && engine.expl[x].children[y].material.opacity > 0)
+				{
+					var s = Math.round(1/engine.expl[x].children[y].material.opacity);
+					engine.expl[x].visible = engine.framesCount%s;
+				}
 			}
 		}
+		break;
+	
+	case 1:
+		if(engine.expl[x].material.opacity <= 0)
+		{
+			engine.scene.remove(engine.expl[x]);
+			engine.expl.splice(x,1);
+		}
+		else
+		{
+			engine.expl[x].material.opacity -= frametime;
+			
+			engine.expl[x].scale.x += frametime*8;
+			engine.expl[x].scale.y += frametime*8;
+			
+			engine.expl[x].rotation.x = engine.camera.rotation.x;
+			engine.expl[x].rotation.y = engine.camera.rotation.z;
+			engine.expl[x].rotation.z = engine.camera.rotation.y;
+		}
+		break;
+	
+	case 2:
+		var updated = 0;
+		for(var y=engine.expl[x].geometry.vertices.length-1;y>=0;--y)
+		{
+			var particle = engine.expl[x].geometry.vertices[y];
+			particle.x += particle.xdir*frametime;
+			particle.y += particle.ydir*frametime;
+			particle.z += particle.zdir*frametime;
+			
+			particle.xdir -= particle.xdir*0.20*frametime;
+			particle.ydir -= particle.ydir*0.20*frametime;
+			particle.zdir -= frametime*50;
+			
+			if(particle.z <= 0)
+			{
+				if(Math.abs(particle.zdir) > 18)
+				{
+					particle.zdir *= -0.85;
+					++updated;
+				}
+				else
+				{
+					particle.xdir = 0;
+					particle.ydir = 0;
+					particle.zdir = 0;
+					particle.z = -1000;
+				}
+			}
+			else
+			{
+				++updated;
+			}
+		}
+		
+		if(updated > 0)
+		{
+			engine.expl[x].geometry.verticesNeedUpdate = true;
+		}
+		else
+		{
+			engine.scene.remove(engine.expl[x]);
+			engine.expl.splice(x, 1);
+		}
+		
+		break;
 	}
 	
 	if(settings.FLOOR_MIRROR && typeof(engine.grid.reflection) != "undefined")
@@ -550,6 +624,9 @@ function draw2d_canvas() //TODO: have an svg output option
 	lw *= 0.7;
 	for(var x=engine.expl.length-1;x>=0;x--)
 	{
+	switch(engine.expl[x].explType)
+	{
+	case 0:
 		ctx.lineWidth = lw*engine.expl[x].children[0].material.opacity;
 		if(ctx.lineWidth > 0)
 		{
@@ -568,6 +645,25 @@ function draw2d_canvas() //TODO: have an svg output option
 				ctx.stroke();
 			}
 		}
+		break
+	
+	case 2:
+		var color = engine.expl[x].material.color;
+		ctx.fillStyle = "rgba("+(color.r*255)+","+(color.g*255)+","+(color.b*255)+", 0.25)";
+		for(var y=engine.expl[x].geometry.vertices.length-1;y>=0;--y)
+		{
+			if(engine.expl[x].geometry.vertices[y].z < 0) continue;
+			/*
+			ctx.beginPath();
+			ctx.arc(engine.expl[x].geometry.vertices[y].x-ax,engine.expl[x].geometry.vertices[y].y-ay, (engine.expl[x].geometry.vertices[y].z*ctx.lineWidth)/10, 0,Math.PI*2);
+			ctx.fill();
+			*/
+			
+			var z = ((engine.expl[x].geometry.vertices[y].z*ctx.lineWidth)/10)*2;
+			ctx.fillRect(engine.expl[x].geometry.vertices[y].x-ax,engine.expl[x].geometry.vertices[y].y-ay,z,z);
+		}
+		break;
+	}
 	}
 	var impact = performance.now() - timeStart;
 	if(impact > 1)

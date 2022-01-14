@@ -244,6 +244,7 @@ global.Setting = Setting;
 	Setting.new({ name: "CYCLE_TEXTURES", val: ["textures/cycle_body.png","textures/cycle_wheel.png"] });
 	
 	Setting.new({ name: "EXPLOSIONS", val: true });
+	Setting.new({ name: "EXPLOSION_TYPE", type: "int", val: 2, min: 0, max: 2 });
 	Setting.new({ name: "HIGH_RIM", val: true });
 	Setting.new({ name: "HIGH_RIM_HEIGHT", val: 50 });
 	Setting.new({ name: "LOW_RIM_HEIGHT", val: 4 });
