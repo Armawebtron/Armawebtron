@@ -263,12 +263,6 @@ function draw()
 		
 		break;
 	}
-	
-	if(settings.FLOOR_MIRROR && typeof(engine.grid.reflection) != "undefined")
-	{
-		engine.grid.visible = false;
-		engine.grid.reflection.update(engine.renderer,engine.scene);
-		engine.grid.visible = true;
 	}
 	
 	if(settings.RIM_WALL_COLOR_MODE == 3)
