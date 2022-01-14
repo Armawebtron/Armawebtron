@@ -160,6 +160,7 @@ window.init = function()
 	loadsettingcfgs();
 	window.onbeforeunload = saveusercfg;
 	engine.scene = new THREE.Scene();
+	game.verifyMap(engine.mapString, function(){});
 	if(engine.dedicated) return;
 	engine.extraCanvas = document.getElementById("extraCanvas");
 	initRenderer();

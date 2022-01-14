@@ -98,6 +98,15 @@ game.play = function()
 	}
 }
 
+function downloadMap(mapfile, onsuccess, onerror)
+{
+	engine.console.print("Downloading map from "+mapfile+"...\n",false);
+	httpGetAsync(mapfile, function(dlmap)
+	{
+		game.verifyMap(dlmap, onsuccess, onerror);
+	}, onerror);
+}
+
 function revertMap()
 {
 	if(engine.dedicated)
@@ -109,8 +118,7 @@ function revertMap()
 	else
 	{
 		var mapfile = settings.RESOURCE_REPOSITORY_CACHE+(settings.MAP_FILE.replace(/\(.+\)/,""));
-		engine.console.print("Downloading map from "+mapfile+"...\n",false);
-		httpGetAsync(mapfile,game.loadRound,function()
+		downloadMap(mapfile,game.loadRound,function()
 		{
 			engine.console.print("Unable to load map file. Ignoring for now...\n",false);
 			game.loadRound();
@@ -182,8 +190,7 @@ game.newRound = function()
 				return game.loadRound(mapData);
 		}
 		var mapfile = settings.RESOURCE_REPOSITORY_SERVER+pureName;
-		engine.console.print("Downloading map from "+mapfile+"...\n",false);
-		httpGetAsync(mapfile,game.loadRound,revertMap);
+		downloadMap(mapfile,game.loadRound,revertMap);
 	}
 	else
 	{
@@ -514,6 +521,72 @@ game.playerLeave = function(p)
 	
 	var i; for(i=engine.players.length-1;i>0;--i) { if(i in engine.players) break; } engine.players.splice(i+1); 
 }
+
+game.verifyMap = function(dlmap, onsuccess, onerror)
+{
+	engine.console.print("Verifying map file...\n",false);
+	
+	var dtd = xmlify(dlmap).firstChild.systemId;
+	if(!dtd)
+	{
+		engine.console.print("No DTD found!\n",false);
+		if(onerror) try{onerror()}catch(e){console.error(e)}
+		return false;
+	}
+	
+	if(!engine.dtds[dtd])
+	{
+		var dtddl = settings.RESOURCE_REPOSITORY_SERVER+dtd;
+		engine.console.print("Downloading dtd from "+dtddl+"...\n",false);
+		httpGetAsync(dtddl,function(d){engine.dtds[dtd]=d;game.verifyMap(dlmap, onsuccess, onerror)},onerror);
+		return null;
+	}
+	
+	// validate xml against the downloaded DTD
+	// but take away the DTD specifier, else xmllint would throw a warning about not finding it
+	var verify = xmllint.validateXML({xml:dlmap.replace(/<!DOCTYPE(.+)>/gm,""),dtd:engine.dtds[dtd]});
+	if(verify.errors)
+	{
+		var errors = 0;
+		
+		var err;
+		for(var e in verify.errors)
+		{
+			var desc = (/file_0\.xml:(\d+): (.+): /g).exec(verify.errors[e]);
+			if(desc) err = verify.errors[e].replace("file_0.xml", settings.MAP_FILE.replace(/\(.+\)/,""));
+			else err = verify.errors[e];
+			
+			if(desc)
+			{
+				if(desc[2].indexOf("error") != -1)
+				{
+					console.error(err);
+					++errors;
+				}
+				else if(desc[2].indexOf("warning") != -1)
+				{
+					console.warn(err);
+				}
+				else
+				{
+					console.info(err);
+				}
+			}
+			
+			engine.console.print(err+"\n");
+		}
+		
+		if(errors)
+		{
+			console.error("Error while checking map");
+			if(onerror) try{onerror()}catch(e){console.error(e)}
+			return false;
+		}
+	}
+	
+	try{onsuccess(dlmap)}catch(e){console.error(e)}
+	return true;
+};
 
 game.loadRound = function(dlmap)
 {
