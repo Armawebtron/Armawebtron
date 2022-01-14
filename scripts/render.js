@@ -562,7 +562,7 @@ function draw2d_canvas() //TODO: have an svg output option
 	{
 		ctx.beginPath();
 		var spl = engine.map.walls[i][engine.map.walls[i].length-1];
-		ctx.moveTo(1*spl[0],1*spl[1]);
+		ctx.moveTo(1*spl[0]-ax,1*spl[1]-ay);
 		for(var z=engine.map.walls[i].length-1;z>=0;z--)
 		{
 			var spl = engine.map.walls[i][z];
@@ -582,6 +582,7 @@ function draw2d_canvas() //TODO: have an svg output option
 			ctx.moveTo(walls[walls.length-1][0]-ax,walls[walls.length-1][1]-ay);
 			for(var i=walls.length-1;i>=0;i--)
 			{
+				if( walls[i][2] < -1 ) continue;
 				ctx.lineTo(walls[i][0]-ax,walls[i][1]-ay);
 			}
 		}
