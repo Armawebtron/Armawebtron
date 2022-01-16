@@ -145,10 +145,7 @@ class Player extends THREE.Object3D
 	{
 		if(full === true)
 		{
-			for(var x=0,len=this.walls.children.length;x<len;x++)
-			{
-				this.walls.remove(this.walls.children[x]);
-			}
+			this.walls.remove.apply(this.walls, this.walls.children.slice(0));
 		}
 		var wmap = this.walls.map, wallmod;
 		for(var x=1,len=wmap.length;x<len;x++)
@@ -167,10 +164,7 @@ class Player extends THREE.Object3D
 		}
 		if(full !== true)
 		{
-			for(;x<this.walls.length;x++)
-			{
-				this.walls.remove(this.walls.children[x]);
-			}
+			this.walls.remove.apply(this.walls, this.walls.children.slice(x));
 		}
 		
 		this.calcWallLength();
