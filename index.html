@@ -114,6 +114,23 @@
 		</div>
 		
 	</span>
+	
+	<div id="serverBrowser" style="display:none">
+		<table id="serverBrowserTable">
+			<tr>
+				<th id="browser_name">Server Name <span></span></th>
+				<th id="browser_type">Type <span></span></th>
+				<th id="browser_ping">Ping <span></span></th>
+				<th id="browser_usrs">Users <span>↓</span></th>
+			</tr>
+			<tr name="server_null">
+				<td>Please wait</td>
+				<td>null</td>
+				<td>-1</td>
+				<td>0/0</td>
+			</tr>
+		</table> 
+	</div>
 
 
 	<div id="centerMessage">&nbsp;</div>
@@ -140,6 +157,8 @@
 	<!-- network crap -->
 	<script type="text/javascript" src="scripts/network/base.js"></script>
 	<script type="text/javascript" src="scripts/network/3dc_net.js"></script>
+	<script type="text/javascript" src="scripts/network/serverBrowser.js"></script>
+	<link rel="stylesheet" type="text/css" href="styles/serverBrowser.css"/>
 	
 
 </body>

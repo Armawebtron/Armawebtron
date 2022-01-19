@@ -32,6 +32,7 @@
 	<!-- General game configuration -->
 	<Menu id="game" title="Play Game">
 		<Item type="submenu" onenter="presets" text="Locally"/>
+		<Item type="js" onenter="serverBrowser()" text="Online" if="window.ConnectionArma"/>
 		<Item type="submenu" onenter="network" text="Custom Connect"/>
 		<Item type="exitmenu" text="&lt;- Go Back"/>
 	</Menu>
@@ -40,6 +41,10 @@
 			<Item type="num" range="1024,49151" var="CONNECT_PORT" text="Port" />
 			<Item type="list" var="CONNECT_SSL" text="SSL">
 				<Option value="false" text="No" /> <Option value="true" text="Yes" />
+			</Item>
+			<Item type="list" var="CONNECT_TYPE" text="Protocol" if="window.ConnectionArma">
+				<Option value="3dc" text="Armawebtron/3dc" />
+				<Option value="arma" text="Retrocycles/Armagetron" />
 			</Item>
 			<Item type="js" onenter="connectToGame()" text="Connect"/>
 			<Item type="exitmenu" text="&lt;- Go Back"/>

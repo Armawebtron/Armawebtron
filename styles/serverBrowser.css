@@ -1,0 +1,22 @@
+
+#serverBrowser
+{
+	color: white;
+	
+	height: 99%;
+	width: 100vw; height: 100vh;
+}
+
+#serverBrowserTable
+{
+	position: absolute;
+	top: 100px; left: 100px;
+	/*height: calc(100% - 200px);*/
+	width: calc(100% - 200px);
+}
+
+#serverBrowserTable th
+{
+	text-align: left;
+}
+

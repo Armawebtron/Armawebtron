@@ -499,6 +499,8 @@ class ConnectionArma extends ArmaNetBase
 		
 		this.onAck = {};
 		
+		this.isGameServer = true;
+		
 		
 		
 		if(typeof(host) === "object")
@@ -791,8 +793,25 @@ class ConnectionArma extends ArmaNetBase
 				{
 					var that = this;
 					setTimeout(function(){that.send({ type: "version", data: 0.8 })}, 100);
-					setTimeout(function(){that.send(new nMessage( _arma_wantObjs ))}, 500);
-					setTimeout(function(){that.send(new nMessage( _arma_requestID ))}, 1000);
+					if(this.isGameServer)
+					{
+						setTimeout(function(){that.send(new nMessage( _arma_wantObjs ))}, 500);
+						setTimeout(function(){that.send(new nMessage( _arma_requestID ))}, 1000);
+					}
+					
+					setTimeout(function()
+					{
+						if( that.eventCallback["connect"] )
+						{
+							that.eventCallback["connect"].forEach(function(f)
+							{
+								f({
+									netid: that.netid,
+									version: that.verMax,
+								});
+							});
+						}
+					},1);
 				}
 				
 				this.netid = msg.getShort();
