@@ -832,6 +832,7 @@ function particleExplosion(pos,color1=0xffffff,color2=color1)
 window.spawnExplosion = function(pos,color1=0xffffff,color2=color1)
 {
 	if(!settings.EXPLOSIONS) return false;
+	if(engine.dedicated) return false;
 	
 	if(typeof(pos) != "object") pos = {x:0,y:0,z:0};
 	else if(typeof(pos.x) == "undefined") pos.x = 0;
