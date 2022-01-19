@@ -94,7 +94,7 @@ class Setting
 		if(this.callback)
 		{
 			var that = this;
-			setTimeout(function() { that.callback(); }, 0);
+			setTimeout(function() { that.callback(val); }, 0);
 		}
 	}
 	valueOf()
@@ -175,7 +175,8 @@ global.Setting = Setting;
 			var bd = document.body;
 			if(params)
 			{
-				if(bd.requestFullscreen) bd.requestFullscreen();
+				if(window.electronFullscreen) window.electronFullscreen(true);
+				else if(bd.requestFullscreen) bd.requestFullscreen();
 				else if(bd.webkitRequestFullscreen) bd.webkitRequestFullscreen();
 				else if(bd.mozRequestFullScreen) bd.mozRequestFullScreen();
 				else if(bd.msRequestFullscreen) bd.msRequestFullscreen();
@@ -183,14 +184,25 @@ global.Setting = Setting;
 			}
 			else
 			{
-				if(bd.exitFullscreen) bd.exitFullscreen();
+				if(window.electronFullscreen) window.electronFullscreen(false);
+				else if(bd.exitFullscreen) bd.exitFullscreen();
 				else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
 				else if(document.mozCancelFullScreen) document.mozCancelFullScreen();
 				//else if(document.msCancelFullscreen) bd.msCancelFullscreen();
 				else alert("Can't exit fullscreen. Please alert nelg with information on what browser you're using")
 			}
 		}
-		return Boolean(window.fullScreen || document.mozFullScreen || document.msFullScreen || document.webkitIsFullScreen || window.outerHeight - window.innerHeight <= 1);
+		return Boolean( 
+			window.fullScreen || 
+			document.mozFullScreen || 
+			document.msFullScreen || 
+			document.webkitIsFullScreen || 
+			window.electronFullscreen && window.electronFullscreen() ||
+			(
+				!window.electronFullscreen &&
+				window.outerHeight - window.innerHeight <= 1
+			)
+		);
 	}});
 
 	// Camera

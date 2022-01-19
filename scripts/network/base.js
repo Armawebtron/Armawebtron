@@ -60,7 +60,20 @@ function connectToGame()
 					engine.network.connection.onclose = connectionAborted;
 					break;
 				case "arma":
-					throw "Arma(cycles/getron) is not (yet) supported! (will require Electron client, unless you can find a plugin that I can have support for)";
+					if(window.ConnectionArma)
+					{
+						if(settings.CONNECT_SSL)
+						{
+							setTimeout(function(){engine.console.print("Note: SSL is not supported by this protocol.\n")},0);
+						}
+						
+						engine.network = new ConnectionArma(settings.CONNECT_HOST,settings.CONNECT_PORT);
+						engine.network.on("error", connectionFailure);
+						engine.network.on("close", connectionAborted);
+						
+						engine.network.connect();
+					}
+					else throw("Armagetron/Retrocycles is not directly supported! You can either connect through the bridge, or run the Electron client.");
 					break;
 				default: 
 					throw "Unknown connection type specified!";
@@ -72,6 +85,7 @@ function connectToGame()
 		catch(e)
 		{
 			engine.console.print(e+"\n");
+			console.error(e);
 			disconnectFromGame();menu("leave");showMenu();
 			menu("menu:");
 			document.getElementById('menu').innerHTML = "<h1>An error occurred</h1><div style='text-align:left;font-size:11pt'>"+e+"</div>";
@@ -113,6 +127,8 @@ function doNetSlide(cycle,timestep=1)
 		if(timestep > 1) timestep = 1;
 		cycle.lastpos.x = (cycle.position.x += (cycle.newPos.x-cycle.position.x)*timestep);
 		cycle.lastpos.y = (cycle.position.y += (cycle.newPos.y-cycle.position.y)*timestep);
+		if(cycle.haswall)
+			cycle.walls.map[cycle.walls.map.length-1] = [cycle.position.x,cycle.position.y];
 		cycle.resetCurrWallSegment();
 		if(cycle.position.x == cycle.newPos.x && cycle.position.y == cycle.newPos.y) delete cycle.newPos;
 	}
