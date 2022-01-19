@@ -865,6 +865,7 @@ game.run = function(oneoff=false)
 		}
 		
 		
+		if(engine.gtime > 0) // only loop through zones once the round starts
 		for(var x=engine.zones.children.length-1;x>=0;--x)
 		{
 			var zone = engine.zones.children[x].cfg;
