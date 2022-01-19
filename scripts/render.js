@@ -326,9 +326,8 @@ function draw()
 	
 	//update HUD (needs to be done for cycle being viewed)
 	var cycle = engine.players[engine.viewTarget];
-	if(!cycle) cycle = new Player({});
 	
-	if( engine.framesCount%2 == 0 )
+	if( cycle && engine.framesCount%2 == 0 )
 	{
 	updateHUD("player_rubber",cycle.rubber,0,settings.CYCLE_RUBBER);
 	var maxspeed = maxSpeed();
@@ -369,7 +368,14 @@ function draw()
 	//actual drawing
 	
 	/*if(engine.players[engine.viewTarget].alive)*/ 
-	cameraView(cycle,frametime*engine.timemult);
+	if(cycle)
+	{
+		cameraView(cycle, frametime*engine.timemult);
+	}
+	else if(!render.chViewTarget)
+	{
+		render.chViewTarget = setTimeout(function(){game.changeViewTarget(1, true);render.chViewTarget=null},1000);
+	}
 	
 	if( engine.extraCanvas )
 	{
