@@ -10,5 +10,9 @@
 	},
 	"devDependencies": {
 		"electron": "^7.0.0"
+	},
+	"dependencies": {
+		"jsdom": "^19.0.0",
+		"ws": "^8.4.0"
 	}
 }
