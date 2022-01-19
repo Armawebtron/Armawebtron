@@ -377,6 +377,19 @@ function draw()
 		render.chViewTarget = setTimeout(function(){game.changeViewTarget(1, true);render.chViewTarget=null},1000);
 	}
 	
+	//renderer switch for post processing
+	if( engine.usingPostProcessing )
+	{
+		engine.composer.render();//new render? for post processing
+	}
+	else
+	{
+		engine.renderer.render(engine.scene, engine.camera);
+	}
+	engine.framesCount++;
+	
+	if(engine.audio) engine.audio.audioMixing();
+	
 	if( engine.extraCanvas )
 	{
 		var hW = engine.extraCanvas.width/2;
@@ -438,19 +451,6 @@ function draw()
 			}
 		}
 	}
-	
-	if(engine.audio) engine.audio.audioMixing();
-	
-	//renderer switch for post processing
-	if (engine.usingPostProcessing)
-	{
-		engine.composer.render();//new render? for post processing
-	}
-	else
-	{
-		engine.renderer.render(engine.scene, engine.camera);
-	}
-	engine.framesCount++;
 }
 
 function updateHUD(celement,thevalue,min=false,max=false)
