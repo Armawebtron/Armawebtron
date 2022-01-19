@@ -207,6 +207,7 @@ class Zone
 				color: color, 
 				transparent: settings.ALPHA_BLEND, opacity: settings.ZONE_ALPHA/**alpha*/,
 				wireframe: settings.ALPHA_BLEND^settings.ZONE_ALPHA_TOGGLE,
+				blending: THREE.AdditiveBlending,
 				
 				side: THREE.DoubleSide 
 			});
