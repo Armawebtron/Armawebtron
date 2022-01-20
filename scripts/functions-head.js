@@ -790,6 +790,11 @@ global.lineIntersect = function(p0_x, p0_y, p1_x, p1_y, p2_x, p2_y, p3_x, p3_y)
 	return (s >= 0 && s <= 1 && t >= 0 && t <= 1);
 }
 
+Array.prototype.random = function()
+{
+	return this[Math.floor(Math.random()*this.length)];
+}
+
 /////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////
 //"encrytion" variables, not sure what they were for:

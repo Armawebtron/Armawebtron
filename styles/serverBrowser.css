@@ -7,16 +7,31 @@
 	width: 100vw; height: 100vh;
 }
 
+#serverBrowser .bTableHolder
+{
+	position: relative;
+	padding-top: 50px;
+	height: calc(100% - 50px);
+	
+	overflow-y: scroll;
+}
+
+
 #serverBrowserTable
 {
-	position: absolute;
-	top: 100px; left: 100px;
-	/*height: calc(100% - 200px);*/
 	width: calc(100% - 200px);
+	margin: auto;
 }
+
 
 #serverBrowserTable th
 {
 	text-align: left;
+}
+
+#serverBrowser .bExitButton
+{
+	position:absolute;
+	z-index:1000;
 }
 
