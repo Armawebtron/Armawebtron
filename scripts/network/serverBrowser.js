@@ -416,6 +416,8 @@ function serverBrowser()
 	engine.inputState = "";
 	
 	document.onkeydown = serverBrowserInput;
+	var bExitButton = document.getElementsByClassName("bExitButton")[0];
+	if(bExitButton) bExitButton.onmouseover = function() { this.className = "bExitButton fakemenu-active"; }
 	
 	getServers.idToFetch = 0;
 	setTimeout(getServers,0);
@@ -428,6 +430,7 @@ function serverBrowserExit()
 	document.getElementById("serverBrowser").style.display = "none";
 	engine.inputState = engine.inputStatePrev;
 	showMenu();
+	getServers.idToFetch = 65521;
 	
 	clearTimeout(serverBrowserSort.timeout);
 	clearInterval(getServers.autoPing);
