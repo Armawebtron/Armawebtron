@@ -3,6 +3,8 @@
 {
 	color: white;
 	
+	z-index: 20;
+	
 	height: 99%;
 	width: 100vw; height: 100vh;
 }
