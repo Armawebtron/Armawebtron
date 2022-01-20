@@ -462,7 +462,9 @@ class ArmaNetBase
 				msg.pushFloat(obj.obj.ping/1e3);
 				
 				// flag
-				msg.pushShort(0);
+				var flag = 0;
+				if(obj.obj.spectating) flag ^= 2;
+				msg.pushShort(flag);
 				
 				// score
 				msg.pushInt(obj.obj.score);
@@ -874,7 +876,10 @@ class ConnectionArma extends ArmaNetBase
 				break;
 			}
 			
-			case _arma_chatMessage: msg.getShort(); // falls through
+			case _arma_chatMessage: 
+				var playerID = msg.getShort();
+				engine.console.print(msg.getStr()+"\n");
+				break;
 			case _arma_consoleMessage:
 			{
 				this.conMsgBuf += msg.getStr();
@@ -1011,6 +1016,7 @@ class ConnectionArma extends ArmaNetBase
 		}
 		
 		this.playerSynced = true;
+		this.playerID = objid;
 	}
 	
 	sendTurn()
@@ -1024,7 +1030,10 @@ class ConnectionArma extends ArmaNetBase
 	
 	sendChat(msg, cycle=engine.players[engine.activePlayer])
 	{
-		
+		if( cycle == engine.players[engine.activePlayer] && this.playerSynced )
+		{
+			this.send((new nMessage(_arma_chat)).pushShort(this.playerID).pushStr(msg));
+		}
 	}
 	
 	syncPlayData()
