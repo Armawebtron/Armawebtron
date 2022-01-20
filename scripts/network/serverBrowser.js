@@ -261,6 +261,14 @@ getServers.doCheck = function()
 	if(this.connections >= this.connectionLimit) return;
 	this.fetchAnother();
 };
+getServers.doChecks = function(times)
+{
+	while((--times) > 0)
+	{
+		getServers.doCheck();
+	}
+}
+
 
 getServers.onGetInfo = function(id, info)
 {
@@ -308,6 +316,7 @@ getServers.onGetInfo = function(id, info)
 			{
 				if(e.key == "ArrowDown")
 				{
+					stopPropagation(e);
 					var it = browserTable.children[0].children[id+1];
 					if(it && it.onmouseover)
 					{
@@ -321,6 +330,7 @@ getServers.onGetInfo = function(id, info)
 				}
 				else if(e.key == "ArrowUp")
 				{
+					stopPropagation(e);
 					var it = browserTable.children[0].children[id-1];
 					if(it && it.onmouseover)
 					{
@@ -366,7 +376,7 @@ getServers.onGetInfo = function(id, info)
 		
 		browserTable.children[0].append(svr);
 		
-		var n = document.getElementsByName("servers_null")[0];
+		var n = document.getElementsByName("server_null")[0];
 		if(n)
 		{
 			browserTable.children[0].removeChild(n);
@@ -409,6 +419,7 @@ function serverBrowser()
 	
 	getServers.idToFetch = 0;
 	setTimeout(getServers,0);
+	getServers.autoPing = setInterval(function(){getServers.idToFetch = 0; getServers.doChecks(4)}, 45*1000);
 }
 
 function serverBrowserExit()
@@ -419,13 +430,60 @@ function serverBrowserExit()
 	showMenu();
 	
 	clearTimeout(serverBrowserSort.timeout);
+	clearInterval(getServers.autoPing);
 }
 
-function serverBrowserSort(timeout=null,sortBy=3)
+serverBrowserSort.sortBy = 65521;
+serverBrowserSort.rev = false;
+serverBrowserSort.By = function(sortBy, rev)
+{
+	var sby = function(by,rev) 
+	{ return(function()
+		{
+			serverBrowserSort.By(by, rev);
+			serverBrowserSort(null, null, undefined, 250);
+		}) 
+	};
+	
+	var browser_name = document.getElementById("browser_name");
+	browser_name.onclick = (sortBy==0&&(!rev))?sby(0, true):sby(0);
+	browser_name = browser_name.children[0];
+	var browser_type = document.getElementById("browser_type");
+	browser_type.onclick = (sortBy==1&&(!rev))?sby(1, true):sby(1);
+	browser_type = browser_type.children[0];
+	var browser_ping = document.getElementById("browser_ping");
+	browser_ping.onclick = (sortBy==2&&(rev))?sby(2):sby(2, true);
+	browser_ping = browser_ping.children[0];
+	var browser_usrs = document.getElementById("browser_usrs");
+	browser_usrs.onclick = (sortBy==3&&(!rev))?sby(3, true):sby(3);
+	browser_usrs = browser_usrs.children[0];
+	
+	var upd = String.fromCharCode(160)+String.fromCharCode(8593+((!rev)*2));
+	
+	browser_name.innerText = (sortBy==0)?upd:"";
+	browser_type.innerText = (sortBy==1)?upd:"";
+	browser_ping.innerText = (sortBy==2)?upd:"";
+	browser_usrs.innerText = (sortBy==3)?upd:"";
+	
+	serverBrowserSort.sortBy = sortBy;
+	serverBrowserSort.rev = !!rev;
+}
+function serverBrowserSort(timeout,sortBy,rev,maxsynctime=25)
 {
 	if( timeout == serverBrowserSort.timeout )
 	{
 		serverBrowserSort.timeout = null;
+	}
+	
+	if( typeof(sortBy) !== "number" )
+	{
+		sortBy = serverBrowserSort.sortBy;
+		if( sortBy < 0 ) serverBrowserSort.By(sortBy=0);
+		if( sortBy > 3 ) serverBrowserSort.By(sortBy=3);
+		if(rev === undefined)
+		{
+			rev = serverBrowserSort.rev;
+		}
 	}
 	
 	var browserTable = document.getElementById("serverBrowserTable");
@@ -434,7 +492,7 @@ function serverBrowserSort(timeout=null,sortBy=3)
 	var comp, comp1, comp2;
 	
 	var sorting = true;
-	var maxtime = performance.now()+25;
+	var maxtime = performance.now()+maxsynctime;
 	while( sorting && performance.now() < maxtime )
 	{
 		servers = browserTable.children[0].children;
@@ -445,9 +503,11 @@ function serverBrowserSort(timeout=null,sortBy=3)
 		{
 			comp1 = servers[i  ].children[sortBy].innerText;
 			comp2 = servers[i+1].children[sortBy].innerText;
+			if(rev) { comp = comp2; comp2 = comp1; comp1 = comp; }
 			
 			switch(sortBy)
 			{
+				case 2: comp = ( parseInt(comp1) < parseInt(comp2) ); break;
 				case 3: comp = ( parseInt(comp1) < parseInt(comp2) ); break;
 				default: comp = ( comp1.toLowerCase() < comp2.toLowerCase() ); break;
 			}
@@ -462,7 +522,8 @@ function serverBrowserSort(timeout=null,sortBy=3)
 	}
 	if(sorting)
 	{
-		serverBrowserSort.timeout = setTimeout(serverBrowserSort, 0);
+		clearTimeout(serverBrowserSort.timeout);
+		serverBrowserSort.timeout = setTimeout(function(t){serverBrowserSort(t, sortBy, rev, maxsynctime)}, 0);
 	}
 }
 
@@ -474,6 +535,7 @@ function serverBrowserInput(e)
 	}
 	else if(e.key == "ArrowDown")
 	{
+		stopPropagation(e);
 		var browserTable = document.getElementById("serverBrowserTable");
 		for(var i=0;i<browserTable.children[0].children.length;++i)
 		{

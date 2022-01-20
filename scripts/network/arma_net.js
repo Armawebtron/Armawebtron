@@ -745,12 +745,14 @@ class ConnectionArma extends ArmaNetBase
 				
 				var name = msg.getStr();
 				
-				console.log(name);
+				//console.log(name);
 				
 				var numPlayers = msg.getInt();
 				
 				this.versMin = msg.getInt();
 				this.versMax = msg.getInt();
+				
+				var version = msg.getStr();
 				
 				var maxPlayers = msg.getInt();
 				
@@ -777,6 +779,8 @@ class ConnectionArma extends ArmaNetBase
 							maxPlayers: maxPlayers,
 							
 							players: players.split("\n"),
+							
+							version: version,
 						});
 					});
 				}
