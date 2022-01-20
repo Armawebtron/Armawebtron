@@ -417,10 +417,15 @@ function serverBrowser()
 	
 	document.onkeydown = serverBrowserInput;
 	var bExitButton = document.getElementsByClassName("bExitButton")[0];
-	if(bExitButton) bExitButton.onmouseover = function() { this.className = "bExitButton fakemenu-active"; }
+	if(bExitButton)
+	{
+		bExitButton.onmouseover = function() { this.className = "bExitButton fakemenu-active"; }
+		bExitButton.onmouseout = function() { this.className = "bExitButton"; }
+	}
 	
 	getServers.idToFetch = 0;
 	setTimeout(getServers,0);
+	serverBrowserSort();
 	getServers.autoPing = setInterval(function(){getServers.idToFetch = 0; getServers.doChecks(4)}, 45*1000);
 }
 
