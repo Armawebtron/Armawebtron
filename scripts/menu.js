@@ -169,8 +169,7 @@ function hoverSelect(item)
 
 function menuIf(syntax) 
 {
-	// oh noes, eval! Bleech, get it away!
-	return !!eval(syntax.replace(/not/,"!").replace(/and/,"&&").replace(/or/,"||"));
+	return !!((new Function((syntax.replace(/not /g,"!").replace(/ and /g,"&&").replace(/ or /g,"||"))))())
 }
 
 function parseItem(cmenu,item)
@@ -221,7 +220,7 @@ function parseItem(cmenu,item)
 			input.options = [];
 			if(item.attributes.call)
 			{
-				input.call = eval(item.attributes.call.value);
+				input.call = ((new Function("return "+item.attributes.call.value))());
 			}
 			else
 			{
@@ -528,7 +527,7 @@ function menu(act,from=false)
 			changeMenuItem(action,1,true,from,"menu")
 			break;
 		case "js":
-			return eval(arg);
+			return ((new Function(arg))());
 			break;
 		case "leave"://return to main menu from pause state
 			game.end(); disconnectFromGame();
