@@ -116,8 +116,12 @@
 	</span>
 	
 	<div id="serverBrowser" style="display:none">
-		<span onclick="serverBrowserExit()" class="bExitButton">&lt;</span>
+		<span onclick="serverBrowserExit()" class="bExitButton">&lt;-</span>
 		<div class="bTableHolder">
+		<div id="bSearch">
+			<label for="bSearch">Filter: </label>
+			<input name="bSearch" type="text" onfocus="this.className='fakemenu-active'" onblur="this.className=''" />
+		</div>
 		<table id="serverBrowserTable">
 			<tr>
 				<th id="browser_name">Server Name<span></span></th>

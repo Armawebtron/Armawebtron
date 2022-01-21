@@ -39,3 +39,18 @@
 	font-size: 32px;
 }
 
+#bSearch
+{
+	position: absolute;
+	top: 10px; left: 100px;
+	z-index: 2000;
+}
+
+#bSearch *
+{
+	color:white; background:none;
+	font-family: inherit;
+	font-size: 18px;
+	border: none;
+}
+

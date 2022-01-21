@@ -144,6 +144,14 @@ getServers.armaMaster = function(oncomplete)
 					var port = msg.getInt();
 					var host = msg.getStr();
 					
+					for(var i=that.cache.length-1;i>=0;--i)
+					{
+						if(that.cache[i].host == host && that.cache[i].port == port)
+						{
+							return true;
+						}
+					}
+					
 					that.cache.push({
 						host: host,
 						port: port,
@@ -177,13 +185,13 @@ getServers.connections = 0;
 getServers.idToFetch = 0;
 getServers.fetchAnother = function()
 {
-	var id = this.idToFetch++;
+	var id = this.idToFetch;
 	if(!this.cache[id])
 	{
 		console.log("Ran out of servers to fetch!");
-		--this.idToFetch;
 		return;
 	}
+	this.idToFetch++;
 	
 	var con;
 	switch(this.cache[id].type)
@@ -394,13 +402,40 @@ getServers.onGetInfo = function(id, info)
 	}
 	
 	svr_name.innerHTML = replaceColors(htmlEntities(server.name));
-	svr_type.innerText = "null";
 	svr_ping.innerText = server.ping;
 	svr_usrs.innerText = server.numPlayers+"/"+server.maxPlayers;
 	
+	var type = "";
+	if(server.settings)
+	{
+		if(server.settings.teamPlay) type = "team";
+	}
+	var vname = removeColors(server.name).filter().replace(/[^a-z0-9]/g, "");
+	if(vname.match(/happyfuntime|bendinguni/g)) type = "rpg";
+	else if(vname.indexOf("fort") >= 0 || vname.indexOf("ladl") >= 0) type = "fort";
+	else if(vname.indexOf("flag") >= 0 || vname.indexOf("ctf") >= 0) type = "ctf";
+	else if(vname.match(/styball|soccer|hockey/g)) type = "socc";
+	else if(vname.match(/shoot|hrs/g)) type = "shot";
+	else if(vname.match(/hr|highrubber/g)) type = "hr";
+	else if(vname.match(/tetris/g)) type = "";
+	if(!type)
+	{
+		if(vname.match(/sumo|flowerpower/g)) type = "sumo";
+		else if(vname.match(/racing|race/g) && vname.indexOf("trac") == -1) type = "race";
+		else if(vname.match(/df|loose|dogfight/g)) type = "df";
+	}
+	else if(vname.match(/sumo|tst|wst/g)) { type = "team\nsumo"; svr_type.style.lineHeight = 1; }
+	
+	if(!type && server.settings)
+	{
+		if(!server.settings.defaultMap) type = "cust";
+	}
+	
+	svr_type.innerText = type;
+	
 	if(!serverBrowserSort.timeout)
 	{
-		serverBrowserSort.timeout = setTimeout(serverBrowserSort, 1000);
+		serverBrowserSort.timeout = setTimeout(serverBrowserSort, 1000, true);
 	}
 };
 
@@ -423,6 +458,32 @@ function serverBrowser()
 		bExitButton.onmouseout = function() { this.className = "bExitButton"; }
 	}
 	
+	var bSearch = document.getElementsByName("bSearch")[0];
+	if(bSearch)
+	{
+		bSearch.onkeyup = function()
+		{
+			var comp = bSearch.value.filter();
+			var browserTable = document.getElementById("serverBrowserTable");
+			Array.from(browserTable.children[0].children).slice(1).forEach(function(i)
+			{
+				if(comp == "")
+				{
+					i.style.display = "";
+					return;
+				}
+				if(i.innerText.filter().indexOf(comp) !== -1)
+				{
+					i.style.display = "";
+				}
+				else
+				{
+					i.style.display = "none";
+				}
+			});
+		};
+	}
+	
 	getServers.idToFetch = 0;
 	setTimeout(getServers,0);
 	serverBrowserSort();
@@ -437,6 +498,9 @@ function serverBrowserExit()
 	showMenu();
 	getServers.idToFetch = 65521;
 	
+	var bSearch = document.getElementsByName("bSearch")[0];
+	if( bSearch && bSearch.onkeyup ) { bSearch.value = ""; bSearch.onkeyup(); }
+	
 	clearTimeout(serverBrowserSort.timeout);
 	clearInterval(getServers.autoPing);
 }
@@ -449,7 +513,8 @@ serverBrowserSort.By = function(sortBy, rev)
 	{ return(function()
 		{
 			serverBrowserSort.By(by, rev);
-			serverBrowserSort(null, null, undefined, 250);
+			serverBrowserSortQuick();
+			serverBrowserSort();
 		}) 
 	};
 	
@@ -476,9 +541,9 @@ serverBrowserSort.By = function(sortBy, rev)
 	serverBrowserSort.sortBy = sortBy;
 	serverBrowserSort.rev = !!rev;
 }
-function serverBrowserSort(timeout,sortBy,rev,maxsynctime=25)
+function serverBrowserSort(rmTimeout,sortBy,rev,timeout=25)
 {
-	if( timeout == serverBrowserSort.timeout )
+	if(rmTimeout)
 	{
 		serverBrowserSort.timeout = null;
 	}
@@ -500,7 +565,7 @@ function serverBrowserSort(timeout,sortBy,rev,maxsynctime=25)
 	var comp, comp1, comp2;
 	
 	var sorting = true;
-	var maxtime = performance.now()+maxsynctime;
+	var maxtime = performance.now()+timeout;
 	while( sorting && performance.now() < maxtime )
 	{
 		servers = browserTable.children[0].children;
@@ -517,7 +582,7 @@ function serverBrowserSort(timeout,sortBy,rev,maxsynctime=25)
 			{
 				case 2: comp = ( parseInt(comp1) < parseInt(comp2) ); break;
 				case 3: comp = ( parseInt(comp1) < parseInt(comp2) ); break;
-				default: comp = ( comp1.toLowerCase() < comp2.toLowerCase() ); break;
+				default: comp = ( comp1.toLowerCase() > comp2.toLowerCase() ); break;
 			}
 			
 			if( comp )
@@ -531,8 +596,54 @@ function serverBrowserSort(timeout,sortBy,rev,maxsynctime=25)
 	if(sorting)
 	{
 		clearTimeout(serverBrowserSort.timeout);
-		serverBrowserSort.timeout = setTimeout(function(t){serverBrowserSort(t, sortBy, rev, maxsynctime)}, 0);
+		serverBrowserSort.timeout = setTimeout(function(){serverBrowserSort(true, sortBy, rev, timeout)}, 0);
 	}
+}
+function serverBrowserSortQuick()
+{
+	var browserTable = document.getElementById("serverBrowserTable");
+	
+	var sortBy = serverBrowserSort.sortBy;
+	var rev = serverBrowserSort.rev;
+	
+	var items = Array.from(browserTable.children[0].children).slice(1);
+	
+	var comp, comp1, comp2;
+	
+	items.sort(function(i1, i2)
+	{
+		comp1 = i1.children[sortBy].innerText;
+		comp2 = i2.children[sortBy].innerText;
+		if(rev) { comp = comp2; comp2 = comp1; comp1 = comp; }
+		
+		switch(sortBy)
+		{
+			case 2:
+			case 3:
+				comp1 = parseInt(comp1);
+				comp2 = parseInt(comp2);
+				comp = false;
+				break;
+			
+			default: 
+				comp1 = comp1.toLowerCase();//+String.fromCharCode(65535);
+				comp2 = comp2.toLowerCase();//+String.fromCharCode(65535); 
+				comp = true;
+				break;
+		}
+		
+		if(comp1 == comp2) return 0;
+		if(comp1 > comp2) return comp?1:-1;
+		return comp?-1:1;
+	});
+	
+	var firstItem = browserTable.children[0].children[1];
+	
+	for(var i=0,l=items.length;i<l;++i)
+	{
+		browserTable.children[0].insertBefore(items[i], firstItem);
+	}
+	
 }
 
 function serverBrowserInput(e)
@@ -554,5 +665,16 @@ function serverBrowserInput(e)
 			}
 		}
 		
+	}
+	else if ( e.keyCode == 114 || ( (e.ctrlKey||e.metaKey) && e.keyCode == 70 ))
+	{
+		// Ctrl+F / Cmd+F
+		var bSearch = document.getElementsByName("bSearch")[0];
+		if(bSearch)
+		{
+			bSearch.focus();
+			bSearch.select();
+			preventDefault(e);
+		}
 	}
 }
