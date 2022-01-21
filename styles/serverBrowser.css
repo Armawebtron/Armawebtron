@@ -54,3 +54,18 @@
 	border: none;
 }
 
+#bServerInfo
+{
+	background: rgba(0, 0, 0, 0.8);
+	position:absolute; bottom: 0;
+	left: 0; right: 16px;
+	padding: 4px;
+}
+
+#bServerInfo, .not_bServerInfo
+{
+	height: 160px;
+	min-height: 22px;
+	max-height: 20vh;
+}
+

@@ -318,6 +318,8 @@ getServers.onGetInfo = function(id, info)
 			a.forEach(function(e){e.className = "";document.onkeydown=null;});
 			this.className = "fakemenu-active";
 			
+			serverBrowserShowInfo(server);
+			
 			var id = a.indexOf(this);
 			
 			document.onkeydown = function(e)
@@ -644,6 +646,55 @@ function serverBrowserSortQuick()
 		browserTable.children[0].insertBefore(items[i], firstItem);
 	}
 	
+}
+
+serverBrowserShowInfo.order = [
+	"players",
+	"newline",
+	"description",
+	"url",
+	//"newline",
+	//"version",
+];
+function serverBrowserShowInfo(server)
+{
+	var bServerInfo = document.getElementById("bServerInfo");
+	if(!bServerInfo) return;
+	
+	var serverInfo = "";
+	
+	var grey = "<span style='color:#888'>", es="</span>";
+	
+	for(var info=0;info<serverBrowserShowInfo.order.length;++info)
+	{
+		switch(serverBrowserShowInfo.order[info])
+		{
+			case "newline": serverInfo += "<br />"; break;
+			case "description":
+				serverInfo += grey+"Description"+es+": "+replaceColors(htmlEntities(server.description))+"<br />";
+				break;
+			case "url":
+				serverInfo += grey+"URL"+es+": "+replaceColors(htmlEntities(server.url))+"<br />";
+				break;
+			case "players":
+				var players = "";
+				for(var i=0;i<server.players.length;++i)
+				{
+					if(players) players += ", ";
+					players += replaceColors(htmlEntities(server.players[i]));
+					if(server.gids[i]) players += "("+server.gids[i]+")";
+				}
+				if(players) serverInfo += grey+"Players"+es+": "+players+"<br />";
+				else serverInfo += "Nobody in this server.<br />";
+				break;
+			case "version":
+				serverInfo += grey+"Version"+es+": "+removeColors(htmlEntities(server.version))+"<br />";
+				break;
+		}
+	}
+	
+	
+	bServerInfo.innerHTML = serverInfo;
 }
 
 function serverBrowserInput(e)
