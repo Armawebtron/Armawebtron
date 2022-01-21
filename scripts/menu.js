@@ -169,7 +169,7 @@ function hoverSelect(item)
 
 function menuIf(syntax) 
 {
-	return !!((new Function((syntax.replace(/not /g,"!").replace(/ and /g,"&&").replace(/ or /g,"||"))))())
+	return !!((new Function("return "+(syntax.replace(/not /g,"!").replace(/ and /g,"&&").replace(/ or /g,"||"))))())
 }
 
 function parseItem(cmenu,item)
