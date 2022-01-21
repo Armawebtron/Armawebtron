@@ -759,8 +759,37 @@ class ConnectionArma extends ArmaNetBase
 				var players = msg.getStr();
 				
 				var description = msg.getStr();
-				
 				var url = msg.getStr();
+				
+				var playerGIDs = msg.getStr().split("\n");
+				for(var i=playerGIDs.length-1;i>=0;--i)
+				{
+					if(!playerGIDs[i]) delete playerGIDs[i];
+				}
+				
+				var settings = {};
+				
+				var flags = msg.getInt();
+				settings.authRequired = Boolean(flags&0x1);
+				settings.defaultMap = !(flags&0x2);
+				settings.teamPlay = Boolean(flags&0x4);
+				
+				settings.minPlayTimeTotal = msg.getInt();
+				settings.minPlayTimeOnline = msg.getInt();
+				settings.minPlayTimeTeam = msg.getInt();
+				
+				settings.cycleDelay = msg.getFloat(); // raw CYCLE_DELAY setting (or .05 if doublebinding is disabled)
+				settings.accel = msg.getFloat(); // accel/speed
+				
+				// characteristic rubber number: rubber/(base speed*cycle_delay)
+				// the number of times you can hump a wall without suiciding
+				settings.rubberHump = msg.getFloat();
+				
+				// maximum ratio of time spent sitting on walls to total time
+				settings.rubberHitRatio = msg.getFloat();
+				
+				// wall length in seconds relative to max speed
+				settings.wallLengthTime = msg.getFloat();
 				
 				
 				if( this.eventCallback["info"] )
@@ -779,8 +808,11 @@ class ConnectionArma extends ArmaNetBase
 							maxPlayers: maxPlayers,
 							
 							players: players.split("\n"),
+							gids: playerGIDs,
 							
 							version: version,
+							
+							settings: settings,
 						});
 					});
 				}
