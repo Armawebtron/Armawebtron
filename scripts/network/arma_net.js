@@ -536,7 +536,7 @@ class ConnectionArma extends ArmaNetBase
 					
 					do
 					{
-						if(n.desc != 0)
+						if(n.descriptor != 0)
 						{
 							that.handler(n);
 						}
@@ -1096,17 +1096,7 @@ class ServerArma extends ArmaNetBase
 		this.server.on("message",function(rmsg,r)
 		{
 			console.debug("incoming",r.address,r.port);
-			var n = new nMessage(rmsg);
-			
-			if( n.descriptor&(1<<15) )
-			{
-				// it's a protobuf message
-				// that's a whole other can of worms
-				
-				console.warn("Recieved protobuf message.");
-				
-				return;
-			}
+			var n = nMessage.AutoFrom(rmsg);
 			
 			for(var i=that.clients.length-1;i>=0;--i)
 			{
@@ -1116,7 +1106,31 @@ class ServerArma extends ArmaNetBase
 					that.clients[i].r.port == r.port
 				)
 				{
-					that.clients[i].handler(n);
+					if( r.size > (n.len*2) )
+					{
+						// interpret multiple messages part of the same packet
+						
+						var offset = 0;
+						var sizeRemaining = r.size;
+						
+						do
+						{
+							if(n.descriptor != 0)
+							{
+								that.clients[i].handler(n);
+							}
+							offset += 6+(n.len*2);
+							sizeRemaining -= 6+(n.len*2);
+							
+							n = nMessage.AutoFrom(rmsg.slice(offset));
+						}
+						while( sizeRemaining >= 6 );
+					}
+					else
+					{
+						that.clients[i].handler(n);
+					}
+					
 					return;
 				}
 			}
