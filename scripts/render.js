@@ -46,35 +46,6 @@ function render()
 			//if(lines[(parseFloat(0+engine.console.style.top)/engine.console.scrollby].length > 0) 
 		}
 	}
-	if(settings.TEXT_OUT_MODE == 1)
-	{
-		var lines = engine.console.scrollback
-		var lnnum = engine.console.scrollby;
-		var currln = lines[lnnum];
-	}
-	else
-	{
-		var lines = engine.console.innerText.split("\n");
-		var lnnum = (-(parseFloat(engine.console.style.top)/engine.console.scrollby));
-		var currln = lines[lnnum-1];
-	}
-	if(Math.round(engine.console.time/engine.console.scrolltime) < Math.round(performance.now()/engine.console.scrolltime) || (performance.now() > engine.console.time_manual+engine.console.scrolltime_manual && lines.length-lnnum > 10))
-	{
-		if(!currln && lnnum != lines.length)
-		{
-			if(lnnum < 0) var scrby = 1;
-			if(lnnum > lines.length) var scrby = -1;
-			engine.console.scroll(scrby);
-			console.log("scroll",scrby);
-		}
-		else
-		{
-			engine.console.time = performance.now();
-			if(typeof(currln) != "undefined" && currln.length > 0) 
-				engine.console.scroll();
-			console.log("scroll");
-		}
-	}
 }
 
 function draw()
@@ -674,6 +645,71 @@ function draw2d_canvas() //TODO: have an svg output option
 }
 
 
+function consoleInfo()
+{
+	var lines, lnnum, currln;
+	
+	switch(settings.TEXT_OUT_MODE)
+	{
+		case 0:
+			lines = engine.console.innerText.split("\n");
+			lnnum = (-(parseFloat(engine.console.style.top)/engine.console.scrollby));
+			currln = lines[lnnum-1];
+			break;
+		
+		case 1:
+			lines = engine.console.scrollback
+			lnnum = engine.console.scrollby;
+			currln = lines[lnnum];
+			break;
+		
+	}
+	
+	return [lines, lnnum, currln];
+}
+
+function consoleScroll()
+{
+	var lines, lnnum, currln;
+	[ lines, lnnum, currln ] = consoleInfo();
+	
+	if(!currln && lnnum != lines.length)
+	{
+		if(lnnum < 0) var scrby = 1;
+		if(lnnum > lines.length) var scrby = -1;
+		engine.console.scroll(scrby);
+		console.log("scroll",scrby);
+	}
+	else
+	{
+		engine.console.time = performance.now();
+		if(typeof(currln) != "undefined" && currln.length > 0) 
+			engine.console.scroll();
+		console.log("scroll");
+	}
+}
+
+function consoleAutoScroll()
+{
+	var lines, lnnum; [ lines, lnnum ] = consoleInfo();
+	
+	if(
+		Math.round(engine.console.time/engine.console.scrolltime) < Math.round(performance.now()/engine.console.scrolltime)
+		|| 
+		(performance.now() > engine.console.time_manual+engine.console.scrolltime_manual && lines.length-lnnum > 10)
+	)
+	{
+		consoleScroll();
+		setTimeout(consoleAutoScroll,10);
+	}
+}
+
+window.addEventListener("load", function()
+{
+	setInterval(consoleAutoScroll, 2500);
+});
+
+
 var cameraCustom = function(cycle, timestep, backOffset, riseOffset, lookOffset, turnSpeed)
 {
 	if(engine.camera.testrot === undefined) engine.camera.testrot = cycle.rotation.z;
@@ -753,7 +789,7 @@ var cameraView = function(cycle, timestep) {
 				settings.CAMERA_CUSTOM_RISE+cycle.speed*settings.CAMERA_CUSTOM_RISE_FROMSPEED,
 				settings.CAMERA_CUSTOM_OFFSET+cycle.speed*settings.CAMERA_CUSTOM_OFFSET_FROMSPEED,
 				settings.CAMERA_CUSTOM_TURN_SPEED,
-			);
+			0);
 			
 			if(engine.camera.userViewDir !== false)
 			{

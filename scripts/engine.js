@@ -218,6 +218,7 @@ if(typeof(document) !== "undefined")
 			this.scrollback.push(str);
 		}
 		this.innerHTML += "  "+replaceColors(htmlEntities(str));
+		if(window.consoleAutoScroll) setTimeout(consoleAutoScroll,100);
 		//console.log(replaceColors(str));
 		this.time = performance.now()+this.scrolltime; 
 		if(!inround()||!settings.TEXT_OUT) console.log("[CON] "+str);
