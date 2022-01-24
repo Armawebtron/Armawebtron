@@ -235,7 +235,9 @@
 		</Menu>
 		<Menu id="other" title="Misc Configuration">
 			<Item type="submenu" onenter="display_tweaks" text="Tweaks"/>
-			<Item type="submenu" onenter="global_input_conf" text="Global Keys"/>
+			<Item type="list" var="ARMA_PROTOBUF" text="Report Protobuf Compatible" if="window.ConnectionArma">
+				<Option value="false" text="No" /> <Option value="true" text="Yes" />
+			</Item>
 			<!--<Item type="exitmenu" text="&lt;- Go Back"/>-->
 		</Menu>
 			<Menu id="display_tweaks" title="Game Tweaks">

@@ -20,6 +20,7 @@
 
 const dgram = require("dgram");
 const nMessage = require("./arma/nMessage.js");
+const { nMessageProto } = require("./arma/nMessage.js");
 
 
 const _arma_CLIENTS = 64;
@@ -523,17 +524,7 @@ class ConnectionArma extends ArmaNetBase
 				//this.r = r;
 				//console.log(r);
 				
-				var n = new nMessage(rmsg);
-				
-				if( n.descriptor&(1<<15) )
-				{
-					// it's a protobuf message
-					// that's a whole other can of worms
-					
-					console.warn("Recieved protobuf message.");
-					
-					return;
-				}
+				var n = nMessage.AutoFrom(rmsg);
 				
 				if( r.size > (n.len*2) )
 				{
@@ -553,7 +544,7 @@ class ConnectionArma extends ArmaNetBase
 						sizeRemaining -= 6+(n.len*2);
 						//console.log(offset, sizeRemaining);
 						
-						n = new nMessage(rmsg.slice(offset));
+						n = nMessage.AutoFrom(rmsg.slice(offset));
 					}
 					while( sizeRemaining >= 6 );
 				}
@@ -606,7 +597,7 @@ class ConnectionArma extends ArmaNetBase
 		
 		// version min/max
 		// 20 is highest non-protobuf
-		msg.pushInt(0).pushInt(20);
+		msg.pushInt(0).pushInt(settings.ARMA_PROTOBUF?23:20);
 		
 		this.send(msg);
 		
@@ -756,7 +747,8 @@ class ConnectionArma extends ArmaNetBase
 				
 				var maxPlayers = msg.getInt();
 				
-				var players = msg.getStr();
+				var players = msg.getStr().split("\n");
+				if(!players[players.length-1]) --players.length;
 				
 				var description = msg.getStr();
 				var url = msg.getStr();
@@ -807,7 +799,7 @@ class ConnectionArma extends ArmaNetBase
 							numPlayers: numPlayers,
 							maxPlayers: maxPlayers,
 							
-							players: players.split("\n"),
+							players: players,
 							gids: playerGIDs,
 							
 							version: version,

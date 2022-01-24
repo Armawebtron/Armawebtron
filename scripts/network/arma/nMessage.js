@@ -9,7 +9,6 @@ class nMessage
 		
 		this.id = id;
 		this.bufpos = 0;
-		this.clientID = 0;
 		
 		switch(typeof(descriptor))
 		{
@@ -251,5 +250,112 @@ nMessage._BEGIN = 0;
 	delete t2;
 	delete t;
 }
+
+class nMessageProto extends nMessage
+{
+	constructor(descriptor,id=false,alloc=false)
+	{
+		super(descriptor, id, alloc);
+	}
+	
+	getHeader()
+	{
+		this.descriptor = this.getShortRaw()^0x8000;
+		var flags = this.getChar();
+		if( flags&1 )
+		{
+			this.id = this.getShortRaw();
+		}
+		if( flags&2 )
+		{
+			console.error("UHHH, cacheRef set");
+		}
+		this.lenReal = this.getIntRaw();
+		this.len = this.lenReal/2;
+		console.debug("proto desc:",this.descriptor," id:",this.id," len:",this.len);
+		
+		this.buf = Buffer.from(this.buf.slice(this.bufpos, this.bufpos+this.lenReal));
+		this.bufpos = 0;
+		
+		this.msgpos = 1;
+	}
+	
+	getIntRaw()
+	{
+		var a = this.getChar();
+		
+		if(!( a&0x80 ))
+		{
+			return a;
+		}
+		
+		var num = 0, mult = 0;
+		while( a&0x80 )
+		{
+			num = ((a^0x80)<<mult)|num;
+			mult += 7;
+			
+			a = this.getChar();
+		}
+		return (a<<mult)|num;
+	}
+	getInt()
+	{
+		this.getChar();
+		return this.getIntRaw();
+	}
+	
+	getFloatRaw()
+	{
+		var buf = Buffer.from(this.buf.slice(this.bufpos, this.bufpos+4));
+		this.bufpos += 4;
+		if(buf.length != 4) return 0;
+		return buf.readFloatLE();
+	}
+	getFloat()
+	{
+		this.getChar();
+		return this.getFloatRaw();
+	}
+	
+	getStringRaw()
+	{
+		var len = this.getIntRaw();
+		var c,str="";
+		for(var i=len-1;i>=0;--i)
+		{
+			c = this.getIntRaw();
+			if(c) 
+			{
+				str += String.fromCharCode(c);
+			}
+		}
+		return str;
+	}
+	getString()
+	{
+		this.getChar();
+		return this.getStringRaw();
+	}
+}
+nMessageProto.prototype.getShortRaw = nMessage.prototype.getShort;
+nMessageProto.prototype.getIntOld = nMessage.prototype.getInt;
+
+nMessage.AutoFrom = function(buf)
+{
+	var desc = (buf.length >= 2)?(buf.readInt16BE()):0;
+	
+	var n;
+	if( desc&(1<<15) )
+		n = new nMessageProto(buf);
+	else
+		n = new nMessage(buf);
+	
+	return n;
+};
+
+
+nMessage.nMessage = nMessage;
+nMessage.nMessageProto = nMessageProto;
 
 module.exports = nMessage;
