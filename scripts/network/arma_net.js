@@ -759,7 +759,7 @@ class ConnectionArma extends ArmaNetBase
 					if(!playerGIDs[i]) delete playerGIDs[i];
 				}
 				
-				var settings = {};
+				let settings = {};
 				
 				var flags = msg.getInt();
 				settings.authRequired = Boolean(flags&0x1);
