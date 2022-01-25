@@ -391,7 +391,7 @@ class ArmaNetBase
 				msg.bufpos += 2; // eat unknown short
 				
 				// brake usage
-				cycle.brakes = msg.getShort()/65535;
+				cycle.brakes = 1-(msg.getShort()/65535);
 				
 				msg.bufpos += 2; // eat unknown short
 				
@@ -873,15 +873,32 @@ class ConnectionArma extends ArmaNetBase
 			case _arma_config:
 			{
 				var setting = msg.getStr();
+				var type, value;
 				
-				if(!conf[setting])
+				switch(setting)
 				{
-					console.error("Got message for unknown setting.",setting);
-					break;
+					case "CYCLE_WALLS_LENGTH": setting = "WALLS_LENGTH"; break;
+					case "CYCLE_WALLS_STAY_UP_DELAY": setting = "WALLS_STAY_UP_DELAY"; break;
+					case "ARENA_AXES": type = "int"; break;
+					
+					case "REAL_ARENA_SIZE_FACTOR":
+						setting = "SIZE_FACTOR";
+						type = " "; //bogus type so our value isn't overwritten
+						value = Math.log(msg.getFloat(), 2)*2;
+						console.log(setting);
+						console.log(value);
+						break;
 				}
 				
-				var type = conf[setting].type;
-				var value;
+				if(!type)
+				{
+					if(!conf[setting])
+					{
+						console.error("Got message for unknown setting.",setting);
+						break;
+					}
+					type = conf[setting].type;
+				}
 				
 				switch(type)
 				{
@@ -899,7 +916,7 @@ class ConnectionArma extends ArmaNetBase
 						break;
 				}
 				
-				netcfg(setting,""+msg.data);
+				netcfg(setting,""+value);
 				
 				break;
 			}
@@ -967,6 +984,7 @@ class ConnectionArma extends ArmaNetBase
 			case _arma_haveID:
 			{
 				var newid = msg.getShort();
+				if(msg instanceof nMessageProto) newid = msg.getInt();
 				
 				if(!this.playerSynced)
 				{
