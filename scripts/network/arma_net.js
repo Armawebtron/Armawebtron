@@ -888,9 +888,7 @@ class ConnectionArma extends ArmaNetBase
 					case "REAL_ARENA_SIZE_FACTOR":
 						setting = "SIZE_FACTOR";
 						type = " "; //bogus type so our value isn't overwritten
-						value = Math.log(msg.getFloat(), 2)*2;
-						console.log(setting);
-						console.log(value);
+						value = Math.log2(msg.getFloat(), 2)*2;
 						break;
 				}
 				
