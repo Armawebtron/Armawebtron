@@ -410,7 +410,8 @@ function gameControl(keycode)
 	if(settings.controls.esc.indexOf(keycode) > -1)
 	{
 		//do in game menu
-		if(!engine.paused) pauseMenuToggle();
+		if( !engine.paused || engine.network )
+			pauseMenuToggle();
 	}
 	if(settings.controls.scroll_up.indexOf(keycode) > -1)
 	{

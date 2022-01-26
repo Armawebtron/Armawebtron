@@ -571,7 +571,10 @@ function pauseMenuToggle()
 		{
 			engine.players[engine.activePlayer].chatting=false;
 		}
-		game.unpause();
+		else
+		{
+			game.unpause();
+		}
 		hideMenu(); engine.inputState = 'game';
 	}
 }
