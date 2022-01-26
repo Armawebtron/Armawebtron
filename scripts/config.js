@@ -429,6 +429,7 @@ global.Setting = Setting;
 	Setting.new({ name: "CONNECT_HOST", val: "armagetron.kevinh.us" });
 	Setting.new({ name: "CONNECT_SSL", val: true });
 	Setting.new({ name: "CONNECT_TYPE", val: "3dc" });
+	Setting.new({ name: "ARMA_PROTOBUF", val: true });
 	
 	Setting.new({ name: "CYCLE_SMOOTH_TIME", val: 0.3 });
 	Setting.new({ name: "CYCLE_SYNC_INTERVAL", val: 0.1 });
