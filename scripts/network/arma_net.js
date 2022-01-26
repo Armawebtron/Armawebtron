@@ -695,7 +695,7 @@ class ConnectionArma extends ArmaNetBase
 				},0);
 			}
 			
-			if( this.msgsIn[msg.id] && (this.msgsIn[msg.id].time+60) < performance.now() )
+			if( this.msgsIn[msg.id] && (this.msgsIn[msg.id].time+9999) < performance.now() )
 			{
 				this.msgsIn[msg.id].time = performance.now();
 				return;
@@ -1906,7 +1906,7 @@ class ServerClientArma
 		{
 			this.send((new nMessage( _arma_ack, 0, 2 )).pushShort( msg.id ));
 			
-			if( this.msgsIn[msg.id] && (this.msgsIn[msg.id].time+60) < performance.now() )
+			if( this.msgsIn[msg.id] && (this.msgsIn[msg.id].time+9999) < performance.now() )
 			{
 				return;
 			}
