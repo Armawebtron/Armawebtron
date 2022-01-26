@@ -293,6 +293,8 @@ class ArmaNetBase
 					obj.playerid = msg.getShort();
 					msg.getShort();
 					
+					if(obj.ownerid == this.netid) this.cycleID = this.usedIDs.indexOf(obj);
+					
 					// gCycle colors are transmitted as floats for some reason
 					r = msg.getFloat()*15; g = msg.getFloat()*15; b = msg.getFloat()*15;
 				}
@@ -375,6 +377,8 @@ class ArmaNetBase
 					cycle.afterTurn(0);
 					
 					cycle.turns = turnCount;
+					
+					cycle.lastTurnTime = cycle.gtime;
 				}
 				else
 				{
@@ -1065,13 +1069,37 @@ class ConnectionArma extends ArmaNetBase
 		this.playerID = objid;
 	}
 	
-	sendTurn()
+	sendTurn(dir=undefined,cycle=engine.players[engine.activePlayer])
 	{
+		var msg = new nMessage( _arma_cycleEvent );
 		
+		msg.pushFloat(cycle.position.x).pushFloat(cycle.position.y);
+		
+		var ang = (dir === undefined)?cycle.rotation.z:(cycle.rotation.z - (pi(2)/settings.ARENA_AXES)*dir);
+		msg.pushFloat(Math.cos(ang)).pushFloat(Math.sin(ang));
+		
+		msg.pushFloat(cycle.dist);
+		
+		var flags = 0;
+		if ( cycle.braking )
+			flags |= 0x01;
+		if ( cycle.chatting )
+			flags |= 0x02;
+		
+		msg.pushShort(flags);
+		
+		msg.pushShort(this.cycleID);
+		
+		msg.pushFloat(cycle.gtime/1e3);
+		msg.pushShort(cycle.turns);
+		
+		this.send(msg);
+		
+		cycle.handleNetTurn = settings.DEBUG_NETWORK_TURN_WAIT;
 	}
-	syncTurn()
+	syncTurn(cycle=engine.players[engine.activePlayer])
 	{
-		
+		this.sendTurn(undefined, cycle);
 	}
 	
 	sendChat(msg, cycle=engine.players[engine.activePlayer])
