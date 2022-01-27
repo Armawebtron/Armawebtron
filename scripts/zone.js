@@ -208,6 +208,7 @@ class Zone
 				transparent: settings.ALPHA_BLEND, opacity: settings.ZONE_ALPHA/**alpha*/,
 				wireframe: settings.ALPHA_BLEND^settings.ZONE_ALPHA_TOGGLE,
 				blending: THREE.AdditiveBlending,
+				depthWrite: false,
 				
 				side: THREE.DoubleSide 
 			});
@@ -247,6 +248,50 @@ class Zone
 			window.svr.send({type:"zone",data:[zone],gtime:engine.gtime});
 		}
 		return this;
+	}
+	readSync(prop)
+	{
+		if(prop.type!==undefined) { this.type = prop.type; }
+		if( prop.x !== undefined )
+		{
+			this.mesh.position.x = prop.x;
+			this.mesh.position.y = prop.y;
+			this.mesh.position.z = prop.z||0;
+		}
+		if( prop.xdir !== undefined )
+		{
+			this.xdir = prop.xdir;
+			this.ydir = prop.ydir;
+		}
+		if( prop.bounce !== undefined )
+		{
+			this.bounce = prop.bounce;
+		}
+		if( prop.radius !== undefined )
+		{
+			this.radius = prop.radius;
+		}
+		if( prop.expansion !== undefined )
+		{
+			this.expansion = prop.expansion;
+		}
+		if( prop.color && this.mesh )
+		{
+			this.mesh.material.color.set(prop.color);
+		}
+		if( prop.rotationSpeed )
+		{
+			this.rotationSpeed = prop.rotationSpeed;
+		}
+		if( prop.type == "flagHeld" )
+		{
+			this.heldBy = engine.players[zone.heldBy];
+			this.heldBy.hasFlag = myZone.cfg;
+		}
+		else if( this.heldBy )
+		{
+			this.heldBy.hasFlag = null;
+		}
 	}
 	distance(position)
 	{

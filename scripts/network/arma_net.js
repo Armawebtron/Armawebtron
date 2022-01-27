@@ -442,6 +442,21 @@ class ArmaNetBase
 						
 						case _arma_gameState.playing:
 							game.unpause();
+							if(full) setTimeout(game.unpause, 100);
+							
+							{
+								let rm = [];
+								console.log("preexisting zones", engine.zones.children.length);
+								for(let zone of engine.zones.children)
+								{
+									if( zone.cfg && !zone.cfg.netObject )
+									{
+										rm.push(zone);
+									}
+								}
+								console.log("deleting "+rm.length+" unsynced zones")
+								engine.zones.remove.apply(engine.zones, rm);
+							}
 							break;
 					}
 				}
@@ -449,6 +464,90 @@ class ArmaNetBase
 				if(this.send)
 				{
 					this.send((new nMessage(_arma_gameStateSync)).pushShort(this.gameState));
+				}
+				
+				break;
+			
+			case _arma_obj.zone:
+				
+				let prop = {};
+				
+				if(full)
+				{
+					// eat unknown float
+					msg.getFloat();
+					
+					prop.createTime = msg.getFloat()*1e3;
+				}
+				
+				var gtime = msg.getFloat()*1e3;
+				
+				// direction
+				prop.xdir = msg.getFloat(); prop.ydir = msg.getFloat();
+				
+				// position
+				prop.x = msg.getFloat(); prop.y = msg.getFloat();
+				
+				if(!msg.end())
+				{
+					prop.color = color( 15*msg.getFloat(), 15*msg.getFloat(), 15*msg.getFloat() );
+				}
+				else prop.color = color(15,15,15);
+				
+				if(!msg.end())
+				{
+					//prop.time = 
+					msg.getFloat(); // another time
+					
+					msg.bufpos += 2; // eat position id
+					prop.x = msg.getFloat(); 
+					prop.xdir = msg.getFloat();
+					
+					msg.bufpos += 2; // eat position id
+					prop.y = msg.getFloat();
+					prop.ydir = msg.getFloat();
+					
+					msg.bufpos += 2; // eat radius id
+					prop.radius = msg.getFloat();
+					prop.expansion = msg.getFloat();
+				}
+				
+				if(!msg.end())
+				{
+					msg.bufpos += 2; // eat rotation id
+					prop.rotationSpeed = msg.getFloat()/6;
+					msg.getFloat(); // rotation increase rate
+				}
+				
+				//console.log(prop);
+				
+				if(full)
+				{
+					var minDist = Infinity, dist;
+					var z;
+					
+					// any already-existing non-synced zones we can steal?
+					for(let zone in engine.zones.children)
+					{
+						if( zone.cfg && !zone.cfg.netObject )
+						{
+							dist = pointDistance( prop.x, prop.y, zone.position.x, zone.position.y );
+							if( minDist > dist )
+							{
+								minDist = dist;
+								z = zone.cfg;
+							}
+						}
+					}
+					
+					if(z) z.readSync(prop);
+					else z = new Zone(prop).spawn();
+					
+					(obj.obj = z).netObject = true;
+				}
+				else
+				{
+					obj.obj.readSync(prop);
 				}
 				
 				break;
@@ -701,10 +800,12 @@ class ConnectionArma extends ArmaNetBase
 					for(var i of that.msgsToAck) { idmsg.pushShort( i ); }
 					that.send(idmsg);
 					that.msgsToAck.splice(0);
+					
+					if(that.challenge) { delete that.challenge; that.connect(); }
 				},0);
 			}
 			
-			if( this.msgsIn[msg.id] && (this.msgsIn[msg.id].time+9999) < performance.now() )
+			if( this.msgsIn[msg.id] && (this.msgsIn[msg.id].time+9999) > performance.now() )
 			{
 				this.msgsIn[msg.id].time = performance.now();
 				return;
@@ -855,6 +956,11 @@ class ConnectionArma extends ArmaNetBase
 							});
 						}
 					},1);
+				}
+				
+				if(msg.end())
+				{
+					this.challenge = true;
 				}
 				
 				this.netid = msg.getShort();
@@ -1051,10 +1157,10 @@ class ConnectionArma extends ArmaNetBase
 		if(!pSync) return;
 		
 		var msg = new nMessage( pSync?_arma_obj.player:_arma_objSync );
+		msg.pushShort(objid);
 		
 		if(pSync)
 		{
-			msg.pushShort(objid);
 			msg.pushShort(this.netid);
 			
 			this.usedIDs[objid] = {type: _arma_obj.player, ownerid: this.netid};
@@ -1832,7 +1938,8 @@ class ServerClientArma
 			
 			// wait a little bit so we aren't immediately giving a new object the same id
 			// just in case the client hasn't received it yet
-			setTimeout(function(){delete this.server.usedIDs[id]}, 1000+(10000*Math.random()));
+			var that = this;
+			setTimeout(function(){delete that.server.usedIDs[id]}, 1000+(10000*Math.random()));
 		}
 	}
 	
@@ -1913,7 +2020,7 @@ class ServerClientArma
 		{
 			this.send((new nMessage( _arma_ack, 0, 2 )).pushShort( msg.id ));
 			
-			if( this.msgsIn[msg.id] && (this.msgsIn[msg.id].time+9999) < performance.now() )
+			if( this.msgsIn[msg.id] && (this.msgsIn[msg.id].time+9999) > performance.now() )
 			{
 				return;
 			}
