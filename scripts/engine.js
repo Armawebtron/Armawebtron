@@ -211,7 +211,7 @@ if(typeof(document) !== "undefined")
 		{
 			if(engine.concatch.type == "all") engine.concatch.to.append(str);
 			else if(engine.concatch.type == "list") engine.concatch.to.push(str);
-			else engine.concatch.to.innerText = str;
+			else engine.concatch.to.innerText = removeColors(str);
 		}
 		if(settings.TEXT_OUT_MODE == 1)
 		{
