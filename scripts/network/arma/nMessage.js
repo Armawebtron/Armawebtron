@@ -209,7 +209,15 @@ class nMessage
 			{
 				str += String.fromCharCode(c1);
 				if(c2) 
+				{
+					if(c1 > 0x7f)
+					{
+						// needed to deal with characters causing
+						// the next character to be the wrong char
+						c2 = (c2+1)%0x100;
+					}
 					str += String.fromCharCode(c2);
+				}
 			}
 		}
 		return str;
