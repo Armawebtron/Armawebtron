@@ -80,6 +80,7 @@ const _arma_obj = {
 	team     : 220,
 	team_ai  : 331,
 	cycle    : 320,
+	cycleWall: 300,
 	zone     : 340,
 	zoneCirc : 350,
 	zonePoly : 360,
@@ -299,7 +300,9 @@ class ArmaNetBase
 					r = msg.getFloat()*15; g = msg.getFloat()*15; b = msg.getFloat()*15;
 				}
 				
-				var o;
+				var o = this.usedIDs[obj.playerid];
+				if(!o)
+				{
 				for(let i=0;i<_arma_MAXIDS;++i)
 				{
 					if( this.usedIDs[i] && this.usedIDs[i].ownerid == ownerID )
@@ -310,6 +313,7 @@ class ArmaNetBase
 							o = this.usedIDs[i];
 						}
 					}
+				}
 				}
 				
 				if(!o)
@@ -370,8 +374,13 @@ class ArmaNetBase
 				
 				if( turnCount > cycle.turns )
 				{
-					cycle.lastpos.x = cycle.position.x = lastTurnX;
-					cycle.lastpos.y = cycle.position.y = lastTurnY;
+					cycle.position.x = lastTurnX;
+					cycle.position.y = lastTurnY;
+					if(cycle.lastpos)
+					{
+						cycle.lastpos.x = lastTurnX;
+						cycle.lastpos.y = lastTurnY;
+					}
 					
 					cycle.rotation.z = newDir;
 					cycle.afterTurn(0);
