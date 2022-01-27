@@ -244,7 +244,7 @@ class ArmaNetBase
 				obj.obj.chatting = Boolean(flags&1);
 				obj.obj.spectating = Boolean(flags&2);
 				
-				var score = Math.round(msg.getFloat()*1000);
+				var score = msg.getInt();
 				if(obj.obj.score != score) 
 				{
 					if(obj.obj.setScore) obj.obj.setScore(score);
