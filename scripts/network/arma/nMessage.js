@@ -154,7 +154,7 @@ class nMessage
 		this.descriptor = this.getShort();
 		this.id = this.getShort();
 		this.len = this.getShort();
-		console.debug("desc:",this.descriptor," id:",this.id," len:",this.len);
+		//console.debug("desc:",this.descriptor," id:",this.id," len:",this.len);
 		
 		this.buf = Buffer.from(this.buf.slice(this.bufpos, this.bufpos+(this.len*2)));
 		this.bufpos = 0;
@@ -280,7 +280,7 @@ class nMessageProto extends nMessage
 		}
 		this.lenReal = this.getIntRaw();
 		this.len = this.lenReal/2;
-		console.debug("proto desc:",this.descriptor," id:",this.id," len:",this.len);
+		//console.debug("proto desc:",this.descriptor," id:",this.id," len:",this.len);
 		
 		this.buf = Buffer.from(this.buf.slice(this.bufpos, this.bufpos+this.lenReal));
 		this.bufpos = 0;
