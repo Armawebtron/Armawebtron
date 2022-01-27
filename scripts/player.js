@@ -558,9 +558,12 @@ class Player extends THREE.Object3D
 				this.sensor.front -= dist; //assume distance until we have new real results.
 				//this.sensor.front = 
 				
+				var targetWLTime = performance.now()+50;
 				var lendiff = this.walls.netLength - settings.WALLS_LENGTH;
 				while(settings.WALLS_LENGTH > 0 && lendiff > 0)
 				{
+					if( performance.now() > targetWLTime ) break;
+					
 					var map = this.walls.map;
 					var xdir = (map[1][0]-map[0][0]), ydir = (map[1][1]-map[0][1]);
 					var len = Math.sqrt((xdir*xdir)+(ydir*ydir));
