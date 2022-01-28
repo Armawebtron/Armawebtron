@@ -337,7 +337,7 @@ class ArmaNetBase
 					cycle.tailColor = color(r,g,b);
 				}
 				
-				cycle.gtime = msg.getFloat()*1e3;
+				cycle.gameTime = msg.getFloat()*1e3;
 				
 				// direction
 				var xdir = msg.getFloat();
@@ -361,7 +361,9 @@ class ArmaNetBase
 					if(cycle.alive) cycle.killAt(cycle.newPos.x, cycle.newPos.y, 0);
 					else cycle.spawn({ x: cycle.newPos.x, y: cycle.newPos.y, z: 0 }, cycle.gtime);
 					delete cycle.newPos;
+					delete cycle.cycleMsgsWait;
 					cycle.turns = -1;
+					if(!alive) return;
 				}
 				
 				var newDist = msg.getFloat();
