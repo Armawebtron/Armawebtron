@@ -146,11 +146,7 @@ game.newRound = function()
 	engine.scene.add( light2 );
 	//////////end of lights
 	
-	var aspectRatio = (window.innerWidth / window.innerHeight);
-	engine.camera = new THREE.PerspectiveCamera( settings.CAMERA_FOV, aspectRatio, settings.CAMERA_NEAR_RENDER, settings.CAMERA_FAR_RENDER );
-	engine.camera.userViewDir = false;
-	engine.camera.up = new THREE.Vector3(0,0,1); //Z is up, X and Y is l+r and b+f
-	//engine.camera.position.set(247, 247, 3);
+	engine.camera = new GameCamera();
 	
 	if(engine.composer)
 	{
@@ -252,6 +248,7 @@ function calculateSpawn(x)
 	}
 	return spawns;
 }
+game.calculateSpawn = calculateSpawn;
 function processPlayer(x,cfg)
 {
 	cfg.name = cfg.name.replace(/\n/g," ");

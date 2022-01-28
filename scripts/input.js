@@ -350,22 +350,22 @@ function gameControl(keycode)
 		}
 		if(settings.controls.look_left.indexOf(keycode) > -1)
 		{
-			engine.camera.userViewDir = engine.players[engine.viewTarget].left;
+			engine.camera.adjViewDir(pi(0.5));
 			engine.controls.pressed.push(keycode);
 		}
 		if(settings.controls.look_right.indexOf(keycode) > -1)
 		{
-			engine.camera.userViewDir = engine.players[engine.viewTarget].right;
+			engine.camera.adjViewDir(-pi(0.5));
 			engine.controls.pressed.push(keycode);
 		}
 		if(settings.controls.look_forward.indexOf(keycode) > -1)
 		{
-			engine.camera.userViewDir = cdir(engine.players[engine.viewTarget].rotation.z);
+			engine.camera.adjViewDir(0);
 			engine.controls.pressed.push(keycode);
 		}
 		if(settings.controls.look_back.indexOf(keycode) > -1)
 		{
-			engine.camera.userViewDir = cdir(engine.players[engine.viewTarget].rotation.z-Math.PI);
+			engine.camera.adjViewDir(-Math.PI);
 			engine.controls.pressed.push(keycode);
 		}
 	}
@@ -463,6 +463,8 @@ function gameControlUp(keycode)
 		if ( temp > -1 ) //if is pressed
 			engine.controls.pressed.splice(temp, 1);
 	}
+	
+	
 	if(settings.controls.brake.indexOf(keycode) > -1)
 	{
 		engine.players[engine.activePlayer].braking = false;
@@ -473,12 +475,25 @@ function gameControlUp(keycode)
 			engine.players[engine.activePlayer].braking = false;
 		engine.players[engine.activePlayer].boosting = false;
 	}
-	if(
-		settings.controls.look_left.indexOf(keycode) > -1 || 
-		settings.controls.look_right.indexOf(keycode) > -1 ||
-		settings.controls.look_forward.indexOf(keycode) > -1 ||
-		settings.controls.look_back.indexOf(keycode) > -1
-	)
+	
+	if( settings.controls.look_left.indexOf(keycode) > -1 )
+	{
+		engine.camera.adjViewDir(-pi(0.5), -1);
+	}
+	else if( settings.controls.look_right.indexOf(keycode) > -1 )
+	{
+		engine.camera.adjViewDir(pi(0.5), -1);
+	}
+	else if( settings.controls.look_back.indexOf(keycode) > -1 )
+	{
+		engine.camera.adjViewDir(-Math.PI, -1);
+	}
+	else if( settings.controls.look_forward.indexOf(keycode) > -1 )
+	{
+		engine.camera.adjViewDir(0, -1);
+	}
+	
+	if( engine.camera.userViewDir && !engine.camera.userViewDir.times )
 	{
 		engine.camera.userViewDir = false;
 	}

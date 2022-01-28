@@ -498,6 +498,34 @@ else
 	}
 }
 
+class GameCamera extends THREE.PerspectiveCamera
+{
+	constructor()
+	{
+		var aspectRatio = (window.innerWidth / window.innerHeight);
+		super( settings.CAMERA_FOV, aspectRatio, settings.CAMERA_NEAR_RENDER, settings.CAMERA_FAR_RENDER );
+		this.up = new THREE.Vector3(0,0,1); //Z is up, X and Y is l+r and b+f
+		//this.position.set(247, 247, 3);
+		this.userViewDir = false;
+	}
+	
+	adjViewDir(adj, ta=1)
+	{
+		if(engine.camera.userViewDir)
+		{
+			var t = engine.camera.userViewDir.times|0;
+			engine.camera.userViewDir = cdir(crad(engine.camera.userViewDir)+adj)
+			engine.camera.userViewDir.times = t+ta;
+		}
+		else
+		{
+			engine.camera.userViewDir = cdir(engine.players[engine.viewTarget].rotation.z+adj);
+			engine.camera.userViewDir.times = ta;
+		}
+	}
+}
+global.GameCamera = GameCamera;
+
 global.toLadderLog = function(event,params)
 {
 	if(settings["LADDERLOG_WRITE_"+event])
