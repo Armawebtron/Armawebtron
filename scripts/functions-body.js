@@ -47,9 +47,11 @@ global.getPlayer = function(name)
 	{
 		return engine.players[matches[0]];
 	}
-}
+};
 
-function retToLastSafe(cycle,w1x,w1y,w2x,w2y)
+(function(){"use strict";
+const players = engine.playersById;
+var retToLastSafe = function(cycle,w1x,w1y,w2x,w2y)
 {
 	var dist = distanceoflines(cycle.position.x,cycle.position.y,cycle.position.x,cycle.position.y,w1x,w1y,w2x,w2y);
 	console.warn(cycle.name+" phased through a wall "+dist+"m.\n");
@@ -108,32 +110,32 @@ global.getCycleSensors = function(full=false)
 	var oneline = "";
 	var range = settings.CYCLE_SENSORS_RANGE;
 	var lrot, rrot, ldrot, rdrot;
-	for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x] !== undefined)
+	for(var x=players.length-1;x>=0;--x) if(players[x] !== undefined)
 	{
 		//if(full)
 		{
-			engine.players[x].sensor.left = engine.players[x].sensor.right = 
-				engine.players[x].sensor.leftTurn = engine.players[x].sensor.rightTurn = 
-				engine.players[x].sensor.front = 
-				engine.players[x].sensor.rear = Infinity;
-			engine.players[x].sensor.nearestobj =
-				engine.players[x].sensor.lnearestobj = false;
-				engine.players[x].sensor.rnearestobj = false;
+			players[x].sensor.left = players[x].sensor.right = 
+				players[x].sensor.leftTurn = players[x].sensor.rightTurn = 
+				players[x].sensor.front = 
+				players[x].sensor.rear = Infinity;
+			players[x].sensor.nearestobj =
+				players[x].sensor.lnearestobj = false;
+				players[x].sensor.rnearestobj = false;
 		}
-		engine.players[x].sensor.bottom = 0;
-		engine.players[x].sensor.frontWallHeight = Infinity;
-		engine.players[x].sensor.objleft = 
-			engine.players[x].sensor.objright = 
-			engine.players[x].sensor.objfront = 
-			engine.players[x].sensor.objrear = false;
-		engine.players[x].sensor.nearcycle = false;
-		engine.players[x].dir.front = cdir(engine.players[x].rotation.z);
-		engine.players[x].dir.left = cdir(lrot=(engine.players[x].rotation.z+(Math.PI/2)));
-		engine.players[x].dir.right = cdir(rrot=(engine.players[x].rotation.z-(Math.PI/2)));
-		engine.players[x].dir.leftTurn = cdir(ldrot=(engine.players[x].rotation.z+(Math.PI/(settings.ARENA_AXES*0.5))));
-		engine.players[x].dir.rightTurn = cdir(rdrot=(engine.players[x].rotation.z-(Math.PI/(settings.ARENA_AXES*0.5))));
-		engine.players[x].dir.lDiff = (lrot != ldrot);
-		engine.players[x].dir.rDiff = (rrot != rdrot);
+		players[x].sensor.bottom = 0;
+		players[x].sensor.frontWallHeight = Infinity;
+		players[x].sensor.objleft = 
+			players[x].sensor.objright = 
+			players[x].sensor.objfront = 
+			players[x].sensor.objrear = false;
+		players[x].sensor.nearcycle = false;
+		players[x].dir.front = cdir(players[x].rotation.z);
+		players[x].dir.left = cdir(lrot=(players[x].rotation.z+(Math.PI/2)));
+		players[x].dir.right = cdir(rrot=(players[x].rotation.z-(Math.PI/2)));
+		players[x].dir.leftTurn = cdir(ldrot=(players[x].rotation.z+(Math.PI/(settings.ARENA_AXES*0.5))));
+		players[x].dir.rightTurn = cdir(rdrot=(players[x].rotation.z-(Math.PI/(settings.ARENA_AXES*0.5))));
+		players[x].dir.lDiff = (lrot != ldrot);
+		players[x].dir.rDiff = (rrot != rdrot);
 	}
 	for(var x=engine.zones.children.length-1;x>=0;--x)
 	{
@@ -141,8 +143,9 @@ global.getCycleSensors = function(full=false)
 		engine.zones.children[x].wall = [0,0,0,0];
 	}
 	var campos = engine.camera.position, ppos;
-	if(!engine.dedicated) ppos = engine.players[engine.viewTarget]?engine.players[engine.viewTarget].position:(new THREE.Vector3());
+	if(!engine.dedicated) ppos = players[engine.viewTarget]?players[engine.viewTarget].position:(new THREE.Vector3());
 	var lookThroughWall = false;
+	var ldir, rdir, ltdir, rtdir;
 	for(var y=engine.map.walls.length-1;y>=0;--y)
 	{
 		//console.log("ohi");
@@ -154,16 +157,19 @@ global.getCycleSensors = function(full=false)
 			{
 				var w2x = p[0], w2y = p[1]/*,w2z = p[2]*/;
 				
-				for(var x=engine.players.length-1;x>=0;--x) if(engine.players[x] !== undefined && engine.players[x].alive)
+				for(var x=players.length-1;x>=0;--x) if(players[x] !== undefined && players[x].alive)
 				{
-					var cycle = engine.players[x];
+					var cycle = players[x];
 					var posx = cycle.position.x, posy = cycle.position.y, posz = cycle.position.z;
 					if(cycle.newPos && lineIntersect(posx,posy,cycle.newPos.x,cycle.newPos.y,w1x,w1y,w2x,w2y))
 					{
-						cycle.position.x = cycle.lastpos.x = cycle.newPos.x;
-						cycle.position.y = cycle.lastpos.y = cycle.newPos.y;
+						posx = cycle.position.x = cycle.newPos.x; posy = cycle.position.y = cycle.newPos.y;
+						var dir = players[x].lastdir.front;
+						players[x].lastpos.x = players[x].newPos.real.x-players[x].dir.front[0];
+						players[x].lastpos.y = players[x].newPos.real.y-players[x].dir.front[1];
 						delete cycle.newPos;
-						return getCycleSensors(full);
+						//return getCycleSensors(full);
+						//centerMessage("tried to phase through rim - newpos");
 					}
 					if(lineIntersect(posx,posy,cycle.lastpos.x,cycle.lastpos.y,w1x,w1y,w2x,w2y))
 					{
@@ -171,18 +177,18 @@ global.getCycleSensors = function(full=false)
 					}
 					else
 					{
-						var dir = engine.players[x].dir.front,
-							ldir = engine.players[x].dir.left,
-							rdir = engine.players[x].dir.right
-							ltdir = engine.players[x].dir.leftTurn,
-							rtdir = engine.players[x].dir.rightTurn;
+						dir = players[x].dir.front,
+						ldir = players[x].dir.left,
+						rdir = players[x].dir.right
+						ltdir = players[x].dir.leftTurn,
+						rtdir = players[x].dir.rightTurn;
 						var rg = /*cycle.sensor.front==Infinity?*/(cycle.speed*range);//:cycle.sensor.front;
 						//var output = pointLineDistance(w1x,w1y,w2x,w2y,posx,posy);
 						//var testx = (w2x-w1x)*dir[0], testy = (w2y-w1y)*dir[1], tpx = posx*(-dir[0]), tpy = posy*(-dir[1]);
-						//if(cycle == engine.players[engine.viewTarget]) oneline += ""+(w2x-w1x)+"\t\t\t\t\t\t\t"+posx+"\t\t\t\t\t\t\t"+(w2x-w1x)+"\t\t\t\t\t\t\t"+posy+";\n";
+						//if(cycle == players[engine.viewTarget]) oneline += ""+(w2x-w1x)+"\t\t\t\t\t\t\t"+posx+"\t\t\t\t\t\t\t"+(w2x-w1x)+"\t\t\t\t\t\t\t"+posy+";\n";
 						//if(((w2x+w1x)/2) >= posy*dir[0] && ((w2y+w1y)/2) >= posx*dir[1])
 						//if(isinfront(w1x,w1y,w2x,w2y,posx,posy,dir))
-						coord = [w1x,w1y,w2x,w2y];
+						//coord = [w1x,w1y,w2x,w2y];
 						if(lineIntersect(posx,posy,posx+(dir[0]*rg),posy+(dir[1]*rg),w1x,w1y,w2x,w2y))
 						{
 							//var ff = distanceoflines(posx,posy,posx+(dir[0]/6),posy+(dir[1]/6),w1x,w1y,w2x,w2y);
@@ -253,12 +259,11 @@ global.getCycleSensors = function(full=false)
 			}
 		}
 	}
-	var pLen = engine.players.length-1;
+	var pLen = players.length-1;
 	var wCycle, cycle;
 	var walls, len;
-	for(var a=pLen;a>=0;--a) if(engine.players[a] !== undefined)
+	for(var a=pLen;a>=0;--a) if(players[a] !== undefined)
 	{
-		wCycle = engine.players[a];
 		walls = wCycle.walls.map;
 		len = walls.length;
 		for(var i=len-1;i>=0;--i)
@@ -270,97 +275,102 @@ global.getCycleSensors = function(full=false)
 				var p2 = walls[i+1];
 				//var w2x = p2[0],w2y = p2[1],w2z = p2[2];
 				
-				for(var x=pLen;x>=0;--x) if(engine.playersById[x] && engine.playersById[x].alive)
+				for(var x=pLen;x>=0;--x) if(players[x] && players[x].alive)
 				{
-					if(wCycle !== engine.playersById[x] || i <= len-(settings.ARENA_AXES))
+					if(wCycle !== players[x] || i <= len-(settings.ARENA_AXES))
 					{
-						if((p1[2]||0) <= engine.playersById[x].position.z && (p1[2]||0)+2 >= engine.playersById[x].position.z)
+						if((p1[2]||0) <= players[x].position.z && (p1[2]||0)+2 >= players[x].position.z)
 						{
 						
-							if(engine.playersById[x].newPos && lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].newPos.x,engine.playersById[x].newPos.y,p1[0],p1[1],p2[0],p2[1]))
+							if(players[x].newPos && lineIntersect(players[x].position.x,players[x].position.y,players[x].newPos.x,players[x].newPos.y,p1[0],p1[1],p2[0],p2[1]))
 							{
-								engine.players[x].position.x = engine.players[x].lastpos.x = engine.players[x].newPos.x;
-								engine.players[x].position.y = engine.players[x].lastpos.y = engine.players[x].newPos.y;
-								delete engine.players[x].newPos;
-								return getCycleSensors(full);
+								players[x].position.x = players[x].newPos.x;
+								players[x].position.y = players[x].newPos.y;
+								var dir = cdir(players[x].rotation.z);
+								players[x].lastpos.x = players[x].newPos.real.x-players[x].dir.front[0];
+								players[x].lastpos.y = players[x].newPos.real.y-players[x].dir.front[1];
+								delete players[x].newPos;
+								//return getCycleSensors(full);
+								retToLastSafe(players[x],p1[0],p1[1],p2[0],p2[1]);
+								//centerMessage("tried to phase through wall - newpos");
 							}
-							if(lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].lastpos.x,engine.playersById[x].lastpos.y,p1[0],p1[1],p2[0],p2[1]))
+							if(lineIntersect(players[x].position.x,players[x].position.y,players[x].lastpos.x,players[x].lastpos.y,p1[0],p1[1],p2[0],p2[1]))
 							{
-								retToLastSafe(engine.playersById[x],p1[0],p1[1],p2[0],p2[1]);
+								retToLastSafe(players[x],p1[0],p1[1],p2[0],p2[1]);
 							}
 							else
 							{
-								var dir = engine.playersById[x].dir.front,
-									ldir = engine.playersById[x].dir.left,
-									rdir = engine.playersById[x].dir.right,
-									ltdir = engine.playersById[x].dir.leftTurn,
-									rtdir = engine.playersById[x].dir.rightTurn;
-								//var rg = engine.playersById[x].sensor.front==Infinity?(engine.playersById[x].speed*range):engine.playersById[x].sensor.front;
-								//if(engine.playersById[x].sensor.front==Infinity)
-									var rg=engine.playersById[x].speed*range;//else var rg=engine.playersById[x].sensor.front;
-								//if(!(engine.playersById[x].position.x == p2[0] && engine.playersById[x].position.y == p2[1]))
+								dir = players[x].dir.front;
+								ldir = players[x].dir.left;
+								rdir = players[x].dir.right;
+								ltdir = players[x].dir.leftTurn;
+								rtdir = players[x].dir.rightTurn;
+								//var rg = players[x].sensor.front==Infinity?(players[x].speed*range):players[x].sensor.front;
+								//if(players[x].sensor.front==Infinity)
+									var rg=players[x].speed*range;//else var rg=players[x].sensor.front;
+								//if(!(players[x].position.x == p2[0] && players[x].position.y == p2[1]))
 								{
-									if(lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x+(dir[0]*rg),engine.playersById[x].position.y+(dir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
+									if(lineIntersect(players[x].position.x,players[x].position.y,players[x].position.x+(dir[0]*rg),players[x].position.y+(dir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
 									{
-										var ff=distanceoflines(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x,engine.playersById[x].position.y,p1[0],p1[1],p2[0],p2[1]);
+										var ff=distanceoflines(players[x].position.x,players[x].position.y,players[x].position.x,players[x].position.y,p1[0],p1[1],p2[0],p2[1]);
 										/*forward = Math.min(forward,ff);
-										if(ff == forward) type = engine.playersById[x];//*/
-										if(ff < engine.playersById[x].sensor.front)
+										if(ff == forward) type = players[x];//*/
+										if(ff < players[x].sensor.front)
 										{ 
-											engine.playersById[x].sensor.front=ff;
-											engine.playersById[x].sensor.nearestobj = wCycle;
-											if(wCycle != engine.playersById[x]) 
+											players[x].sensor.front=ff;
+											players[x].sensor.nearestobj = wCycle;
+											if(wCycle != players[x]) 
 											{
-												engine.playersById[x].sensor.lastnonselfobj = wCycle;
+												players[x].sensor.lastnonselfobj = wCycle;
 											}
 										}
 									}
-									else if(lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x+(ldir[0]*rg),engine.playersById[x].position.y+(ldir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
+									else if(lineIntersect(players[x].position.x,players[x].position.y,players[x].position.x+(ldir[0]*rg),players[x].position.y+(ldir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
 									{
-										var ll = distanceoflines(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x,engine.playersById[x].position.y,p1[0],p1[1],p2[0],p2[1]);
-										if(ll < engine.playersById[x].sensor.left)
+										var ll = distanceoflines(players[x].position.x,players[x].position.y,players[x].position.x,players[x].position.y,p1[0],p1[1],p2[0],p2[1]);
+										if(ll < players[x].sensor.left)
 										{ 
-											engine.playersById[x].sensor.left=ll;
-											engine.playersById[x].sensor.lnearestobj = wCycle;
-												engine.playersById[x].sensor.objleft = wCycle;
+											players[x].sensor.left=ll;
+											players[x].sensor.lnearestobj = wCycle;
+												players[x].sensor.objleft = wCycle;
 										}
-										if( !engine.playersById[x].dir.lDiff && ll < engine.playersById[x].sensor.leftTurn )
+										if( !players[x].dir.lDiff && ll < players[x].sensor.leftTurn )
 										{
-											if(ll < engine.playersById[x].sensor.leftTurn) { engine.playersById[x].sensor.leftTurn=ll;}
+											if(ll < players[x].sensor.leftTurn) { players[x].sensor.leftTurn=ll;}
 										}
 									}
-									else if(lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x+(rdir[0]*rg),engine.playersById[x].position.y+(rdir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
+									else if(lineIntersect(players[x].position.x,players[x].position.y,players[x].position.x+(rdir[0]*rg),players[x].position.y+(rdir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
 									{
-										var rr = distanceoflines(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x,engine.playersById[x].position.y,p1[0],p1[1],p2[0],p2[1]);
-										if(rr < engine.playersById[x].sensor.right) 
+										var rr = distanceoflines(players[x].position.x,players[x].position.y,players[x].position.x,players[x].position.y,p1[0],p1[1],p2[0],p2[1]);
+										if(rr < players[x].sensor.right) 
 										{ 
-											engine.playersById[x].sensor.right=rr;
-											engine.playersById[x].sensor.rnearestobj = 
-												engine.playersById[x].sensor.objright = wCycle;
+											players[x].sensor.right=rr;
+											players[x].sensor.rnearestobj = 
+												players[x].sensor.objright = wCycle;
 										}
-										if( !engine.playersById[x].dir.rDiff && ll < engine.playersById[x].sensor.leftTurn )
+										if( !players[x].dir.rDiff && ll < players[x].sensor.leftTurn )
 										{
-											if(rr < engine.playersById[x].sensor.rightTurn) { engine.playersById[x].sensor.rightTurn=rr;}
+											if(rr < players[x].sensor.rightTurn) { players[x].sensor.rightTurn=rr;}
 										}
 									}
-									else if(lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x+(-dir[0]*rg),engine.playersById[x].position.y+(-dir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
+									else if(lineIntersect(players[x].position.x,players[x].position.y,players[x].position.x+(-dir[0]*rg),players[x].position.y+(-dir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
 									{
-										var bb=distanceoflines(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x,engine.playersById[x].position.y,p1[0],p1[1],p2[0],p2[1]);
-										if(bb < engine.playersById[x].sensor.rear) 
+										var bb=distanceoflines(players[x].position.x,players[x].position.y,players[x].position.x,players[x].position.y,p1[0],p1[1],p2[0],p2[1]);
+										if(bb < players[x].sensor.rear) 
 										{ 
-											engine.playersById[x].sensor.rear=bb; 
-											engine.playersById[x].sensor.objrear = wCycle;
+											players[x].sensor.rear=bb; 
+											players[x].sensor.objrear = wCycle;
 										}
 									}
-									if(engine.playersById[x].dir.lDiff && lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x+(ltdir[0]*rg),engine.playersById[x].position.y+(ltdir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
+									if(players[x].dir.lDiff && lineIntersect(players[x].position.x,players[x].position.y,players[x].position.x+(ltdir[0]*rg),players[x].position.y+(ltdir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
 									{
-										var ll = distanceoflines(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x,engine.playersById[x].position.y,p1[0],p1[1],p2[0],p2[1]);
-										if(ll < engine.playersById[x].sensor.leftTurn) { engine.playersById[x].sensor.leftTurn=ll;}
+										var ll = distanceoflines(players[x].position.x,players[x].position.y,players[x].position.x,players[x].position.y,p1[0],p1[1],p2[0],p2[1]);
+										if(ll < players[x].sensor.leftTurn) { players[x].sensor.leftTurn=ll;}
 									}
-									else if(engine.playersById[x].dir.rDiff && lineIntersect(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x+(rtdir[0]*rg),engine.playersById[x].position.y+(rtdir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
+									else if(players[x].dir.rDiff && lineIntersect(players[x].position.x,players[x].position.y,players[x].position.x+(rtdir[0]*rg),players[x].position.y+(rtdir[1]*rg),p1[0],p1[1],p2[0],p2[1]))
 									{
-										var rr = distanceoflines(engine.playersById[x].position.x,engine.playersById[x].position.y,engine.playersById[x].position.x,engine.playersById[x].position.y,p1[0],p1[1],p2[0],p2[1]);
-										if(rr < engine.playersById[x].sensor.rightTurn) { engine.playersById[x].sensor.rightTurn=rr;}
+										var rr = distanceoflines(players[x].position.x,players[x].position.y,players[x].position.x,players[x].position.y,p1[0],p1[1],p2[0],p2[1]);
+										if(rr < players[x].sensor.rightTurn) { players[x].sensor.rightTurn=rr;}
 									}
 								}
 							}
@@ -373,7 +383,7 @@ global.getCycleSensors = function(full=false)
 	/*for(var x=engine.map.zones.length-1;x>=0;--x)
 	{
 		var zone = engine.map.zones[x];
-		for(var y=engine.players.length-1;y>=0;--y) if(engine.players[y] !== undefined)
+		for(var y=players.length-1;y>=0;--y) if(players[y] !== undefined)
 		{
 			var ff = Math.sqrt(((zone[1]-p2x)**2)+((zone[2]-p2y)**2))-zone[3];
 			if(ff < cycle.sensor.front) { cycle.sensor.front=ff; cycle.sensor.nearestobj = "zone"; }
@@ -381,24 +391,25 @@ global.getCycleSensors = function(full=false)
 	}*/
 	//console.log(forward);
 	if(oneline != "") console.log(oneline);
-	for(var x=engine.players.length-1;x>=0;--x) if((cycle=engine.players[x]) !== undefined && cycle.lastpos)
+	for(var x=players.length-1;x>=0;--x) if((cycle=players[x]) !== undefined && cycle.lastpos)
 	{
 		cycle.lastpos.x = cycle.position.x;
 		cycle.lastpos.y = cycle.position.y;
 		cycle.lastpos.z = cycle.position.z;
-		engine.players[x].lastdir = {
-			front:engine.players[x].dir.front,
-			left:engine.players[x].dir.left,
-			right:engine.players[x].dir.right
+		players[x].lastdir = {
+			front:players[x].dir.front,
+			left:players[x].dir.left,
+			right:players[x].dir.right
 		};
-		engine.players[x].lastsensor = {
-			front:engine.players[x].sensor.front,
-			left:engine.players[x].sensor.left,
-			right:engine.players[x].sensor.right
+		players[x].lastsensor = {
+			front:players[x].sensor.front,
+			left:players[x].sensor.left,
+			right:players[x].sensor.right
 		};
 		cycle.intersectTest = [];
 	}
 }
+})();
 
 global.maxSpeed = function()
 {
