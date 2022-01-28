@@ -89,7 +89,6 @@ global.localStorage = {
 performance = {now:function(){return process.uptime()*1000}};
 global.xmllint = require('./scripts//lib/xmllint.js'); //XML verification
 require('./scripts//functions-head.js');
-require('./scripts//functions-body.js');
 function mixCycle(){} //empty function for sound
 ctx = false; // no sound
 require('./scripts//config.js'); settings.FINISH_TYPE = 1;
@@ -99,6 +98,7 @@ engine.dedicated = true;
 engine.console.color = color;
 delete settings.players[0]; //delete client player
 //engine.scene = new THREE.Scene(); // don't run init()
+require('./scripts//functions-body.js');
 require('./scripts//init.js');
 global.AI = require('./scripts//ai.js');
 global.Player = require('./scripts//player.js');
