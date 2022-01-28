@@ -550,6 +550,9 @@ function draw2d_canvas() //TODO: have an svg output option
 	}
 	for(var x=engine.players.length-1;x>=0;x--) if(engine.players[x] !== undefined)
 	{
+		if( !engine.playersById[x].walls.children[0] || !engine.playersById[x].walls.children[0].children[0] )
+			continue;
+		
 		var color = engine.players[x].walls.children[0].children[0].material.color;
 		ctx.strokeStyle = "rgb("+(color.r*255)+","+(color.g*255)+","+(color.b*255)+")";
 		ctx.beginPath();
