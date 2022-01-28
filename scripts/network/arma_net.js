@@ -261,6 +261,7 @@ class ArmaNetBase
 					if(!(obj.obj instanceof Player))
 					{
 						//this.usedIDs.indexOf(obj)
+						let p = obj.obj;
 						obj.obj = new Player(obj.obj);
 						if(obj.ownerid == this.netid)
 						{
@@ -280,8 +281,11 @@ class ArmaNetBase
 							console.debug("Assign player ID "+i);
 							engine.players[i] = obj.obj;
 						}
+						obj.obj.ping = p.ping;
+						obj.obj.setScore(p.score);
 					}
 				}
+				setTimeout(game.updateScoreBoard,0);
 				
 				break;
 			
@@ -408,10 +412,12 @@ class ArmaNetBase
 				
 				msg.bufpos += 2; // eat unknown short
 				
-				// brake usage
-				cycle.brakes = 1-(msg.getShort()/65535);
-				
 				msg.bufpos += 2; // eat unknown short
+				
+				// brake usage
+				cycle.brakes = (msg.getShort()/65535);
+				
+				break;
 				
 				break;
 			
@@ -419,6 +425,10 @@ class ArmaNetBase
 			case _arma_obj.timer:
 				engine.syncGameTime = msg.getFloat()*1e3;
 				engine.timemult = msg.getFloat();
+				if(init)
+				{
+					engine.gtime = engine.syncGameTime;
+				}
 				break;
 			
 			case _arma_obj.game:
@@ -449,6 +459,7 @@ class ArmaNetBase
 							game.unpause();
 							if(full) setTimeout(game.unpause, 100);
 							
+							if(engine.zones.children)
 							{
 								let rm = [];
 								console.log("preexisting zones", engine.zones.children.length);
@@ -462,6 +473,12 @@ class ArmaNetBase
 								console.log("deleting "+rm.length+" unsynced zones")
 								engine.zones.remove.apply(engine.zones, rm);
 							}
+							
+							if( !engine.players[engine.viewTarget] || !engine.players[engine.viewTarget].alive )
+							{
+								game.changeViewTarget(1, true);
+							}
+							
 							break;
 					}
 				}
@@ -526,7 +543,7 @@ class ArmaNetBase
 				
 				//console.log(prop);
 				
-				if(full)
+				if( full || !obj.obj )
 				{
 					var minDist = Infinity, dist;
 					var z;
@@ -800,7 +817,7 @@ class ConnectionArma extends ArmaNetBase
 				setTimeout(function()
 				{
 					if(that.msgsToAck.length == 0) return;
-					console.log("Send acks");
+					//console.log("Send acks");
 					var idmsg = new nMessage( _arma_ack, 0 ); //, 2*that.msgsToAck.length
 					for(var i of that.msgsToAck) { idmsg.pushShort( i ); }
 					that.send(idmsg);
@@ -1010,6 +1027,10 @@ class ConnectionArma extends ArmaNetBase
 						type = " "; //bogus type so our value isn't overwritten
 						value = Math.log2(msg.getFloat(), 2)*2;
 						break;
+					
+					case "RESOURCE_REPOSITORY_SERVER":
+						chsetting(setting, msg.getStr());
+						return;
 				}
 				
 				if(!type)
@@ -1117,6 +1138,87 @@ class ConnectionArma extends ArmaNetBase
 				break;
 			}
 			
+			case _arma_sync:
+			{
+				var timeout = msg.getFloat();
+				var sync_sn_netObjects = msg.getBool();
+				var c_sync = msg.getShort();
+				
+				console.debug("sync",timeout,sync_sn_netObjects,c_sync);
+				
+				if(sync_sn_netObjects)
+				{
+					/*
+					for(var i=0;i<_arma_MAXIDS;++i)
+					{
+						if( this.server.usedIDs[i] && this.usedIDs[i].obj )
+						{
+							this.sync(this.usedIDs[i].obj);
+						}
+					}
+					*/
+				}
+				
+				this.send((new nMessage( _arma_syncAck, 0, 2 )).pushShort( c_sync ));
+				break;
+			}
+			
+			case _arma_removePlayer:
+			{
+				var objid = msg.getShort();
+				break;
+			}
+			
+			case _arma_objDestroy:
+			{
+				var obj, objid;
+				while(!msg.end())
+				{
+					objid = msg.getShort();
+					if(!objid) continue;
+					var obj = this.usedIDs[objid];
+					if(obj)
+					{
+						switch(obj.type)
+						{
+							case _arma_obj.player:
+							case _arma_obj.player_ai:
+								//this.handler( (new nMessage( _arma_removePlayer )).pushShort( objid ) )
+								if( obj.obj && obj.obj.alive )
+								{
+									obj.kill();
+								}
+								delete engine.players[engine.players.indexOf(obj.obj)];
+								game.updateScoreBoard();
+								break;
+							
+							case _arma_obj.cycle:
+								if( obj.owner && obj.owner.alive )
+								{
+									obj.owner.kill();
+								}
+								break;
+							
+							case _arma_obj.cycleWall:
+								if(obj.owner && obj.owner.netWalls)
+								{
+									var i = obj.owner.netWalls.indexOf(obj);
+									if(i >= 0) obj.owner.netWalls.splice(i, 1);
+								}
+								break;
+							
+						}
+						
+						delete this.usedIDs[objid];
+					}
+					else
+					{
+						engine.console.print("Server called to destroy object "+objid+" which already doesn't exist\n");
+					}
+				}
+				break;
+			}
+			
 			case _arma_objSync:
 			{
 				var objid = msg.getShort();
@@ -1137,7 +1239,7 @@ class ConnectionArma extends ArmaNetBase
 			default:
 			if( Object.values(_arma_obj).indexOf(msg.descriptor) !== -1 )
 			{
-				console.debug("Got remote object");
+				//console.debug("Got remote object");
 				
 				var objid = msg.getShort();
 				var owner = msg.getShort();
