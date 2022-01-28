@@ -235,8 +235,11 @@ class ArmaNetBase
 				obj.obj.pingCharity = msg.getShort();
 				obj.obj.name = msg.getString();
 				
+				if( full || ( !obj.obj.alive && this.gameState != _arma_gameState.playing ) )
+				{
 				obj.obj.cycleColor = cycleColor(r,g,b);
 				obj.obj.tailColor = color(r,g,b);
+				}
 				
 				obj.obj.ping = Math.round(msg.getFloat()*1000);
 				
