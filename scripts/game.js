@@ -1204,7 +1204,8 @@ game.changeViewTarget = function(a=1,forcechange=false)
 	}
 	
 	if(engine.dedicated) return;
-	engine.console.print("Watching "+engine.players[engine.viewTarget].name+"...\n");
+	if(!engine.players[engine.viewTarget]) return;
+	engine.console.print("Watching "+engine.players[engine.viewTarget].getBoringName()+"...\n");
 }
 
 game.checkForWinner = function()
