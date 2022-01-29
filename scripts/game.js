@@ -1107,6 +1107,14 @@ game.killBlame = function(cycle,escape=false)
 	cycle.kill();
 }
 
+game.blastHole = function(pos, radius)
+{
+	for(var i=engine.players.length-1;i>=0;--i) if(engine.players[i])
+	{
+		engine.players[i].wallBlastHole(pos.x, pos.y, pos.z||0, radius);
+	}
+}
+
 game.start = function()
 {
 	if(!engine.gameRunning) game.run();

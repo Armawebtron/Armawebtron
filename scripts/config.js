@@ -499,7 +499,7 @@ global.Setting = Setting;
 	Setting.new({ name: "CYCLE_TURN_SPEED_FACTOR", val: 0.95 }).makeGameSetting();
 
 	Setting.new({ name: "WALLS_LENGTH", val: 600 }).makeGameSetting();
-	//settings["WALLS_LENGTH"].set(30);
+	Setting.new({ name: "EXPLOSION_RADIUS", val: 2 }).makeGameSetting();
 	
 	Setting.new({ name: "RESPAWN_TIME", val: -1 }).makeGameSetting();
 	Setting.new({ name: "CYCLE_FIRST_SPAWN_PROTECTION", val: false }).makeGameSetting();

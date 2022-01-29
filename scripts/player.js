@@ -169,6 +169,74 @@ class Player extends THREE.Object3D
 		
 		this.calcWallLength();
 	}
+	wallBlastHole(x, y, z, radius) //! blast a hole in the cycle walls
+	{
+		var wallX, wallY, wallX2, wallY2, dir, xdir, ydir, dist, mkHole, add;
+		
+		{
+			// forward loop this time, since the wall array will be growing as walls are split...
+			for(var i=0;i<this.walls.map.length;++i)
+			{
+				wallX = this.walls.map[i][0];
+				wallY = this.walls.map[i][1];
+				
+				if( this.walls.map[i+1] && (this.walls.map[i+1][2]||0) >= 0 )
+				{
+					wallX2 = this.walls.map[i+1][0];
+					wallY2 = this.walls.map[i+1][1];
+					
+					dist = pointDistance( wallX, wallY, wallX2, wallY2 );
+					
+					dir = Math.atan2( wallY2-wallY, wallX2-wallX );
+					xdir = Math.cos(dir)/100; ydir = Math.sin(dir)/100;
+					
+					add = 0;
+					
+					// now we loop through the part of this wall
+					while(dist > 0)
+					{
+						wallX += xdir;
+						wallY += ydir;
+						dist -= 0.01;
+						
+						// check if this piece of the wall is in the blast area
+						if( is_in_circle( x, y, radius, wallX, wallY, 0.01 ) )
+						{
+							if(!mkHole)
+							{
+								// this is where the hole should start
+								
+								mkHole = [ wallX, wallY, -Infinity ];
+							}
+						}
+						else if(mkHole)
+						{
+							// alright, now we know where a hole should begin and end
+							// time to actually blast one.
+							
+							this.walls.map.splice( i+1, 0, mkHole, [wallX, wallY, this.walls.map[i+1][2]] );
+							i += 2;
+							
+							mkHole = null;
+						}
+					}
+					
+					if(mkHole)
+					{
+						this.walls.map.splice( i+1, 0, mkHole, [wallX, wallY, this.walls.map[i+1][2]] );
+						i += 2;
+						
+						mkHole = [ wallX2, wallY2, -Infinity ];
+						
+					}
+					
+				}
+			}
+		}
+		
+		// update the 3d view to reflect the new walls
+		this.resetWall();
+	}
 	turn(dir)
 	{
         if(dir != -1 && dir != 1) return false;
@@ -234,6 +302,10 @@ class Player extends THREE.Object3D
 		}
 		catch(e) { console.error(e); }
 		spawnExplosion(this.position,this.cycleColor,this.tailColor);
+		if(settings.EXPLOSION_RADIUS > 0)
+		{
+			game.blastHole(this.position, settings.EXPLOSION_RADIUS);
+		}
 		game.updateScoreBoard();
 		
 		if(this.hasFlag)
