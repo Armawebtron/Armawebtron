@@ -15,11 +15,16 @@ global.gafd = function(a,b) //! returns angle from xdir, ydir
 	return c
 }
 
-global.cdir = function(theta) //! Gets [xdir, ydir] from angle
+global.cdir = function(theta) //! Gets [xdir, ydir] from radian
 {
 	var x = Math.cos(theta);
 	var y = Math.sin(theta);
 	return [x,y];
+}
+
+global.crad = function(c) //! Gets radian from [xdir, ydir]
+{
+	return Math.atan2(c[1], c[0]);
 }
 
 global.fileOpen = function(callback,type="plain/text")
