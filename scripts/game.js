@@ -869,7 +869,7 @@ game.run = function(oneoff=false)
 			//zones expand
 			if(zone.radius > 0)
 			{
-				engine.zones.children[x].scale.x = engine.zones.children[x].scale.y = (zone.radius += zone.expansion*timestep*engine.REAL_ARENA_SIZE_FACTOR);
+				engine.zones.children[x].scale.x = engine.zones.children[x].scale.y = (zone.radius += zone.expansion*timestep);
 			}
 			else if(zone.radius < 0) engine.zones.children[x].scale.x = engine.zones.children[x].scale.y = zone.radius = 0;
 			
@@ -991,10 +991,10 @@ game.run = function(oneoff=false)
 						zone.onOutside(cycle,engine.gtime,timestep);
 					}
 				}
-				if(zone.type == "fortress") //fortress recover rate
-				{
-					zone.rotationSpeed += (settings.ZONE_SPIN_SPEED-zone.rotationSpeed)*timestep*settings.FORTRESS_CONQUEST_DECAY_RATE;
-				}
+			}
+			if(zone.type == "fortress") //fortress recover rate
+			{
+				zone.rotationSpeed += (settings.ZONE_SPIN_SPEED-zone.rotationSpeed)*timestep*settings.FORTRESS_CONQUEST_DECAY_RATE;
 			}
 			if(typeof(zone.xdir)+typeof(zone.ydir) !== "undefinedundefined")
 			{
