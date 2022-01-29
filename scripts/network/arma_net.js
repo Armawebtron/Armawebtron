@@ -396,7 +396,7 @@ class ArmaNetBase
 					
 					cycle.turns = turnCount;
 					
-					cycle.lastTurnTime = cycle.gtime;
+					cycle.lastTurnTime = cycle.gameTime;
 				}
 				else
 				{
