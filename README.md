@@ -10,6 +10,10 @@ finite cycle trails lengths, holes, zones, and custom maps. As such, many
 game modes are playable without too much hassle. Some are even included and
 selectable as presets.
 
+Oh, and since it runs in a browser and offers very basic touchscreen capability,
+it will run on a mobile device, provided it has a halfway modern browser.
+More work is planned to improve in this area.
+
 Unfortunately, due to limitations of what browsers allow, Armawebtron within
 a web browser can NOT directly connect to an Armagetron server.
 
@@ -19,7 +23,7 @@ a means to have a downloadable application, it also offers the ability to browse
 connect, chat, and play in Armagetron servers natively.
 
 And back in the good ol' web browser, there is a semi-functional bridge available
-which does, to some extent, allow you to connect and play in an Armagetron
+which does, to some extent, allow you to indirectly connect and play in an Armagetron
 server. But it is unreliable, and currently will only connect to the most
 popular server at the time, or nothing at all if nothing is populated.
 No guarantees it will function correctly, if at all.
