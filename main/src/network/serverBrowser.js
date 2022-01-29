@@ -76,16 +76,26 @@ getServers.tdcMaster = function(oncomplete)
 		{
 			case "server":
 				console.log(msg);
-				//for(var i=that.cache.length-1;i>=0;--i)
+				
+				var host = msg.data[0];
+				var port = (msg.data[1])|0;
+				
+				for(var i=that.cache.length-1;i>=0;--i)
 				{
-					that.cache.push({
-						host: msg.data[0],
-						port: (msg.data[1])|0,
-						ssl: Boolean(msg.data[2]),
-						type: msg.data[2]||"3dc",
-					});
-					that.doCheck();
+					if(that.cache[i].host == host && that.cache[i].port == port)
+					{
+						that.cache[i].ssl = Boolean(msg.data[2]);
+						return true;
+					}
 				}
+				
+				that.cache.push({
+					host: host,
+					port: port,
+					ssl: Boolean(msg.data[2]),
+					type: msg.data[2]||"3dc",
+				});
+				that.doCheck();
 				return true;
 		}
 		return false;

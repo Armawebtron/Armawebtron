@@ -964,6 +964,29 @@ class ServerClient3dc
 				}
 				break;
 			
+			case "info":
+				var players = [];
+				var p = 0;
+				for(var i=engine.players.length-1;i>=0;--i)
+				{
+					if( engine.players[i] && !engine.players[i].AI )
+					{
+						++p;
+						players.push(engine.players[i].getColoredName());
+					}
+				}
+				
+				var data = {
+					name: settings.SERVER_NAME,
+					version: "3dc-beta8",
+					
+					players: players,
+					playersMax: settings.MAX_CLIENTS,
+				};
+				
+				this.send({data: data, gtime: engine.gtime});
+				break;
+			
 			case "rdy": this.assignNetId(); break;
 			
 			case "player":
