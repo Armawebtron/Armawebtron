@@ -29,7 +29,7 @@ lot of work to be playable.
 * Minimap doesn't scale in resolution well (fix would be using SVG instead of Canvas)
 * Minimap has some performance negatives, similar as below
 * The more turns, the more walls that have to be calculated, meaning lower FPS.
- > This can never be "fixed" but the effect has been mitigated quite a bit in sensors.
+   - This can never be "fixed" but the effect has been mitigated quite a bit in sensors.
 * Network support is quite buggy
 
 
@@ -45,9 +45,9 @@ lot of work to be playable.
 * Capture the flag
 * Shooting
 * Better bots
- > Camping detection
- > Ability to trace cycles, killing enemies
-   - Needs Better sensors?
+   + Camping detection
+   + Ability to trace cycles, killing enemies
+      - Needs Better sensors?
 * Access levels, Global ID
 * Proper language file.
 
