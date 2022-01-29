@@ -564,7 +564,7 @@ global.Setting = Setting;
 	//MAP
 	Setting.new({ name: "ARENA_AXES", val: 4, max: 65535 }).makeGameSetting();
 	Setting.new({ name: "STRICT_AXES_SPAWN", val: true }).makeGameSetting();
-	Setting.new({ name: "RESOURCE_REPOSITORY_CACHE", val: './cache/resource/' }).makeGameSetting();
+	Setting.new({ name: "RESOURCE_REPOSITORY_CACHE", val: './included/resource/' }).makeGameSetting();
 	Setting.new({ name: "MAP_FILE", val: 'Anonymous/polygon/regular/square-1.0.1.aamap.xml' }).makeGameSetting();
 	Setting.new({ name: "MAP_ROTATION", val: "" }).makeGameSetting();
 	Setting.new({ name: "ROTATION_TYPE", val: 0 }).makeGameSetting(); //1:round, 2:match

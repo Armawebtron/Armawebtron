@@ -41,13 +41,13 @@ function createWindow()
 	
 	window = new BrowserWindow({icon:"favicon.ico",backgroundColor:"#000",show:true,
 		webPreferences: {
-			preload: path.join(app.getAppPath(),"scripts","electron","preload.js"),
+			preload: path.join(app.getAppPath(),"main","src","electron","preload.js"),
 			//contextIsolation: true,
 			nodeIntegration: false,
 		}
 	});
 	
-	window.loadFile("index.html",{hash:args});
+	window.loadFile("main/index.html",{hash:args});
 	window.once("ready-to-show",window.show);
 	window.on("closed",function(){window=null});
 	window.autoHideMenuBar = true;

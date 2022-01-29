@@ -71,31 +71,31 @@ window.initRenderer = function()
 			if(!THREE.EffectComposer)
 			{
 				engine.console.print("Loading post-processing composer...\n");
-				include("scripts/lib/PostProcessing/EffectComposer.js", initRenderer);
+				include("src/lib/PostProcessing/EffectComposer.js", initRenderer);
 				return;
 			}
 			if(!THREE.ShaderPass)
 			{
 				engine.console.print("Loading post-processing shader pass...\n");
-				include("scripts/lib/PostProcessing/ShaderPass.js", initRenderer);
+				include("src/lib/PostProcessing/ShaderPass.js", initRenderer);
 				return;
 			}
 			if(!THREE.RenderPass)
 			{
 				engine.console.print("Loading post-processing render pass...\n");
-				include("scripts/lib/PostProcessing/RenderPass.js", initRenderer);
+				include("src/lib/PostProcessing/RenderPass.js", initRenderer);
 				return;
 			}
 			if( settings.POSTPROCESSING_FXAA && !THREE.FXAAShader )
 			{
 				engine.console.print("Loading FXAA Shader...\n");
-				include("scripts/lib/PostProcessing/FXAAShader.js", initRenderer);
+				include("src/lib/PostProcessing/FXAAShader.js", initRenderer);
 				return;
 			}
 			if( settings.POSTPROCESSING_BLOOM && !THREE.UnrealBloomPass )
 			{
 				engine.console.print("Loading post-processing bloom pass...\n");
-				include("scripts/lib/PostProcessing/UnrealBloomPass.js", initRenderer);
+				include("src/lib/PostProcessing/UnrealBloomPass.js", initRenderer);
 				return;
 			}
 			

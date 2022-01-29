@@ -1,13 +1,13 @@
 @font-face
 {
 	font-family: Armagetronad;
-	src: url("./fonts/Armagetronad.woff");
+	src: url("../fonts/Armagetronad.woff");
 }
 
 @font-face
 {
 	font-family: Flynn;
-	src: url("./fonts/Flynn.otf");
+	src: url("../fonts/Flynn.otf");
 }
 /*
 @font-face
