@@ -264,6 +264,7 @@ global.getCycleSensors = function(full=false)
 	var walls, len;
 	for(var a=pLen;a>=0;--a) if(players[a] !== undefined)
 	{
+		wCycle = players[a];
 		walls = wCycle.walls.map;
 		len = walls.length;
 		for(var i=len-1;i>=0;--i)
