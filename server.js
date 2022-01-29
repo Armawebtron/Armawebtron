@@ -3,7 +3,7 @@ global.window = global;
 _GET = {};
 datadir = process.env.HOME+"/.local/share/3dcycles-dedicated/";
 cfgdir = process.env.HOME+"/.config/3dcycles-dedicated/";
-srcdir = "./scripts/";
+srcdir = "./main/src/";
 var color = false;
 ignoreErrors = true; //ignore errors like browsers do? Can potentially leave the game in an undefined state
 debugMessages = false; //spit out debug messages?
@@ -52,7 +52,7 @@ try{https = require("https")} catch(e) { console.warn("WARNING: Unable to load H
 WebSocket = require("ws");
 //global.DOMParser = require('xmldom').DOMParser;
 global.DOMParser = new (require("jsdom").JSDOM)().window.DOMParser;
-global.THREE = require('./scripts//lib/Three.js'); //webgl framework (still neccessary)
+global.THREE = require('./main/src//lib/Three.js'); //webgl framework (still neccessary)
 
 global.Detector = {webgl:true};
 global.localStorage = {
@@ -60,11 +60,11 @@ global.localStorage = {
 	{
 		var fileDir;
 		if(file.startsWith("included/"))
-			fileDir = srcdir+"../cache/config/"+(file.replace("included/",""));
+			fileDir = srcdir+"/included/config/"+(file.replace("included/",""));
 		else
 			fileDir = cfgdir+"/"+file;
 		fileDir = path.normalize(fileDir);
-		if(!fileDir.startsWith(srcdir+"../cache/config/") && !fileDir.startsWith(cfgdir))
+		if( !fileDir.startsWith(srcdir+"/included/config/") && !fileDir.startsWith(cfgdir) )
 		{
 			engine.console.print("SECURITY: Attempted access to outside path forbidden.\n",false);
 		}
@@ -87,26 +87,26 @@ global.localStorage = {
 	now:function(){return (new Date().getTime())-this.timeOrigin},
 };*/
 performance = {now:function(){return process.uptime()*1000}};
-global.xmllint = require('./scripts//lib/xmllint.js'); //XML verification
-require('./scripts//functions-head.js');
+global.xmllint = require('./main/src//lib/xmllint.js'); //XML verification
+require('./main/src//functions-head.js');
 function mixCycle(){} //empty function for sound
 ctx = false; // no sound
-require('./scripts//config.js'); settings.FINISH_TYPE = 1;
+require('./main/src//config.js'); settings.FINISH_TYPE = 1;
 settings.CYCLE_SYNC_INTERVAL = 0.5;
-require('./scripts//engine.js'); 
+require('./main/src//engine.js'); 
 engine.dedicated = true;
 engine.console.color = color;
 delete settings.players[0]; //delete client player
 //engine.scene = new THREE.Scene(); // don't run init()
-require('./scripts//functions-body.js');
-require('./scripts//init.js');
-global.AI = require('./scripts//ai.js');
-global.Player = require('./scripts//player.js');
+require('./main/src//functions-body.js');
+require('./main/src//init.js');
+global.AI = require('./main/src//ai.js');
+global.Player = require('./main/src//player.js');
 console.log(Player);
-global.Team = require('./scripts//team.js');
-global.Zone = require('./scripts//zone.js');
-eval(''+fs.readFileSync('./scripts//buildObjects.js'));
-global.game = require('./scripts//game.js');
+global.Team = require('./main/src//team.js');
+global.Zone = require('./main/src//zone.js');
+eval(''+fs.readFileSync('./main/src//buildObjects.js'));
+global.game = require('./main/src//game.js');
 global.render = function(){};
 
 roundEndForce = function() //HACK to keep the round from spawning again
@@ -133,8 +133,8 @@ global.serverSleep = function()
 
 if(!engine.scene) init();
 
-const { Connection3dc, Server3dc } = require('./scripts//network/3dc_net.js');
-const { ConnectionArma, ServerArma } = require('./scripts//network/arma_net.js');
+const { Connection3dc, Server3dc } = require('./main/src//network/3dc_net.js');
+const { ConnectionArma, ServerArma } = require('./main/src//network/arma_net.js');
 
 //window.svr = new Server3dc(null,settings.SERVER_PORT,settings.SERVER_SSL_ENABLED);
 //window.svr = new ServerArma(null, 4534);
