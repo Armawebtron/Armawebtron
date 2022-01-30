@@ -598,6 +598,7 @@ class ArmaNetBase
 				
 				// flag
 				var flag = 0;
+				if(obj.obj.chatting) flag ^= 1;
 				if(obj.obj.spectating) flag ^= 2;
 				msg.pushShort(flag);
 				
@@ -1330,8 +1331,45 @@ class ConnectionArma extends ArmaNetBase
 		}
 	}
 	
-	syncPlayData()
+	syncPlayData(cycle=engine.players[engine.activePlayer])
 	{
+		if(!cycle) return;
+		
+		if( cycle.braking != cycle.brakingPrev && this.cycleID )
+		{
+			var msg = new nMessage( _arma_cycleEvent );
+			
+			msg.pushFloat(cycle.position.x).pushFloat(cycle.position.y);
+			msg.pushFloat(cycle.dir.front[0]).pushFloat(cycle.dir.front[1]);
+			
+			msg.pushFloat(cycle.dist);
+			
+			var flags = 0;
+			if( cycle.braking )
+				flags |= 0x01;
+			if( cycle.chatting )
+				flags |= 0x02;
+			
+			msg.pushShort(flags);
+			
+			msg.pushShort(this.cycleID);
+			
+			msg.pushFloat(cycle.gameTime/1e3);
+			
+			this.send(msg);
+			
+			cycle.brakingPrev = cycle.braking;
+		}
+		
+		if( cycle.chatting != cycle.chattingPrev && this.playerSynced )
+		{
+			var msg = new nMessage( _arma_objSync ).pushShort(this.playerID);
+			
+			this.mkNetObj({ obj: cycle, type: _arma_obj.player }, msg);
+			this.send(msg);
+			
+			cycle.chattingPrev = cycle.chatting;
+		}
 		
 	}
 	
