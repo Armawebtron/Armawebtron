@@ -1145,8 +1145,9 @@ game.unpause = function()
 {
 	for(var ctrl in engine.controls)
 	{
-		engine.controls[ctrl] = [];
+		engine.controls[ctrl].splice(0);
 	}
+	engine.camera.resetViewDir();
 	//renderLoop = true;//replaces cutoff
 	if(engine.paused)
 	{

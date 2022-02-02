@@ -524,6 +524,15 @@ class GameCamera extends THREE.PerspectiveCamera
 			engine.camera.userViewDir.times = ta;
 		}
 	}
+	
+	resetViewDir()
+	{
+		if(engine.camera.userViewDir)
+		{
+			engine.camera.userViewDir.times = 0;
+			engine.camera.userViewDir = false;
+		}
+	}
 }
 global.GameCamera = GameCamera;
 
