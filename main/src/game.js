@@ -677,7 +677,7 @@ game.run = function(oneoff=false)
 	if(!engine.roundCommencing && !engine.paused) 
 	{
 		if(engine.network) engine.network.syncPlayData();
-		if(!oneoff && settings.GAME_LOOP != 1) {setTimeout(game.run,1000/settings.DEDICATED_FPS); engine.gameRunning = true;}
+		if(!oneoff && settings.GAME_LOOP == 1) { return; }
 		//time handlers and delta
 		var timenow = performance.now()/settings.TIME_FACTOR;
 		var rDelta = (timenow-engine.lastGameTime);
@@ -743,7 +743,7 @@ game.run = function(oneoff=false)
 						}
 					}
 					//bot turning
-					if(cycle.AI)
+					if( !oneoff && cycle.AI )
 					{
 						cycle.AI.think(timestep);
 					}
@@ -1065,7 +1065,7 @@ game.run = function(oneoff=false)
 	}
 	else
 	{
-		engine.gameRunning = false;
+		game.stopRunning();
 	}
 }
 
@@ -1117,7 +1117,11 @@ game.blastHole = function(pos, radius)
 
 game.start = function()
 {
-	if(!engine.gameRunning) game.run();
+	if(!engine.gameRunning)
+	{
+		engine.gameRunning = setInterval(game.run, 1000/settings.DEDICATED_FPS);
+		//game.run();
+	}
 	if(!engine.renderRunning) render();
 }
 
@@ -1127,6 +1131,15 @@ game.pause = function()
 	engine.startOfPause = performance.now();
 	if(engine.audio) engine.audio.stopCycles();
 }
+
+game.stopRunning = function()
+{
+	if(engine.gameRunning)
+	{
+		clearInterval(engine.gameRunning);
+		engine.gameRunning = false;
+	}
+};
 
 game.unpause = function()
 {
