@@ -200,6 +200,10 @@ window.onload = function()
 		{
 			chsetting("CONNECT_SSL",_GET["ssl"]);
 		}
+		if(typeof(_GET["type"]) != "undefined")
+		{
+			chsetting("CONNECT_TYPE",_GET["type"]);
+		}
 		if(typeof(_GET["preset"]) != "undefined")
 		{
 			menu('menu:preset_loaded');menu('menu:preset_loaded');
