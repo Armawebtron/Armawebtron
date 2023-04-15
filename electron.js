@@ -4,6 +4,8 @@ const path = require("path");
 
 let window; //global reference is needed for garbage collection
 
+global._window = window;
+
 function createWindow()
 {
 	var args = "";
@@ -23,7 +25,7 @@ function createWindow()
 				break;
 			case "-v": case "--version":
 				process.stdout.write("This is ");
-				require("./scripts/functions-head.js");
+				require("./main/src/functions-head.js");
 				process.stdout.write(tStringify("@progtitle@ @version@.\n"));
 				app.quit();
 				break;
@@ -39,10 +41,10 @@ function createWindow()
 		}
 	}
 	
-	window = new BrowserWindow({icon:"favicon.ico",backgroundColor:"#000",show:true,
+	window = new BrowserWindow({icon:"main/favicon.ico",backgroundColor:"#000",show:true,
 		webPreferences: {
 			preload: path.join(app.getAppPath(),"main","src","electron","preload.js"),
-			//contextIsolation: true,
+			contextIsolation: false,
 			nodeIntegration: false,
 		}
 	});
