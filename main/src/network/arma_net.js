@@ -1194,7 +1194,7 @@ class ConnectionArma extends ArmaNetBase
 								break;
 							
 							case _arma_obj.cycle:
-								if( obj.owner && obj.owner.alive )
+								if( obj.owner && obj.owner.alive && this.cycleID == objid )
 								{
 									obj.owner.kill();
 								}
@@ -1206,6 +1206,12 @@ class ConnectionArma extends ArmaNetBase
 									var i = obj.owner.netWalls.indexOf(obj);
 									if(i >= 0) obj.owner.netWalls.splice(i, 1);
 								}
+								break;
+							
+							case _arma_obj.zone:
+							case _arma_obj.zoneCirc:
+							case _arma_obj.zonePoly:
+								engine.zones.remove( obj.obj.mesh );
 								break;
 							
 						}
