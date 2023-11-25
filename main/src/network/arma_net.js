@@ -163,11 +163,13 @@ class ArmaNetBase
 		//this.usedIDs = {};
 		this.usedIDs = new Array(_arma_MAXIDS);
 		this.gameState = 0;
+		
+		this.minID = _arma_CLIENTS;
 	}
 	
 	hasType(t) //! find first message of type t
 	{
-		for(var i=_arma_CLIENTS;i<_arma_MAXIDS;++i)
+		for(var i=this.minID;i<_arma_MAXIDS;++i)
 		{
 			if( this.usedIDs[i] && this.usedIDs[i].type == t )
 			{
@@ -191,7 +193,7 @@ class ArmaNetBase
 	*/
 	hasObj(obj) //! find first instance of object
 	{
-		for(var i=_arma_CLIENTS;i<_arma_MAXIDS;++i)
+		for(var i=this.minID;i<_arma_MAXIDS;++i)
 		{
 			if( this.usedIDs[i] && this.usedIDs[i].obj == obj )
 			{
@@ -227,6 +229,7 @@ class ArmaNetBase
 					if(!obj.obj)
 					{
 						obj.obj = {};
+						obj.obj.engineType = settings.player.engineType;
 					}
 				}
 				
@@ -250,11 +253,43 @@ class ArmaNetBase
 				var score = msg.getInt();
 				if(obj.obj.score != score) 
 				{
-					if(obj.obj.setScore) obj.obj.setScore(score);
+					if(obj.obj.setScore)
+					{
+						var bk = 0;
+						if( obj.obj.team )
+							bk = obj.obj.team.score;
+						obj.obj.setScore(score);
+						if( obj.obj.team )
+							obj.obj.team.score = bk;
+					}
 					else obj.obj.score = score;
 				}
 				
 				msg.getBool();  //newdisc
+				
+				var nextTeamID = msg.getShort();
+				var teamID = msg.getShort();
+				var idealPlayersPerTeam = msg.getShort();
+				
+				var ot = this.usedIDs[teamID];
+				if( ot )
+				{
+					if( obj.obj.team != ot.obj && obj.obj.team instanceof Team )
+					{
+						var teamOld = obj.obj.team.members.indexOf( obj.obj );
+						if( teamOld != -1 )
+							obj.obj.team.members.splice(teamOld, 1);
+					}
+					obj.obj.team = ot.obj;
+					if( obj.obj instanceof Player )
+					{
+						if( obj.obj.team.members && obj.obj.team.members.indexOf( obj.obj ) == -1 )
+						{
+							obj.obj.team.members.push( obj.obj );
+						}
+					}
+					//console.log(ot);
+				}
 				
 				if(full)
 				{
@@ -263,12 +298,12 @@ class ArmaNetBase
 						//this.usedIDs.indexOf(obj)
 						let p = obj.obj;
 						obj.obj = new Player(obj.obj);
-						if(obj.ownerid == this.netid)
+						/*if(obj.ownerid == this.netid)
 						{
 							engine.activePlayer = this.netid;
 							engine.players[obj.ownerid] = obj.obj;
 						}
-						else
+						else*/
 						{
 							let i = 0;
 							for(;i<=engine.playersById.length;++i)
@@ -290,6 +325,8 @@ class ArmaNetBase
 				break;
 			
 			case _arma_obj.cycle:
+				if( this.skipCycleSyncHack && !full ) break;
+				
 				//var ownerID = msg.getShort();
 				var ownerID = obj.ownerid;
 				//var o = this.usedIDs[ownerID];
@@ -341,7 +378,9 @@ class ArmaNetBase
 					cycle.tailColor = color(r,g,b);
 				}
 				
-				cycle.gameTime = msg.getFloat()*1e3;
+				if( this.skipCycleSyncHack ) break;
+				
+				var gameTime = msg.getFloat()*1e3;
 				
 				// direction
 				var xdir = msg.getFloat();
@@ -363,11 +402,44 @@ class ArmaNetBase
 				if( alive != cycle.alive )
 				{
 					if(cycle.alive) cycle.killAt(cycle.newPos.x, cycle.newPos.y, 0);
-					else cycle.spawn({ x: cycle.newPos.x, y: cycle.newPos.y, z: 0 }, cycle.gtime);
+					else
+					{
+						engine.scene.remove(cycle.walls);
+						
+						cycle.spawn({ x: cycle.newPos.x, y: cycle.newPos.y, z: 0 }, ( cycle.gtime > 1000 ));
+						if(engine.audio)
+						{
+							engine.audio.mixCycle( cycle );
+						}
+						
+						if( cycle.gtime <= 1000 )
+						{
+							var nearestSpawn = null;
+							var nearDist = Infinity;
+							
+							var dist = Math.abs( spawn[0] - cycle.newPos.x ) + Math.abs( spawn[1] - cycle.newPos.y );
+							
+							if( nearDist > dist )
+							{
+								nearestSpawn = spawn;
+								nearDist = dist;
+							}
+							
+							for(var x=0;x<engine.players.length;++x)
+							{
+								var spawn = game.calculateSpawn(x);
+								spawnPoints.push( Array.from(spawn) );
+							}
+						}
+					}
 					delete cycle.newPos;
 					delete cycle.cycleMsgsWait;
 					cycle.turns = -1;
-					if(!alive) return;
+					if(!alive)
+					{
+						obj.obj = null;
+						return;
+					}
 				}
 				
 				var newDist = msg.getFloat();
@@ -383,6 +455,45 @@ class ArmaNetBase
 				
 				if( turnCount > cycle.turns )
 				{
+					if( cycle.turns > 0 && turnCount > cycle.turns + 1 )
+					{
+						console.log( cycle.getBoringName(), cycle.turns - turnCount );
+						
+						var pos2 = new THREE.Vector2( lastTurnX, lastTurnY );
+						var pos3 = pos2.clone();
+						pos3.x -= ydir*1000;
+						pos3.y -= xdir*1000;
+						
+						var pos = intersectionPoint( cycle.lastTurnPos, cycle.position,  pos2, pos3 );
+						
+						if( pos )
+						{
+							cycle.position.x = pos.x;
+							cycle.position.y = pos.y;
+							if(cycle.lastpos)
+							{
+								cycle.lastpos.x = cycle.position.x;
+								cycle.lastpos.y = cycle.position.y;
+							}
+							
+							var cd = Math.atan2(( cycle.position.y - lastTurnY ), ( cycle.position.x - lastTurnX ));
+							var cdX = Math.cos(cd), cdY = Math.sin(cd);
+							
+							var angdiff = normalizeRad(cycle.rotation.z-cd);
+							console.log(angdiff);
+							if( angdiff < Math.PI )
+							{
+								cycle.handleTurn(-1);
+							}
+							else if( angdiff > Math.PI )
+							{
+								cycle.handleTurn(1);
+							}
+							
+							delete cycle.newPos;
+						}
+					}
+					
 					cycle.position.x = lastTurnX;
 					cycle.position.y = lastTurnY;
 					if(cycle.lastpos)
@@ -396,6 +507,7 @@ class ArmaNetBase
 					
 					cycle.turns = turnCount;
 					
+					cycle.gameTime = gameTime;
 					cycle.lastTurnTime = cycle.gameTime;
 				}
 				else
@@ -409,6 +521,7 @@ class ArmaNetBase
 				
 				// rubber usage
 				cycle.rubber = (msg.getShort()/65535) * settings.CYCLE_RUBBER;
+				cycle.recvRubber = cycle.rubber;
 				
 				msg.bufpos += 2; // eat unknown short
 				
@@ -421,6 +534,35 @@ class ArmaNetBase
 				
 				break;
 			
+			case _arma_obj.team:
+			case _arma_obj.team_ai:
+				
+				var r = msg.getShort();
+				var g = msg.getShort();
+				var b = msg.getShort();
+				
+				var name = msg.getStr();
+				var maxPlayers = msg.getInt();
+				var maxImbalance = msg.getInt();
+				var score = msg.getInt();
+				
+				if( !obj.obj )
+				{
+					obj.obj = new Team({name:name,score:score});
+					engine.teams.push(obj.obj);
+					obj.localTeamID = engine.teams.length;
+				}
+				else
+				{
+					obj.obj.name = name;
+					obj.obj.score = score;
+				}
+				
+				netcfg("TEAM_RED_"+obj.localTeamID,   ""+r);
+				netcfg("TEAM_GREEN_"+obj.localTeamID, ""+g);
+				netcfg("TEAM_BLUE_"+obj.localTeamID,  ""+b);
+				
+				break;
 			
 			case _arma_obj.timer:
 				engine.syncGameTime = msg.getFloat()*1e3;
@@ -639,6 +781,8 @@ class ConnectionArma extends ArmaNetBase
 		
 		this.isGameServer = true;
 		
+		this.minID = 0;
+		
 		
 		
 		if(typeof(host) === "object")
@@ -802,6 +946,11 @@ class ConnectionArma extends ArmaNetBase
 		}
 	}
 	
+	currCliTime()
+	{
+		return performance.now();
+	}
+	
 	handler(msg)
 	{
 		if(msg.id > 0)
@@ -828,13 +977,13 @@ class ConnectionArma extends ArmaNetBase
 				},0);
 			}
 			
-			if( this.msgsIn[msg.id] && (this.msgsIn[msg.id].time+9999) > performance.now() )
+			if( this.msgsIn[msg.id] && (this.msgsIn[msg.id].time+9999) > engine.network.currCliTime() )
 			{
-				this.msgsIn[msg.id].time = performance.now();
+				this.msgsIn[msg.id].time = engine.network.currCliTime();
 				return;
 			}
 			
-			this.msgsIn[msg.id] = {time: performance.now()};
+			this.msgsIn[msg.id] = {time: engine.network.currCliTime()};
 		}
 		
 		//console.log(msg.descriptor);
@@ -1021,6 +1170,7 @@ class ConnectionArma extends ArmaNetBase
 				{
 					case "CYCLE_WALLS_LENGTH": setting = "WALLS_LENGTH"; break;
 					case "CYCLE_WALLS_STAY_UP_DELAY": setting = "WALLS_STAY_UP_DELAY"; break;
+					case "CYCLE_EXPLOSION_RADIUS": setting = "EXPLOSION_RADIUS"; break;
 					case "ARENA_AXES": type = "int"; break;
 					
 					case "REAL_ARENA_SIZE_FACTOR":
@@ -1029,16 +1179,18 @@ class ConnectionArma extends ArmaNetBase
 						value = Math.log2(msg.getFloat(), 2)*2;
 						break;
 					
+					/*
 					case "RESOURCE_REPOSITORY_SERVER":
 						chsetting(setting, msg.getStr());
 						return;
+					*/
 				}
 				
 				if(!type)
 				{
 					if(!conf[setting])
 					{
-						console.error("Got message for unknown setting.",setting);
+						console.warn("Got message for unknown setting.",setting);
 						break;
 					}
 					type = conf[setting].type;
@@ -1067,7 +1219,21 @@ class ConnectionArma extends ArmaNetBase
 			
 			case _arma_chatMessage: 
 				var playerID = msg.getShort();
-				engine.console.print(msg.getStr()+"\n");
+				var pre = "";
+				var o = this.usedIDs[playerID];
+				if(o)
+				{
+					//console.log(o);
+					if( !o.obj.team )
+					{
+						pre = "*SPEC* ";
+					}
+					else if( !o.obj.alive )
+					{
+						pre = "*DEAD* ";
+					}
+				}
+				engine.console.print(pre+msg.getStr()+"\n");
 				break;
 			case _arma_consoleMessage:
 			{
@@ -1187,14 +1353,38 @@ class ConnectionArma extends ArmaNetBase
 								//this.handler( (new nMessage( _arma_removePlayer )).pushShort( objid ) )
 								if( obj.obj && obj.obj.alive )
 								{
-									obj.kill();
+									obj.obj.kill();
+								}
+								if( obj.obj && obj.obj.walls )
+								{
+									// instantly delete walls
+									engine.scene.remove(obj.obj.walls);
+								}
+								if( obj.obj && obj.obj.team )
+								{
+									var objid2 = obj.obj.team.members.indexOf(obj.obj);
+									if( objid2 != -1 )
+										obj.obj.team.members.splice(objid2, 1);
 								}
 								delete engine.players[engine.players.indexOf(obj.obj)];
 								game.updateScoreBoard();
 								break;
 							
+							case _arma_obj.team:
+							case _arma_obj.team_ai:
+								//delete engine.teams[engine.teams.indexOf(obj.obj)]
+								var teamID = engine.teams.indexOf(obj.obj);
+								engine.teams.splice(teamID,1);
+								for(var x=teamID;x<engine.teams.length;++x)
+								{
+									var objid2 = this.hasObj(engine.teams[x]);
+									if( this.usedIDs[objid2] )
+										this.usedIDs[objid2].localTeamID -= 1;
+								}
+								break;
+							
 							case _arma_obj.cycle:
-								if( obj.owner && obj.owner.alive && this.cycleID == objid )
+								if( obj.owner && obj.owner.alive && obj.obj )
 								{
 									obj.owner.kill();
 								}
@@ -1208,17 +1398,11 @@ class ConnectionArma extends ArmaNetBase
 								}
 								break;
 							
-							case _arma_obj.zone:
-							case _arma_obj.zoneCirc:
-							case _arma_obj.zonePoly:
-								engine.zones.remove( obj.obj.mesh );
-								break;
-							
 						}
 						
 						delete this.usedIDs[objid];
 					}
-					else
+					else if( !this.eatObjErr )
 					{
 						engine.console.print("Server called to destroy object "+objid+" which already doesn't exist\n");
 					}
@@ -1234,7 +1418,7 @@ class ConnectionArma extends ArmaNetBase
 				{
 					this.recvObj(this.usedIDs[objid], msg);
 				}
-				else
+				else if( !this.eatObjErr )
 				{
 					engine.console.print("Ignoring sync for unrecieved network object "+objid+"\n");
 					console.warn("Got ID for invalid object.");
@@ -1695,11 +1879,14 @@ class ServerClientArma
 		this.msgsOut = {};
 		this.msgsIn = {};
 		
+		this.minID = _arma_CLIENTS;
+		
 		this.pings=this.pingc=0;
 		
 		this.onAck = {};
 		
 		this.syncedObjs = [];
+		this.syncedIDs = [];
 		
 		this.netid = false;
 		this.versionID = 0;
@@ -1827,7 +2014,7 @@ class ServerClientArma
 				
 				case "endRound":
 					var n = 0;
-					for(var i=_arma_CLIENTS;i<_arma_MAXIDS;++i)
+					for(var i=this.minID;i<_arma_MAXIDS;++i)
 					{
 						if( this.server.usedIDs[i] && this.server.usedIDs[i].obj )
 						{
@@ -1891,6 +2078,7 @@ class ServerClientArma
 		if(id)
 		{
 			var o = this.server.usedIDs[id];
+			if(!o.netSynced) o.netSynced = 0;
 			
 			// don't sync object if the client doesn't know to accept it
 			// otherwise, client will crash while entering server
@@ -1908,8 +2096,29 @@ class ServerClientArma
 			if( this.syncedObjs.indexOf(obj) === -1 )
 			{
 				msg = new nMessage( o.type );
+				var c = this.syncedIDs.indexOf(id);
+				if(c !== -1)
+				{
+					console.log("SYNCING DUP ID");
+					//msg = new nMessage( _arma_objSync );
+					
+					let msg2 = new nMessage( _arma_objDestroy );
+					msg2.pushShort( id );
+					this.send(msg2);
+					
+					return;
+				}
+				else
+				{
+					this.syncedIDs.push(id);
+				}
 				this.syncedObjs.push(obj);
 				m=true;
+				if(c !== -1)m=false;
+				
+				++o.netSynced;
+				
+				console.log("newsync",id);
 			}
 			else
 			{
@@ -2070,7 +2279,12 @@ class ServerClientArma
 			this.syncedObjs.splice(id,1);
 		}
 		id = this.server.hasObj( obj );
-		if(id)
+		var c = this.syncedIDs.indexOf(id);
+		if(c !== -1)
+		{
+			this.syncedIDs.splice(c, 1);
+		}
+		if( id && c !== -1 )
 		{
 			var msg = new nMessage( _arma_objDestroy );
 			switch(this.server.usedIDs[id].type)
@@ -2080,12 +2294,25 @@ class ServerClientArma
 					this.send( new nMessage( _arma_removePlayer ).pushShort( id ) );
 					break;
 			}
-			//console.log("d",id);
+			console.log("d",id);
 			msg.pushShort( id );
 			this.send(msg);
 			
+			console.log( "s",this.server.usedIDs[id].netSynced );
+			
+			--this.server.usedIDs[id].netSynced;
+			
+			console.log( "s",this.server.usedIDs[id].netSynced );
+		}
+		
+		if( this.server.usedIDs[id].netSynced <= 0 )
+		{
+			console.log("DELETE",id)
+			
 			// clear the object now, so it doesn't get erronously synced
 			this.server.usedIDs[id].obj = null;
+			
+			this.server.usedIDs[id].type = 0;
 			
 			// wait a little bit so we aren't immediately giving a new object the same id
 			// just in case the client hasn't received it yet
@@ -2251,7 +2478,7 @@ class ServerClientArma
 				
 				var idsNeeded = 1;
 				//msg.getShort();
-				for(var i=_arma_CLIENTS;i<_arma_MAXIDS;++i)
+				for(var i=this.minID;i<_arma_MAXIDS;++i)
 				{
 					if( !this.server.usedIDs[i] )
 					{
@@ -2491,11 +2718,21 @@ class ServerClientArma
 		clearInterval(this.pendAckTimer);
 		
 		var id = this.server.clients.indexOf(this);
-		for(var i=_arma_CLIENTS;i<_arma_MAXIDS;++i)
+		for(var i=this.minID;i<_arma_MAXIDS;++i)
 		{
 			if( this.server.usedIDs[i] )
 			{
 				var u = this.server.usedIDs[i];
+				if( u.netSynced && this.syncedIDs.indexOf(i) !== -1 )
+				{
+					--u.netSynced;
+					
+					if( u.netSynced == 0 )
+					{
+						delete this.server.usedIDs[i];
+					}
+				}
+				
 				if( u.to == this && !u.type )
 				{
 					delete this.server.usedIDs[i];
