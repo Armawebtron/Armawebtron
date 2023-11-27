@@ -299,11 +299,7 @@ class Player extends THREE.Object3D
 		if( this.audio ) this.audio.stop();
 		if( engine.audio && !engine.roundCommencing ) try
 		{
-			engine.audio.playSound({
-				buffer:engine.audio.bLoader.other+4,
-				vol:1,
-				pos: this.position, 
-			});
+			engine.audio.playSound({buffer:this.engineType+6,vol:Math.log(60/pointDistance(this.position.x,this.position.y,engine.camera.position.x,engine.camera.position.y))*0.4 });
 		}
 		catch(e) { console.error(e); }
 		spawnExplosion(this.position,this.cycleColor,this.tailColor);
@@ -392,7 +388,11 @@ class Player extends THREE.Object3D
 		
 		if( engine.audio && !engine.roundCommencing ) try
 		{
-			engine.audio.playSound({buffer:engine.audio.bLoader.other+4,vol:Math.log(80/pointDistance(this.position.x,this.position.y,engine.camera.position.x,engine.camera.position.y))*0.3||0 });
+			engine.audio.playSound({
+				buffer:engine.audio.bLoader.other+4,
+				vol:1,
+				pos: this.position, 
+			});
 		}
 		catch(e) { console.error(e); }
 	}
