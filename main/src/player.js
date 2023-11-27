@@ -158,9 +158,10 @@ class Player extends THREE.Object3D
 			{
 				wallmod = this.walls.children[x-1];
 				wallmod.position.set(wmap[x-1][0],wmap[x-1][1],wmap[x-1][2]||0);
+				wallmod.scale.set(1,1,0.75);
 			}
-			wallmod.scale.x = (wmap[x][0]-wmap[x-1][0])/wallmod.size;
-			wallmod.scale.y = (wmap[x][1]-wmap[x-1][1])/wallmod.size;
+			wallmod.scale.x += ((wmap[x][0]-wmap[x-1][0]))/wallmod.size;
+			wallmod.scale.y += ((wmap[x][1]-wmap[x-1][1]))/wallmod.size;
 		}
 		if(full !== true)
 		{
