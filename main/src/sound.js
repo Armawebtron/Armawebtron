@@ -1,7 +1,6 @@
 /*
  * Armawebtron - A lightcycle game.
  * Copyright (C) 2019 Glen Harpring
- * This file was mostly written by Durf.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,10 +17,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-var initSound = function(){
-engine.audio = new AudioContext();
+var initSound = function()
+{
+
+engine.audio = new THREE.AudioListener();
+engine.audio.destination = {numberOfOutputs: 1};
+
 engine.audio.bLoader = new BufferLoader(
-	engine.audio,
+	engine.audio.context,
 	[
 		// Cycle run sounds
 		"",//0
@@ -46,139 +49,114 @@ engine.audio.bLoader = new BufferLoader(
 		"sounds/tr2n_origins/intro.wav",
 		"sounds/tr2n_origins/extro.wav",
 		"sounds/zone_spawn.ogg",
+		"sounds/arma/cycle_turn.wav",
 	]
 );
 engine.audio.bLoader.load();
 engine.audio.bLoader.other = 12;
 
 
-
 engine.audio.playSound = function(obj)
 {
-	var buffer, vol, pitch, loop, after;
-	var output = engine.audio.destination;
+	var buffer;
 	switch(typeof(obj.buffer))
 	{
 		case "object": buffer = obj.buffer; break;
 		case "number": buffer = engine.audio.bLoader.bufferList[obj.buffer]; break;
 	}
-	vol = (obj.vol===undefined)?1:obj.vol;
-	pitch = (obj.pitch===undefined)?1:obj.pitch;
-	loop = !!obj.loop;
-	after = obj.after;
-	return playSound(buffer, vol, pitch, loop, output, after);
+	
+	var sound = new ((obj.pos)?THREE.PositionalAudio:THREE.Audio)( engine.audio );
+	
+	sound.setBuffer( buffer );
+	sound.setVolume( (obj.vol===undefined)?1:obj.vol );
+	sound.setLoop( !!obj.loop );
+	
+	if( obj.pitch !== undefined )
+		sound.setPlaybackRate( obj.pitch );
+	
+	if( obj.pos )
+	{
+		sound.setRefDistance( 10 );
+		sound.panner.setPosition(obj.pos.x,obj.pos.y,obj.pos.z);
+	}
+	
+	sound.play();
+	
 };
 
 
+//var audioLoader = new THREE.AudioLoader();
 
-engine.audio.toggleSoundType = function() //safely changes the sound panners in settings, and players (not used anywhere)
+
+engine.audio.toggleSoundType = function()
 {
-	if (engine.retroSound == true) { engine.retroSound = false; } else { engine.retroSound = true; } 
-	var p = "HRTF";
-	if (!engine.retroSound) { p = "equalpower" }
-	//assume a change
-	for(var x=0;x<engine.players.length;x++) if(engine.players[x])
-	{
-		engine.players[x].audio.panner.panningModel = p;//change panning model
-	}
+	//STUB
 }
 
-engine.audio.posMult = 0.2;
+
 engine.audio.mixCycle = function(cycle)
 {
-	if(!cycle.alive) return;
+	cycle.audio.setPlaybackRate( cycle.speed / settings.CYCLE_SOUND_SPEED );
 	
-	if(cycle.engineSound !== undefined)
-	{
-		cycle.engineSound.playbackRate.value = cycle.speed / settings.CYCLE_SOUND_SPEED;
-	}
-
-	if(!Number.isFinite(cycle.position.x) || !Number.isFinite(cycle.position.y)) return false;
-	
-	if(cycle.audio)
-	{
-		cycle.audio.panner.setPosition(cycle.position.x*engine.audio.posMult, cycle.position.y*engine.audio.posMult, cycle.position.z*engine.audio.posMult*2);
-	}
+	cycle.audio.panner.setPosition( cycle.position.x, cycle.position.y, cycle.position.z );
 }
 
 engine.audio.audioMixing = function()
 {
-	try
-	{
-		var m = engine.camera.matrix;
-		var mx = m.elements[12], my = m.elements[13], mz = m.elements[14];
-		m.elements[12] = m.elements[13] = m.elements[14] = 0;
-
-		var vec = new THREE.Vector3(0,1,0);
-		// NOTE: the following 2 lines were commented out, but I don't know why as they seem to fix panning issues
-		vec.applyMatrix4(m);
-		vec.normalize();
-		var up = new THREE.Vector3(0,0,1);
-		up.applyMatrix4(m);
-		up.normalize();
-
-		engine.audio.listener.setOrientation(vec.x, vec.y, vec.z, up.x, up.y, up.z);
-		engine.audio.listener.setPosition(engine.camera.position.x*engine.audio.posMult, engine.camera.position.y*engine.audio.posMult, engine.camera.position.z*engine.audio.posMult);
-
-		m.elements[12] = mx; m.elements[13] = my; m.elements[14] = mz;
-	}
-	catch(e)
-	{
-		console.warn(e);
-		if(e.message.search("finite") > 0) engine.camera.position.set(engine.logicalBox.center.x*engine.REAL_ARENA_SIZE_FACTOR,engine.logicalBox.center.y*engine.REAL_ARENA_SIZE_FACTOR,0);
-		return false;
-	}
+	//STUB
 };
+
+
 
 engine.audio.changeSoundPanner = function(type)
 {
-	switch(type)
-	{
-		case "EQ": case "HQ": case "equalpower":
-			cycle.audio.panner.panningModel = "equalpower";
-		break;
-		case "HRTF": case "LQ":
-			cycle.audio.panner.panningModel = "HRTF";
-		break;
-		default:
-			cycle.audio.panner.panningModel = "equalpower";
-		break;
-	}
+	//STUB
 }
 
 engine.audio.changeEngineSound = function(cycle,choice)
 {
-	cycle.engineType = choice;
-	cycle.engineSound.stop();
-	cycle.engineSound = playSound(bufferLoader.bufferList[choice], 0.5, 1, true, cycle.audio);
-	engine.audio.resume();
+	//STUB
 }
 
 engine.audio.stopCycles = function()
 {
 	for(var x=0;x<engine.players.length;x++) if(typeof(engine.players[x]) != "undefined")
 	{
-		engine.players[x].audio.panner.disconnect();//turns off audio
+		engine.players[x].audio.pause();
 	}
 }
 
 engine.audio.startCycles = function()
 {
-	engine.audio.resume();
+	engine.audio.context.resume();
 	for(var x=0;x<engine.players.length;x++) if(typeof(engine.players[x]) != "undefined" && engine.players[x].alive)
 	{
-		engine.players[x].audio.panner.connect(engine.audio.destination);//turns on audio
+		engine.players[x].audio.play();
 	}
 }
-};
 
+engine.audio.createCycleRun = function(cycle)
+{
+	var sound = new THREE.PositionalAudio( engine.audio );
+	
+	sound.setBuffer( engine.audio.bLoader.bufferList[cycle.engineType] );
+	sound.setLoop( true );
+	sound.setVolume( 0.5 );
+	
+	sound.setRefDistance( 10 );
+	
+	return sound;
+}
+
+};
 
 
 function playSound(buffer, vol, pitch, loop, output, after)
 {
+	console.warn("DEPRECATED CALL TO playSound");
 
-	var src = engine.audio.createBufferSource();
-	src.gainNode = engine.audio.createGain();
+	var src = engine.audio.context.createBufferSource();
+	src.gainNode = engine.audio.context.createGain();
 
 	src.connect(src.gainNode);
 	src.gainNode.connect(output);
@@ -189,7 +167,7 @@ function playSound(buffer, vol, pitch, loop, output, after)
 	src.loop = loop;
 	
 	if(isNaN(after)) after = 0;
-	src.start(engine.audio.currentTime+after)
+	src.start(engine.audio.context.currentTime+after)
 
 	return src;
 }

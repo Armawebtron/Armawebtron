@@ -281,7 +281,7 @@ class Player extends THREE.Object3D
 			engine.scene.add(this.walls);
 		}
 		
-		if(this.audio) this.audio.panner.connect(engine.audio.destination);
+		if( this.audio ) this.audio.play();
 		
 		engine.scene.add(this);
 		if(update) game.updateScoreBoard();
@@ -295,10 +295,15 @@ class Player extends THREE.Object3D
 		engine.scene.remove(this);
 		if(this == engine.players[engine.viewTarget] && !engine.dedicated)
 			setTimeout(function(){if(!engine.players[engine.viewTarget].alive)game.changeViewTarget()},3000);
-		if(this.audio) this.audio.panner.disconnect();
-		if(engine.audio) try
+		
+		if( this.audio ) this.audio.stop();
+		if( engine.audio && !engine.roundCommencing ) try
 		{
-			engine.audio.playSound({buffer:this.engineType+6,vol:Math.log(60/pointDistance(this.position.x,this.position.y,engine.camera.position.x,engine.camera.position.y))*0.4 });
+			engine.audio.playSound({
+				buffer:engine.audio.bLoader.other+4,
+				vol:1,
+				pos: this.position, 
+			});
 		}
 		catch(e) { console.error(e); }
 		spawnExplosion(this.position,this.cycleColor,this.tailColor);
@@ -385,7 +390,7 @@ class Player extends THREE.Object3D
 		this.lastTurnDir = dir;
 		this.lastTurnPos = this.position.clone();
 		
-		if(engine.audio) try
+		if( engine.audio && !engine.roundCommencing ) try
 		{
 			engine.audio.playSound({buffer:engine.audio.bLoader.other+4,vol:Math.log(80/pointDistance(this.position.x,this.position.y,engine.camera.position.x,engine.camera.position.y))*0.3||0 });
 		}
@@ -736,19 +741,7 @@ class Player extends THREE.Object3D
 		this.engineType = cfg.engineType;
 		if(engine.audio)
 		{
-			this.audio = engine.audio.createGain();
-			this.audio.gain.value = 0.01;
-			this.audio.panner = engine.audio.createPanner();
-			if(engine.retroSound)
-				this.audio.panner.panningModel = "HRTF";
-			else
-				this.audio.panner.panningModel = "equalpower";
-			this.audio.connect(this.audio.panner);
-			this.audio.panner.connect(engine.audio.destination);
-
-			//audio initialization
-			this.engineSound = playSound(engine.audio.bLoader.bufferList[this.engineType], 0.1, 0, true, this.audio);
-			this.audio.gain.setTargetAtTime(6, engine.audio.currentTime, 1.0);
+			this.audio = engine.audio.createCycleRun(this);
 		}
 	}
 	

@@ -147,6 +147,7 @@ game.newRound = function()
 	//////////end of lights
 	
 	engine.camera = new GameCamera();
+	engine.camera.add( engine.audio );
 	
 	if(engine.composer)
 	{
@@ -620,6 +621,8 @@ game.loadRound = function(dlmap)
 	
 	if(engine.audio && settings.SOUNDS_INTRO)
 		engine.audio.playSound({buffer:engine.audio.bLoader.other+1,vol:0.5});
+	
+	if( engine.audio ) engine.audio.startCycles();
 	
 	if(settings.ROUND_CONSOLE_MESSAGE != "")
 	{
