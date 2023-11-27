@@ -431,14 +431,15 @@ class Player extends THREE.Object3D
 		}
 		if(this.sensor.left < settings.CYCLE_WALL_NEAR || this.sensor.right < settings.CYCLE_WALL_NEAR)
 		{
-			var wallAccel = settings.CYCLE_ACCEL*0.3;
+			var wallAccel = settings.CYCLE_ACCEL;
+			var finalAccel = 0;
 			if(wallAccel != 0) //don't bother if there's no accel
 			{
-				var accelMult = [(settings.CYCLE_WALL_NEAR-this.sensor.left)/settings.CYCLE_WALL_NEAR,(settings.CYCLE_WALL_NEAR-this.sensor.right)/settings.CYCLE_WALL_NEAR];
+				var wallDist = [this.sensor.left,this.sensor.right];
 				var accelTargets = [this.sensor.lnearestobj,this.sensor.rnearestobj];
 				for(var z=2;z--;)
 				{
-					if(accelMult[z] > 0)
+					if( settings.CYCLE_WALL_NEAR >= wallDist[z] )
 					{
 						if(accelTargets[z] == "rim")
 						{
@@ -459,11 +460,13 @@ class Player extends THREE.Object3D
 						{
 							throw "Accel target is unknown.";
 						}
-						wallAccel *= accelMult[z];
+						finalAccel += wallAccel * (
+							( 1 / ( wallDist[z] + settings.CYCLE_ACCEL_OFFSET ) ) -
+							( 1 / ( settings.CYCLE_WALL_NEAR + settings.CYCLE_ACCEL_OFFSET ) )
+						);
 					}
 				}
-				//console.log(wallAccel);
-				acceleration += wallAccel;
+				acceleration += finalAccel;
 			}
 		}
 		this.speed += acceleration*timestep;
