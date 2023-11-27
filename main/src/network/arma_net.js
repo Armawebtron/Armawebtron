@@ -1885,7 +1885,7 @@ class ServerArma extends ArmaNetBase
 			}
 			if( w2 && w2.turns === undefined && cycle.walls.map.length == i+1 && cycle.walls.map[0][2] === undefined )
 			{
-				console.log("FIRST WALL!!!");
+				console.debug("FIRST WALL!!!");
 				
 				// FIXME: we really need to do walls properly
 				var that = this;
@@ -1894,7 +1894,7 @@ class ServerArma extends ArmaNetBase
 					var wall = cycle.walls.children[0];
 					if( wall )
 					{
-						console.log("wall",cycle.walls.map.length,cycle.walls.map.length);
+						console.debug("wall",cycle.walls.map.length,cycle.walls.map.length);
 						
 						wall.isCycleWall = true; // HACK
 						
@@ -1915,7 +1915,7 @@ class ServerArma extends ArmaNetBase
 			var wall = cycle.walls.children[cycle.walls.children.length-i+1];
 			if( wall )
 			{
-				console.log("wall",i,cycle.walls.map.length);
+				console.debug("wall",i,cycle.walls.map.length);
 				
 				wall.isCycleWall = true; // HACK
 				
@@ -2128,7 +2128,7 @@ class ServerClientArma
 					break;
 				
 				case "del":
-					console.log("des", data.data);
+					console.debug("des", data.data);
 					this.onDestroyObj( engine.players[data.data] );
 					break;
 				
@@ -2191,7 +2191,7 @@ class ServerClientArma
 				
 				++o.netSynced;
 				
-				console.log("newsync",id);
+				console.debug("newsync",id);
 			}
 			else
 			{
@@ -2353,12 +2353,12 @@ class ServerClientArma
 						if( o.data.turns === undefined )
 						{
 							console.log("no wall info");
-							console.log("WALLS", o.data, o.data2);
+							console.debug("WALLS", o.data, o.data2);
 							var dist = 0, gtime = 0;
 							if( o.data2.turns !== undefined )
 							{
 								dist = ( o.data2.dist - pointDistance(o.data[0],o.data[1],o.data2[0],o.data2[1]) );
-								console.log("DIST",dist);
+								console.debug("DIST",dist);
 							}
 							msg.pushFloat(dist).pushFloat(gtime);
 						}
@@ -2419,20 +2419,20 @@ class ServerClientArma
 					this.send( new nMessage( _arma_removePlayer ).pushShort( id ) );
 					break;
 			}
-			console.log("d",id);
+			console.debug("d",id);
 			msg.pushShort( id );
 			this.send(msg);
 			
-			console.log( "s",this.server.usedIDs[id].netSynced );
+			console.debug( "s",this.server.usedIDs[id].netSynced );
 			
 			--this.server.usedIDs[id].netSynced;
 			
-			console.log( "s",this.server.usedIDs[id].netSynced );
+			console.debug( "s",this.server.usedIDs[id].netSynced );
 		}
 		
 		if( this.server.usedIDs[id] && this.server.usedIDs[id].netSynced <= 0 )
 		{
-			console.log("DELETE",id)
+			console.debug("DELETE",id)
 			
 			// clear the object now, so it doesn't get erronously synced
 			this.server.usedIDs[id].obj = null;
@@ -2662,7 +2662,7 @@ class ServerClientArma
 					msg.bufpos += 4; //ignore score
 					msg.getBool();  //newdisc
 					
-					console.log("f",flags);
+					console.debug("f",flags);
 					settings.players[this.netid].spectating = Boolean(flags&2);
 					//settings.players[this.netid].spectating = false;
 					
@@ -2748,7 +2748,7 @@ class ServerClientArma
 					var d = normalizeRad(Math.atan2(ydir,xdir)-engine.players[this.netid].rotation.z);
 				if( d > 0.01 )
 				{
-					console.log(cycle.dist-dist, cycle.position.x-posx, cycle.position.y-posy, cycle.gameTime-time);
+					console.debug(cycle.dist-dist, cycle.position.x-posx, cycle.position.y-posy, cycle.gameTime-time);
 					
 					// FIXME: should not just trust the client
 					cycle.position.x = posx;
