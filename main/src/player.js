@@ -74,8 +74,10 @@ class Player extends THREE.Object3D
 	newWallSegment() //should be called on turns
 	{
 		var adj = 0.7, wmap = this.walls.map, dirmult = this.dir.front;
-		wmap[wmap.length-1] = [this.position.x,this.position.y,this.position.z];
+		var s=wmap[wmap.length-1];s[0]=this.position.x;s[1]=this.position.y;s[2]=this.position.z;
 		wmap[wmap.length] = [this.position.x,this.position.y,this.position.z]; 
+		var n = wmap[wmap.length-1];
+		n.gtime = this.gameTime; n.dist = this.dist; n.turns = this.turns+1;
 		this.resetCurrWallSegment(false,1);
 		var wall = newWall(this.tailColor,this.position.x,this.position.y,this.position.z);
 		var adjx = (dirmult[0]*adj), adjy = (dirmult[1]*adj);

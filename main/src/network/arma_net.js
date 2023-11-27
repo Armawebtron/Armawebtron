@@ -1682,6 +1682,7 @@ class ServerArma extends ArmaNetBase
 				{
 					var msg = new nMessage( _arma_serverInfoSmall, 0 );
 					msg.pushInt(that.port).pushStr("");
+					msg.pushInt(0); // no idea
 					setTimeout(function(){that.server.send( msg.get(), r.port, r.address )},250);
 					break;
 				}
@@ -1817,6 +1818,12 @@ class ServerArma extends ArmaNetBase
 				break;
 			}
 			
+			case (obj.isCycleWall):
+			{
+				
+				break;
+			}
+			
 			case (obj instanceof THREE.Object3D):
 			if(obj.owner instanceof Player)
 			{
@@ -1859,6 +1866,72 @@ class ServerArma extends ArmaNetBase
 	syncCycle(cycle, walls=false)
 	{
 		//if(walls) this.sync(cycle.walls);
+		
+		if( walls )
+		{
+			//console.log("WALL", cycle.walls.map[cycle.walls.map.length-3]);
+			
+			var b = 2;
+			var w1 = cycle.walls.map[cycle.walls.map.length-b];
+			
+			var i = b+1;
+			var w2 = cycle.walls.map[cycle.walls.map.length-i];
+			if( w1 && w2 && w1.turns !== undefined && w2.turns !== undefined )
+			{
+				while( w2 && ( w1.turns == w2.turns || w2.turns === undefined ) )
+				{
+					w2 = cycle.walls.map[cycle.walls.map.length-(++i)];
+				}
+			}
+			if( w2 && w2.turns === undefined && cycle.walls.map.length == i+1 && cycle.walls.map[0][2] === undefined )
+			{
+				console.log("FIRST WALL!!!");
+				
+				// FIXME: we really need to do walls properly
+				var that = this;
+				(function()
+				{
+					var wall = cycle.walls.children[0];
+					if( wall )
+					{
+						console.log("wall",cycle.walls.map.length,cycle.walls.map.length);
+						
+						wall.isCycleWall = true; // HACK
+						
+						var id = that.hasObj(wall);
+						if(!id) id = that.useObj(wall);
+						
+						var o = that.usedIDs[id];
+						o.type = _arma_obj.cycleWall;
+						
+						o.data = cycle.walls.map[0];
+						o.data2 = cycle.walls.map[1];
+						
+						that.sync(wall);
+					}
+				})();
+			}
+			
+			var wall = cycle.walls.children[cycle.walls.children.length-i+1];
+			if( wall )
+			{
+				console.log("wall",i,cycle.walls.map.length);
+				
+				wall.isCycleWall = true; // HACK
+				
+				var id = this.hasObj(wall);
+				if(!id) id = this.useObj(wall);
+				
+				var o = this.usedIDs[id];
+				o.type = _arma_obj.cycleWall;
+				
+				o.data = cycle.walls.map[cycle.walls.map.length-i];
+				o.data2 = cycle.walls.map[cycle.walls.map.length-b];
+				
+				this.sync(wall);
+			}
+		}
+		
 		this.sync(cycle.model);
 	}
 	syncDeath(cycle)
@@ -2021,11 +2094,11 @@ class ServerClientArma
 							switch(this.server.usedIDs[i].type)
 							{
 								case _arma_obj.cycle:
+								case _arma_obj.cycleWall:
 								case _arma_obj.zone:
 								case _arma_obj.zoneCirc:
 								case _arma_obj.zonePoly:
-									this.onDestroyObj( this.server.usedIDs[i].obj );
-									delete this.server.usedIDs[i];
+									this.onDestroyObj( this.server.usedIDs[i].obj, true );
 									++n;
 									break;
 							}
@@ -2099,7 +2172,7 @@ class ServerClientArma
 				var c = this.syncedIDs.indexOf(id);
 				if(c !== -1)
 				{
-					console.log("SYNCING DUP ID");
+					console.log("SYNCING DUP ID", id);
 					//msg = new nMessage( _arma_objSync );
 					
 					let msg2 = new nMessage( _arma_objDestroy );
@@ -2239,14 +2312,10 @@ class ServerClientArma
 					msg.pushShort((65535*(p.rubber/settings.CYCLE_RUBBER))|0);
 					
 					// dunno
-					msg.pushShort(65535)
+					msg.pushShort(65535).pushShort(65535)
 					
 					// brakes level 
 					msg.pushShort(((p.brakes*65535)|0))
-					
-					// dunno
-					msg.pushShort(65535)
-					
 					
 					// FIXME: more unknown stuff
 					msg.pushShort(0).pushShort(0);
@@ -2255,8 +2324,64 @@ class ServerClientArma
 					if(!p.alive)
 					{
 						if(m) return;
-						var that = this; setTimeout(function(){that.onDestroyObj(obj)},100);
+						var that = this; setTimeout(function(){that.onDestroyObj(obj)},3000);
 					}
+					
+					break;
+				}
+				
+				case _arma_obj.cycleWall:
+				{
+					var start = msg.bufpos;
+					
+					if(m)
+					{
+						// cycle ID
+						//console.log(obj);
+						msg.pushShort(this.server.hasObj(obj.parent.owner.model));
+						//console.log(obj.parent.owner.getBoringName(), this.server.hasObj(obj.parent.owner.model));
+						
+						// start pos
+						msg.pushFloat(o.data[0]).pushFloat(o.data[1]);
+						
+						// dir
+						//var dir = Math.atan2(o.data[1]-o.data2[1], o.data[0]-o.data2[0]);
+						var dir = Math.atan2(o.data2[1]-o.data[1], o.data2[0]-o.data[0]);
+						//console.log("WALLDIR", Math.cos(dir), Math.sin(dir));
+						msg.pushFloat(Math.cos(dir)).pushFloat(Math.sin(dir));
+						
+						if( o.data.turns === undefined )
+						{
+							console.log("no wall info");
+							console.log("WALLS", o.data, o.data2);
+							var dist = 0, gtime = 0;
+							if( o.data2.turns !== undefined )
+							{
+								dist = ( o.data2.dist - pointDistance(o.data[0],o.data[1],o.data2[0],o.data2[1]) );
+								console.log("DIST",dist);
+							}
+							msg.pushFloat(dist).pushFloat(gtime);
+						}
+						else
+						{
+							msg.pushFloat(o.data.dist).pushFloat(o.data.gtime/1e3);
+						}
+						
+						// pre
+						msg.pushInt(0);
+					}
+					
+					// end pos
+					//console.log("WALLS", o.data, o.data2);
+					msg.pushFloat(o.data2[0]).pushFloat(o.data2[1]);
+					
+					msg.pushFloat(o.data2.gtime/1e3);
+					
+					// gridded ?
+					msg.pushBool(true);
+					
+					
+					//msg.pushShort(0);
 					
 					break;
 				}
@@ -2271,7 +2396,7 @@ class ServerClientArma
 		this.sync(cycle.model);
 	}
 	
-	onDestroyObj(obj)
+	onDestroyObj(obj, now)
 	{
 		var id = this.syncedObjs.indexOf(obj);
 		if(id !== -1)
@@ -2305,7 +2430,7 @@ class ServerClientArma
 			console.log( "s",this.server.usedIDs[id].netSynced );
 		}
 		
-		if( this.server.usedIDs[id].netSynced <= 0 )
+		if( this.server.usedIDs[id] && this.server.usedIDs[id].netSynced <= 0 )
 		{
 			console.log("DELETE",id)
 			
@@ -2314,10 +2439,17 @@ class ServerClientArma
 			
 			this.server.usedIDs[id].type = 0;
 			
-			// wait a little bit so we aren't immediately giving a new object the same id
-			// just in case the client hasn't received it yet
-			var that = this;
-			setTimeout(function(){delete that.server.usedIDs[id]}, 1000+(10000*Math.random()));
+			if( now )
+			{
+				delete this.server.usedIDs[id];
+			}
+			else
+			{
+				// wait a little bit so we aren't immediately giving a new object the same id
+				// just in case the client hasn't received it yet
+				var that = this;
+				setTimeout(function(){delete that.server.usedIDs[id]}, 1000+(10000*Math.random()));
+			}
 		}
 	}
 	
@@ -2611,8 +2743,11 @@ class ServerClientArma
 					var time = msg.getFloat()*1e3;
 					var turns = msg.getShort();
 					
-					var d = normalizeRad(Math.atan2(ydir,xdir)-engine.players[this.netid].rotation.z);
+					cycle.braking = Boolean(flags&0x01);
 					
+					var d = normalizeRad(Math.atan2(ydir,xdir)-engine.players[this.netid].rotation.z);
+				if( d > 0.01 )
+				{
 					console.log(cycle.dist-dist, cycle.position.x-posx, cycle.position.y-posy, cycle.gameTime-time);
 					
 					// FIXME: should not just trust the client
@@ -2636,6 +2771,10 @@ class ServerClientArma
 					this.server.syncCycle( cycle, false );
 					if(cycle.speed > 1) cycle.update(0.01/cycle.speed);
 					this.server.syncCycle( cycle, true );
+				}
+				else
+					this.server.syncCycle( cycle, false );
+				
 				}
 				break;
 			
