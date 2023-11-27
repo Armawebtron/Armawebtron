@@ -152,6 +152,10 @@ window.initRenderer = function()
 	resizeWindow();
 	
 	document.body.appendChild(engine.renderer.domElement);
+	
+	// FIXME: find a better solution
+	var c = document.getElementById("canvas")
+	if( c ) c.style.transform = "scaleY(-1)";
 };
 
 window.init = function() 
