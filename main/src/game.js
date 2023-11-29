@@ -799,9 +799,7 @@ game.run = function(oneoff=false)
 					}
 					cycle.update();
 				}
-				if(cycle.rubber > settings.CYCLE_RUBBER+0.0001)
-					cycle.rubber = settings.CYCLE_RUBBER+0.0001;
-				else if(cycle.rubber > 0)
+				if(cycle.rubber > 0)
 				{
 					cycle.rubber -= (timestep/settings.CYCLE_RUBBER_TIME)*cycle.rubber;
 					if(cycle.sentRubber) cycle.sentRubber = false;

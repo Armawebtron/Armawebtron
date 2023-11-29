@@ -570,7 +570,7 @@ class Player extends THREE.Object3D
 			}
 			if(collided || (escape && settings.ARENA_BOUNDARY_KILLS))
 			{
-				if(this.rubber >= settings.CYCLE_RUBBER)
+				if(this.rubber >= settings.CYCLE_RUBBER+(3*(this.ping/1000)))
 				{
 					if(!engine.network)
 					{
@@ -598,6 +598,10 @@ class Player extends THREE.Object3D
 						this.sentRubber = true;
 					}
 				}
+			}
+			else if(this.rubber > settings.CYCLE_RUBBER+0.0001)
+			{
+				this.rubber = settings.CYCLE_RUBBER+0.0001;
 			}
 			var move2d = Math.cos(this.model.rotation.y), movez = -this.model.rotation.y;
 			var dist2d = dist*move2d;

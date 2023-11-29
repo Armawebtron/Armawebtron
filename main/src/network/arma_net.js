@@ -2309,7 +2309,7 @@ class ServerClientArma
 					// rubber used
 					// which for some reason is not a float
 					// but a integer representation of the percentage
-					msg.pushShort((65535*(p.rubber/settings.CYCLE_RUBBER))|0);
+					msg.pushShort(Math.min(((65535*(p.rubber/settings.CYCLE_RUBBER))|0),65535));
 					
 					// dunno
 					msg.pushShort(65535).pushShort(65535)
