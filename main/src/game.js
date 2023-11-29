@@ -1255,7 +1255,7 @@ game.checkForWinner = function()
 	}
 	if(
 		(declareRoundWinner) ||
-		(settings.GAME_TYPE == 1 && numHumanPlay > 0 && numPlay > 1 && (alivecount <= 1 || (settings.FINISH_TYPE == 1 && aliveaicount == alivecount))) || 
+		(settings.GAME_TYPE == 1 && numPlay > 1 && (alivecount <= 1 || (numHumanPlay > 0 && settings.FINISH_TYPE == 1 && aliveaicount == alivecount))) || 
 		(/*settings.GAME_TYPE == 0 && */(alivecount <= 0))
 	)
 	{
