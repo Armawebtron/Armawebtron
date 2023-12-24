@@ -2158,6 +2158,7 @@ class ServerClientArma
 			switch(o.type)
 			{
 				case _arma_obj.cycle:
+				case _arma_obj.cycleWall:
 				case _arma_obj.zone:
 				case _arma_obj.zoneCirc:
 				case _arma_obj.zonePoly:
