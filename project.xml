@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="Armawebtron2" package="com.sample.armawebtron2" version="1.0.0" company="Company Name" />
+	<app main="Main" path="build" file="Armawebtron2" />
+	
+	<source path="src" />
+	
+	<haxelib name="openfl" />
+	<haxelib name="away3d" />
+	<!--<haxelib name="haxe-concurrent" />-->
+	<!--
+	<haxelib name="haxeui-core" />
+	<haxelib name="haxeui-openfl" />
+	-->
+	
+	<assets path="assets" rename="assets" />
+	<assets path="assets/fonts" rename="fonts" />
+	<assets path="assets/models" rename="models" />
+	
+	<window background="#000000" fps="240" />
+	
+</project>

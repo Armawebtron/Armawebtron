@@ -1,0 +1,223 @@
+
+import GameCore;
+
+class Player
+{
+	static var ids : UInt = 0;
+	public var id : UInt;
+	
+	public var isAI : Bool;
+	public var name : String;
+	
+	public var spectating : Bool;
+	
+	public function new()
+	{
+		id = ids++;
+		
+		isAI = false;
+		name = "";
+		
+		spectating = false;
+	}
+	
+	public function state() : Array<Dynamic>
+	{
+		return [
+			"player",
+			id,
+			name,
+			isAI,
+		];
+	}
+}
+
+class CycleWall
+{
+	static var ids : UInt = 0;
+	public var id : UInt;
+	
+	public var x1 : Float; public var y1 : Float;
+	public var x2 : Float; public var y2 : Float;
+	
+	public var owner : Cycle;
+	
+	
+	public function new()
+	{
+		id = ids++;
+	}
+	
+	public function state() : Array<Dynamic>
+	{
+		return [
+			"cycleWall",
+			id,
+			x1, y1,
+			x2, y2,
+		];
+	}
+}
+
+class Dist
+{
+	public var f : Float;
+	public var l : Float;
+	public var r : Float;
+	
+	public function new()
+	{
+		f = 9999;
+		l = 9999;
+		r = 9999;
+	}
+}
+
+class Cycle
+{
+	static var ids : UInt = 0;
+	public var id : UInt;
+	
+	public var p : Player;
+	
+	public var time : Float;
+	
+	public var collision : Bool;
+	public var dist : Dist;
+	
+	public var lastX : Float; public var lastY : Float;
+	
+	public var x : Float; public var y : Float;
+	public var xdir : Float; public var ydir : Float;
+	
+	public var alive : Bool;
+	
+	public var speed : Float;
+	public var speedTarget : Float;
+	
+	public var rubber : Float;
+	public var rubberMax : Float;
+	
+	public var brake : Float;
+	public var braking : Bool;
+	
+	public var walls : Array<CycleWall>;
+	
+	public function new()
+	{
+		id = ids++;
+		
+		time = 0;
+		
+		collision = false;
+		
+		speedTarget = 30;
+		rubberMax = 5;
+		
+		lastX = lastY = 0;
+		x = y = 0;
+		
+		rubber = 0;
+		speed = 20;
+		
+		xdir = 0;
+		ydir = 1;
+		
+		walls = [];
+		
+		alive = true;
+		
+		p = null;
+	}
+	
+	public function update( timestep : Float ) : Bool
+	{
+		time += timestep;
+		
+		if( collision )
+		{
+		}
+		else
+		{
+			lastX = x; lastY = y;
+			
+			this.x += timestep * speed * xdir;
+			this.y += timestep * speed * ydir;
+		}
+		
+		if( rubber > 0 )
+		{
+			rubber -= timestep * rubber;
+		}
+		else if( rubber != 0 )
+		{
+			rubber = 0;
+		}
+		
+		if( walls.length > 0 )
+		{
+			var wall = walls[walls.length-1];
+			wall.x2 = x; wall.y2 = y;
+		}
+		
+		if( p != null && p.isAI )
+		{
+			if( time > 1 )
+			{
+				if( dist.l > dist.r )
+				{
+					
+				}
+				else
+				{
+					
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	/*
+	public function newState() : Array<Dynamic>
+	{
+		return [
+			"newCycle",
+			id,
+			x, y,
+			xdir, ydir,
+		];
+	}
+	
+	public function state() : Array<Dynamic>
+	{
+		return [
+			"cycle",
+			id,
+			alive,
+			x, y,
+			xdir, ydir,
+			speed, rubber,
+		];
+	}*/
+	
+	public function newState() : TGameEvent
+	{
+		return t_newCycle(
+			id, 
+			x, y,
+			xdir, ydir
+		);
+	}
+	
+	public function state() : TGameEvent
+	{
+		return t_cycle(
+			id, alive,
+			x, y, 
+			xdir, ydir,
+			speed, rubber
+		);
+	}
+}
+
