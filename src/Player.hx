@@ -1,5 +1,6 @@
 
 import GameCore;
+import Game;
 
 class Player
 {
@@ -23,14 +24,14 @@ class Player
 		spectating = false;
 	}
 	
-	public function state() : Array<Dynamic>
+	public function state() : TGameEvent
 	{
-		return [
-			"player",
+		return t_player(
 			id,
+			true,
 			name,
-			isAI,
-		];
+			isAI
+		);
 	}
 }
 
@@ -56,14 +57,24 @@ class CycleWall
 		dist = 0;
 	}
 	
-	public function state() : Array<Dynamic>
+	public function newState() : TGameEvent
 	{
-		return [
-			"cycleWall",
-			id,
+		return t_newWall(
+			id, 
+			wall_cycle, 
+			owner.id, 
 			x1, y1,
-			x2, y2,
-		];
+			x2, y2
+		);
+	}
+	
+	public function state() : TGameEvent
+	{
+		return t_wall(
+			id, 
+			x1, y1,
+			x2, y2
+		);
 	}
 }
 
@@ -114,9 +125,12 @@ class Cycle
 	
 	public var walls : Array<CycleWall>;
 	
-	public function new()
+	public var game : Game;
+	
+	public function new( g : Game )
 	{
 		id = ids++;
+		game = g;
 		
 		time = 0;
 		
@@ -144,6 +158,19 @@ class Cycle
 		p = null;
 	}
 	
+	public function mkNewWall()
+	{
+		var w = new CycleWall();
+		
+		w.owner = this;
+		
+		w.x1 = this.x; w.y1 = this.y;
+		w.x2 = this.x; w.y2 = this.y;
+		
+		this.walls.push(w);
+		game.eToSend.push(w.newState());
+	}
+	
 	public function turnReady( dir )
 	{
 		this.dir = (this.dir+dir)%axes.length;
@@ -152,6 +179,8 @@ class Cycle
 		this.ydir = axes[this.dir][1];
 		
 		this.speed *= 0.95;
+		
+		mkNewWall();
 		
 		
 		this.lastX = this.x + this.xdir * 0.0001;

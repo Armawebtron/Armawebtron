@@ -1,4 +1,10 @@
 
+enum GWallType
+{
+	wall_rim;
+	wall_cycle;
+}
+
 enum TGameEvent
 {
 	m_pause;
@@ -19,6 +25,13 @@ enum TGameEvent
 	t_con( recv : UInt, msg : String );
 	t_cen( recv : UInt, msg : String, timeout : Float, speed : Float );
 	
+	t_player(
+		id: UInt,
+		exists: Bool,
+		name: String,
+		isAI: Bool
+	);
+	
 	t_newCycle(
 		id: UInt, 
 		x: Float, y: Float,
@@ -32,6 +45,13 @@ enum TGameEvent
 	);
 	
 	t_newWall(
+		id: UInt,
+		type: GWallType, owner: UInt,
+		x1: Float, y1: Float,
+		x2: Float, y2: Float
+	);
+	
+	t_wall(
 		id: UInt,
 		x1: Float, y1: Float,
 		x2: Float, y2: Float

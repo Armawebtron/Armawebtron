@@ -147,7 +147,7 @@ class Game
 					case 3: consoleMessage("Hack the grid!");
 					case 4: consoleMessage("There's so much more memory to fill.");
 					case 5: consoleMessage("I wonder what's beyond the void...");
-					case 6: consoleMessage("What's stopping us from escaping the grid anyway?");
+					case 6: consoleMessage("Stuck inside these four walls...");
 					case 7: consoleMessage("Let's corrupt all the enemy cycles' cores!");
 					case 8: consoleMessage("Dump some cores!");
 					case 9: consoleMessage("Cause a page fault!");
@@ -160,7 +160,7 @@ class Game
 				{
 					if( !p.spectating )
 					{
-						var cycle = new Cycle();
+						var cycle = new Cycle(this);
 						
 						cycle.xdir = Math.cos(i*(Math.PI/2));
 						cycle.ydir = Math.sin(i*(Math.PI/2));
