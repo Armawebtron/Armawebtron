@@ -14,6 +14,8 @@ import away3d.primitives.PlaneGeometry;
 import away3d.textures.BitmapTexture;
 import away3d.textures.Anisotropy;
 
+import away3d.filters.*;
+
 import openfl.Assets;
 
 
@@ -27,6 +29,10 @@ class GridAnimation extends Sprite
 	private var grid    : Mesh;
 	
 	private var lastTime : UInt;
+	
+	
+	private var fo : Bool;
+	private var blurLevel : Float;
 	
 	
 	public function new()
@@ -64,6 +70,8 @@ class GridAnimation extends Sprite
 		this.lastTime = Lib.getTimer();
 		
 		this.gridMat.alpha = 0;
+		
+		fo = true; blurLevel = 0;
 	}
 	
 	private var fadingOut : Bool;
@@ -104,8 +112,29 @@ class GridAnimation extends Sprite
 			else this.gridMat.alpha = 1;
 		}
 		
+		if( fo )
+		{
+			/*
+			blurLevel += timestep*120;
+			
+			if( blurLevel >= 24 )
+			*/
+			{
+				fo = false;
+				blurLevel = 24;
+			}
+			
+			view.filters3d = [new BlurFilter3D(Std.int(blurLevel), Std.int(blurLevel))];
+		}
+		
 		this.lastTime = time;
 		
 		view.render();
+	}
+	
+	public function onresize()
+	{
+		view.width = stage.stageWidth;
+		view.height = stage.stageHeight;
 	}
 }

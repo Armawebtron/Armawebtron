@@ -1,8 +1,11 @@
 
 enum TGameEvent
 {
+	m_pause;
+	m_unpause;
+	
 	// input
-	m_turn( id : UInt, dir : Int );
+	m_turn( id : UInt, dir : Int, key : UInt );
 	m_brake( id : UInt, braking : Bool );
 	m_away( id : UInt, away : Bool );
 	

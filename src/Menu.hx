@@ -40,7 +40,9 @@ class MenuItem extends SimpleButton
 	
 	private var menu : Menu;
 	
-	public function new( master : Menu, txt : String, y : UInt, action : MenuAction, width=800 )
+	static public var defaultWidth : UInt;
+	
+	public function new( master : Menu, txt : String, y : UInt, action : MenuAction, width : Int=-1 )
 	{
 		this.sprite = new Sprite();
 		
@@ -48,6 +50,8 @@ class MenuItem extends SimpleButton
 		
 		
 		var m = new TextField();
+		
+		if( width == -1 ) width = defaultWidth;
 		
 		if( width != 0 )
 		{
@@ -176,6 +180,8 @@ class Menu extends Sprite
 		//addChild(exitMenu);
 		
 		this.haxeuiInit = false;
+		
+		startY = 160;
 	}
 	
 	
@@ -301,6 +307,8 @@ class Menu extends Sprite
 	
 	private var haxeuiInit : Bool;
 	
+	public var startY : UInt;
+	
 	public function changeMenu(menu : Menus)
 	{
 		if( currMenu == configMenu )
@@ -321,13 +329,13 @@ class Menu extends Sprite
 			}
 		}
 		
-		var y = 160;
+		var y = startY;
 		
 		switch( menu )
 		{
 			case mainMenu:
 			{
-				title.text = "Armawebtron v1.0.0";
+				title.text = "Armawebtron v1.0.0-beta9";
 				
 				var m = new MenuItem(this, "Play Game", y, actChangeMenu(playMenu));
 				y += 60;
@@ -386,5 +394,19 @@ class Menu extends Sprite
 		currMenu = menu;
 		
 		exitMenu.x = 0;
+	}
+	
+	public function onresize()
+	{
+		MenuItem.defaultWidth = stage.stageWidth;
+		title.width = stage.stageWidth;
+		
+		title.y = stage.stageHeight/15;
+		startY = Std.int(stage.stageHeight/3.75);
+		
+		if( this.currMenu != null )
+		{
+			changeMenu(this.currMenu);
+		}
 	}
 }

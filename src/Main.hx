@@ -3,21 +3,25 @@ package;
 import openfl.Lib;
 
 import openfl.display.Sprite;
-import openfl.events.Event;
+import openfl.events.*;
 
 import openfl.text.TextField;
 import openfl.text.TextFormat;
 import openfl.text.TextFormatAlign;
 
+#if( target.threaded )
 import sys.thread.Thread;
-//import hx.concurrent.thread.Thread;
+#end
 
 
 import Menu;
 import GameView;
 import GridAnimation;
 
+import GameCore;
 import Game;
+
+import UserConfig;
 
 enum State
 {
@@ -35,18 +39,51 @@ class Main extends Sprite
 	var grid : GridAnimation;
 	
 	var gamet : Game;
+#if( target.threaded )
 	var worker : sys.thread.Thread;
 	var main : sys.thread.Thread;
+#elseif( js )
+	var worker : js.html.Worker;
+	var maint : js.html.DedicatedWorkerGlobalScope;
+#end
 	
 	var currState : State;
 	
 	public function new()
 	{
+		#if( !target.threaded && js )
+		if( try js.Browser.document == null catch (e:Dynamic) true ) 
+		{
+			super();
+			initWorker();
+		}
+		else
+		#end
+		{
+			super();
+			initMain();
+		}
+	}
+	
+	var userConfig : UserConfig;
+	
+	public function initMain()
+	{
 		threadEnabled = true;
 		
-		super();
+		#if( !target.threaded )
+			threadEnabled = false;
+		#end
+		
+		#if( !target.threaded && js )
+			threadEnabled = true;
+		#end
+		
+		trace("Thread supported? "+threadEnabled);
 		
 		addEventListener(Event.ENTER_FRAME, render);
+		stage.addEventListener(Event.RESIZE, onresize);
+		stage.addEventListener(KeyboardEvent.KEY_DOWN, onkeydown);
 		
 		this.grid = new GridAnimation();
 		this.addChild(this.grid);
@@ -58,8 +95,47 @@ class Main extends Sprite
 		this.gamet = null;
 		//this.worker = null;
 		
+		this.userConfig = new UserConfig();
+		
+		#if( !target.threaded && js )
+			// workers not working?!
+			threadEnabled = false;
+		#end
+		
+		
+		trace("Threads enabled? "+threadEnabled);
+		
+		#if( !target.threaded && js )
+		if( threadEnabled )
+		{
+			var scriptPath : String = js.Syntax.code("(new Error().stack.match(/([^ \\n])*([a-z]*:\\/\\/\\/?)*?[a-z0-9\\/\\\\]*\\.js/ig)[0])");
+			if( scriptPath.indexOf("@") != -1 )
+			{
+				scriptPath = scriptPath.substr(scriptPath.indexOf("@")+1);
+			}
+			worker = new js.html.Worker(scriptPath);
+		}
+		#end
+		
 		this.setState( stateMenu );
 	}
+	
+	#if( !target.threaded && js )
+	public function initWorker()
+	{
+		trace("hello");
+		
+		maint = untyped self;
+		
+		gamet = new Game();
+		maint.onmessage = msgFromMain;
+	}
+	
+	function msgFromMain( e : js.html.MessageEvent )
+	{
+		gamet.recvMsg( e.data );
+	}
+	#end
 	
 	public function render(e : Event)
 	{
@@ -78,6 +154,7 @@ class Main extends Sprite
 			
 			case stateGame:
 			{
+			#if( target.threaded )
 				if( threadEnabled )
 				{
 					var m = sys.thread.Thread.readMessage(false);
@@ -88,6 +165,9 @@ class Main extends Sprite
 					}
 				}
 				else
+			#elseif( js )
+				if( !threadEnabled )
+			#end
 				{
 					this.game.recvGame(this.gamet.loop());
 				}
@@ -100,6 +180,7 @@ class Main extends Sprite
 		}
 	}
 	
+#if( target.threaded )
 	function t_doGame()
 	{
 		var nextTime = Lib.getTimer() + 0.2;
@@ -127,6 +208,7 @@ class Main extends Sprite
 			nextTime = time + 0.005;
 		}
 	}
+#end
 	
 	public function setState( state : State )
 	{
@@ -160,6 +242,7 @@ class Main extends Sprite
 			{
 				if( this.gamet == null )
 				{
+				#if( target.threaded )
 					if( threadEnabled )
 					{
 						this.main = sys.thread.Thread.current();
@@ -172,6 +255,7 @@ class Main extends Sprite
 						lock.wait();
 					}
 					else
+				#end
 					{
 						this.gamet = new Game();
 					}
@@ -186,10 +270,79 @@ class Main extends Sprite
 			
 			case stateQuit:
 			{
+			#if( sys )
 				Sys.exit(0);
+			#else
+				throw 'exit'; // HACK!!
+			#end
 			}
 		}
 		
 		currState = state;
+		onresize();
+	}
+	
+	function sendMessage( e : TGameEvent )
+	{
+		#if( target.threaded || js )
+		if( threadEnabled )
+		{
+			#if( !target.threaded && js )
+				worker.postMessage(e);
+			#else
+				worker.sendMessage(e);
+			#end
+		}
+		else
+		#end
+		{
+			gamet.recvMsg(e);
+		}
+	}
+	
+	private function onkeydown( e : KeyboardEvent )
+	{
+		switch( currState )
+		{
+			case stateGame:
+			{
+				//trace(e.keyCode);
+				
+				var turnLeft = userConfig.players[0].turnLeft.indexOf(e.keyCode);
+				var turnRight = userConfig.players[0].turnRight.indexOf(e.keyCode);
+				
+				if( turnLeft != -1 )
+				{
+					sendMessage( m_turn(0, -1, turnLeft+1) );
+				}
+				else if( turnRight != -1 )
+				{
+					sendMessage( m_turn(0, 1, turnRight+1) );
+				}
+				
+				//;
+			}
+			
+			default:
+		}
+	}
+	
+	private function onresize( e : Event = null )
+	{
+		switch( currState )
+		{
+			case stateMenu:
+			{
+				this.grid.onresize();
+				this.menu.onresize();
+			}
+			
+			case stateGame:
+			{
+				this.game.onresize();
+			}
+			
+			default:
+		}
 	}
 }

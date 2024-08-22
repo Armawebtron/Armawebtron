@@ -67,13 +67,13 @@ class CycleView extends ObjectContainer3D
 	{
 		var asset : IAsset = event.asset;
 		
-		trace("onload");
+		//trace("onload");
 		switch(asset.assetType)
 		{
 			case Asset3DType.MESH:
 			{
 				var mesh : Mesh = cast(asset, Mesh);
-				this.addChild(mesh);
+				this.addChild(mesh.clone());
 				//mesh.x = -255;
 				//mesh.y = -50;
 			}
@@ -113,6 +113,8 @@ class GameView extends Sprite
 	var centerMsg : String; var centerMsgTime : Float;
 	var cenSpd : Float;
 	var cenSpr : TextField;
+	
+	var fpsDisp : away3d.debug.AwayFPS;
 	
 	public function new()
 	{
@@ -156,7 +158,7 @@ class GameView extends Sprite
 					
 					cycle.x = x;
 					cycle.z = y;
-					cycle.rotationY = ( ( Math.atan2(ydir, xdir) * MathConsts.RADIANS_TO_DEGREES ) ) - 90;
+					cycle.rotationY = ( ( Math.atan2(-ydir, xdir) * MathConsts.RADIANS_TO_DEGREES ) ) + 90;
 				}
 				
 				case t_cycle(id, alive, x, y, xdir, ydir, speed, rubber):
@@ -165,7 +167,7 @@ class GameView extends Sprite
 					
 					//trace(e);
 					
-					var newDir = ( Math.atan2(ydir, xdir) * MathConsts.RADIANS_TO_DEGREES ) - 90;
+					var newDir = ( Math.atan2(-ydir, xdir) * MathConsts.RADIANS_TO_DEGREES ) + 90;
 					
 					cycle.x = x;
 					cycle.z = y;
@@ -187,7 +189,7 @@ class GameView extends Sprite
 		this.view = new View3D();
 		this.addChild(view);
 		
-		this.addChild(new away3d.debug.AwayFPS(view, 700, 10, 0xffffff, 1));
+		this.addChild(fpsDisp=(new away3d.debug.AwayFPS(view, 700, 10, 0xffffff, 1)));
 		
 		
 		view.camera.x = 20;
@@ -259,8 +261,10 @@ class GameView extends Sprite
 			//view.camera.x = cycle.x-20;
 			//view.camera.z = cycle.z-5;
 			
+			//var cdir = Math.atan2(c->ydir, c->xdir);
 			var cdir : Float = MathConsts.DEGREES_TO_RADIANS * ( cycle.rotationY + 90 );
-			cdir = Math.atan2( Math.sin(cdir), Math.cos(cdir) );
+			cdir = Math.atan2( -Math.sin(cdir), Math.cos(cdir) );
+			//trace(cdir);
 			
 			var test = cdir - heading;
 			while( test < -Math.PI ) test += Math.PI+Math.PI;
@@ -268,19 +272,20 @@ class GameView extends Sprite
 			
 			heading += test * 4 * timestep;
 			
-			view.camera.x = cycle.x - ( Math.cos(heading) * 3 );
-			view.camera.z = cycle.y - ( Math.sin(heading) * 3 );
-			view.camera.y = 15;
+			view.camera.x = cycle.x + ( Math.cos(heading) * 13 );
+			view.camera.z = cycle.z + ( Math.sin(heading) * 13 );
+			view.camera.y = 8;
 			
 			view.camera.lookAt(new Vector3D(
-				cycle.x+(Math.cos(heading)*20), 0, 
-				cycle.z+(Math.sin(heading)*20)
+				cycle.x+(Math.cos(heading)*-3), 0, 
+				cycle.z+(Math.sin(heading)*-3)
 			));
 		}
 		
 		centerMsgTime -= timestep;
 		if( cenSpr.alpha > 0 && ( centerMsgTime - cenSpd ) < 0 )
 		{
+			//trace( ( cenSpd - centerMsgTime ));
 			//cenSpr.alpha = ( cenSpd - centerMsgTime );
 			cenSpr.alpha -= timestep * cenSpd;
 			
@@ -295,5 +300,16 @@ class GameView extends Sprite
 		this.lastTime = time;
 		
 		view.render();
+	}
+	
+	public function onresize()
+	{
+		view.width = stage.stageWidth;
+		view.height = stage.stageHeight;
+		
+		fpsDisp.x = stage.stageWidth-100;
+		
+		cenSpr.width = stage.stageWidth;
+		cenSpr.y = stage.stageHeight*0.7;
 	}
 }

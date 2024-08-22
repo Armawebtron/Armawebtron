@@ -11,6 +11,8 @@ class Player
 	
 	public var spectating : Bool;
 	
+	public var cycle : Cycle;
+	
 	public function new()
 	{
 		id = ids++;
@@ -40,12 +42,18 @@ class CycleWall
 	public var x1 : Float; public var y1 : Float;
 	public var x2 : Float; public var y2 : Float;
 	
+	public var dist : Float;
+	
 	public var owner : Cycle;
 	
 	
 	public function new()
 	{
 		id = ids++;
+		
+		x1 = y1 = 0;
+		x2 = y2 = 0;
+		dist = 0;
 	}
 	
 	public function state() : Array<Dynamic>
@@ -90,6 +98,9 @@ class Cycle
 	public var x : Float; public var y : Float;
 	public var xdir : Float; public var ydir : Float;
 	
+	public var dir : UInt;
+	public var axes : Array<Array<Float>>;
+	
 	public var alive : Bool;
 	
 	public var speed : Float;
@@ -122,12 +133,34 @@ class Cycle
 		
 		xdir = 0;
 		ydir = 1;
+		dir = 0;
 		
 		walls = [];
+		
+		dist = new Dist();
 		
 		alive = true;
 		
 		p = null;
+	}
+	
+	public function turnReady( dir )
+	{
+		this.dir = (this.dir+dir)%axes.length;
+		
+		this.xdir = axes[this.dir][0];
+		this.ydir = axes[this.dir][1];
+		
+		this.speed *= 0.95;
+		
+		
+		this.lastX = this.x + this.xdir * 0.0001;
+		this.lastY = this.y + this.ydir * 0.0001;
+	}
+	
+	public function doTurn( dir )
+	{
+		turnReady( dir );
 	}
 	
 	public function update( timestep : Float ) : Bool

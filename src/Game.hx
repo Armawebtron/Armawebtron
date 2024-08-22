@@ -4,6 +4,8 @@ import openfl.Lib;
 import Player;
 import GameCore;
 
+import TMath;
+
 enum RoundStates { R_COMMENCING;
 	R_LOAD_GRID; R_LOAD_OBJECTS;
 	R_LOAD_CAMERA;
@@ -36,6 +38,8 @@ class Game
 	//public var eToSend : Array<Array<Dynamic>>;
 	public var eToSend : Array<TGameEvent>;
 	
+	public var axes : Array<Array<Float>>;
+	
 	private var lastTime : UInt;
 	
 	public function new()
@@ -50,6 +54,8 @@ class Game
 		this.gameTime = 0;
 		
 		this.lastTime = Lib.getTimer();
+		
+		axes = [[0, -1], [-1, 0], [0, 1], [1, 0]];
 		
 		addedAIs = false;
 	}
@@ -68,9 +74,16 @@ class Game
 	{
 		switch(e)
 		{
-			case m_turn( id, dir ):
+			case m_turn( id, dir, key ):
 			{
+				var cycle : Cycle = players[0].cycle;
 				
+				trace(dir);
+				
+				if( cycle != null )
+				{
+					cycle.doTurn(dir);
+				}
 			}
 			
 			default:
@@ -128,7 +141,7 @@ class Game
 			case R_LOAD_OBJECTS:
 			{
 				//fade_out(64);
-				switch(time%10)
+				switch(Std.int(time%10))
 				{
 					case 0: consoleMessage("Another round, another crash.");
 					case 1: consoleMessage("The MCP isn't gonna win this time.");
@@ -139,7 +152,7 @@ class Game
 					case 6: consoleMessage("What's stopping us from escaping the grid anyway?");
 					case 7: consoleMessage("Let's corrupt all the enemy cycles' cores!");
 					case 8: consoleMessage("Dump some cores!");
-					case 9: consoleMessage("Cause a page fault!");					
+					case 9: consoleMessage("Cause a page fault!");
 					default:
 						consoleMessage("");
 				}
@@ -154,12 +167,32 @@ class Game
 						cycle.xdir = Math.cos(i*(Math.PI/2));
 						cycle.ydir = Math.sin(i*(Math.PI/2));
 						
-						cycle.x = ( cycle.xdir * ( -70 - (Std.int(i/4) * 4 ) ) ) + cycle.ydir;
-						cycle.y = ( cycle.ydir * ( -70 - (Std.int(i/4) * 4 ) ) ) + cycle.xdir;
+						for(i=>a in axes)
+						{
+							if(
+								Math.round(a[0]) == Math.round(cycle.xdir) &&
+								Math.round(a[1]) == Math.round(cycle.ydir)
+							)
+							{
+								cycle.dir = i;
+							}
+						}
+						
+						var s : Float;
+						if( ((i%8)>3) )
+							s = -4;
+						else
+							s = 4;
+						
+						cycle.x = ( cycle.xdir * ( -70 - ( Std.int(i/4) * 4 ) ) ) + ( cycle.ydir * ( ( Std.int(i/8) * s ) - 2 ) );
+						cycle.y = ( cycle.ydir * ( -70 - ( Std.int(i/4) * 4 ) ) ) + ( cycle.xdir * ( ( Std.int(i/8) * s ) - 2 ) );
 						
 						this.cycles.push(cycle);
+						cycle.axes = axes;
 						
 						events.push( cycle.newState() );
+						
+						p.cycle = cycle;
 						
 						++i;
 					}
@@ -200,13 +233,7 @@ class Game
 						lastCountDown = 0;
 					}
 					
-					for( cycle in cycles )
-					{
-						if( cycle.update( timestep ) )
-						{
-							events.push( cycle.state() );
-						}
-					}
+					run( timestep, events );
 				}
 			}
 			
@@ -225,6 +252,147 @@ class Game
 		lastTime = time;
 		
 		return events;
+	}
+	
+	public function run( timestep : Float, events : Array<TGameEvent> )
+	{
+		for( c in cycles )
+		{
+			var lxdir : Float, lydir : Float;
+			if( ( c.dir & 1 ) != 0 )
+			{
+				lxdir = c.ydir;
+				lydir = c.xdir;
+			}
+			else
+			{
+				lxdir = -c.ydir;
+				lydir = -c.xdir;
+			}
+			
+			var range : Float = c.speed * 5;
+			
+			
+			for( c2 in cycles )
+			{
+				for( wall in c.walls )
+				{
+					if( TMath.lineIntersect(
+						c.lastX, c.lastY,
+						c.x, c.y,
+						wall.x1, wall.y1,
+						wall.x2, wall.y2
+					) )
+					{
+						var dist = TMath.distanceOfLines(
+							c.lastX, c.lastY,
+							c.lastX, c.lastY,
+							wall.x1, wall.y1,
+							wall.x2, wall.y2
+						) - 0.03;
+						
+						c.x = c.lastX+
+							(c.xdir*dist);
+						c.y = c.lastY+
+							(c.ydir*dist);
+						
+						//if( i != k || c.currWall != j+1 )
+						//	c.collision = 1;
+						
+						if( TMath.lineIntersect(
+							c.lastX, c.lastY,
+							c.x, c.y,
+							wall.x1, wall.y1,
+							wall.x2, wall.y2
+						) )
+						{
+							c.x = c.lastX;
+							c.y = c.lastY;
+						}
+						
+						// hmm, arguably we should try all cycles / walls again
+						//i = MAX_CYCLES;
+						//break;
+						
+						// but that doesn't actually seem to help much
+					}
+					
+					if( TMath.lineIntersect(
+						c.x, c.y,
+						( c.x + c.xdir * range ), ( c.y + c.ydir * range ),
+						wall.x1, wall.y1,
+						wall.x2, wall.y2
+					) )
+					{
+						var ff = TMath.distanceOfLines(
+							c.x, c.y,
+							c.x, c.y,
+							wall.x1, wall.y1,
+							wall.x2, wall.y2
+						);
+						
+						if( ff < 0.03 )
+						{
+							c.collision = true;
+						}
+						
+						if( c.dist.f > ff )
+							c.dist.f = ff;
+					}
+					
+					if( TMath.lineIntersect(
+						c.x, c.y,
+						( c.x + lxdir * range ), ( c.y + lydir * range ),
+						wall.x1, wall.y1,
+						wall.x2, wall.y2
+					) )
+					{
+						var ff = TMath.distanceOfLines(
+							c.x, c.y,
+							c.x, c.y,
+							wall.x1, wall.y1,
+							wall.x2, wall.y2
+						);
+						
+						if( c.dist.l > ff )
+						{
+							c.dist.l = ff;
+							//type_l[k] = 1 + (i == k);
+						}
+					}
+					
+					if( TMath.lineIntersect(
+						c.x, c.y,
+						( c.x - lxdir * range ), ( c.y - lydir * range ),
+						wall.x1, wall.y1,
+						wall.x2, wall.y2
+					) )
+					{
+						var ff = TMath.distanceOfLines(
+							c.x, c.y,
+							c.x, c.y,
+							wall.x1, wall.y1,
+							wall.x2, wall.y2
+						);
+						
+						if( c.dist.r > ff )
+						{
+							c.dist.r = ff;
+							//type_r[k] = 1 + (i == k);
+						}
+					}
+				}
+			}
+		}
+		
+		
+		for( cycle in cycles )
+		{
+			if( cycle.update( timestep ) )
+			{
+				events.push( cycle.state() );
+			}
+		}
 	}
 }
 
