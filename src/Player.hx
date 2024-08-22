@@ -116,6 +116,8 @@ class Cycle
 	
 	public var speed : Float;
 	public var speedTarget : Float;
+	public var cycleSpeedDecayBelow : Float;
+	public var cycleSpeedDecayAbove : Float;
 	
 	public var rubber : Float;
 	public var rubberMax : Float;
@@ -132,12 +134,14 @@ class Cycle
 		id = ids++;
 		game = g;
 		
-		time = 0;
-		
-		collision = false;
-		
 		speedTarget = 30;
+		cycleSpeedDecayBelow = 5.;
+		cycleSpeedDecayAbove = 0.1;
+		
 		rubberMax = 5;
+		
+		
+		time = 0;
 		
 		lastX = lastY = 0;
 		x = y = 0;
@@ -151,6 +155,7 @@ class Cycle
 		
 		walls = [];
 		
+		collision = false;
 		dist = new Dist();
 		
 		alive = true;
@@ -196,8 +201,28 @@ class Cycle
 	{
 		time += timestep;
 		
+		var accel : Float = 0;
+		
+		if( this.speed < speedTarget )
+		{
+			accel += ( speedTarget - this.speed ) * cycleSpeedDecayBelow;
+		}
+		else if( this.speed > speedTarget )
+		{
+			accel += ( speedTarget - this.speed ) * cycleSpeedDecayAbove;
+		}
+		
+		if( this.braking )
+		{
+			accel -= 10;
+		}
+		
+		this.speed += accel * timestep;
+		
+		
 		if( collision )
 		{
+			
 		}
 		else
 		{
@@ -220,6 +245,8 @@ class Cycle
 		{
 			var wall = walls[walls.length-1];
 			wall.x2 = x; wall.y2 = y;
+			
+			game.eToSend.push(wall.state());
 		}
 		
 		if( p != null && p.isAI )

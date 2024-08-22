@@ -39,6 +39,7 @@ import openfl.text.TextFormatAlign;
 
 
 import GameCore;
+import TMath;
 
 
 class CycleView extends ObjectContainer3D
@@ -91,6 +92,39 @@ class CycleView extends ObjectContainer3D
 	}
 }
 
+class WallView extends Mesh
+{
+	private var geo : PlaneGeometry;
+	
+	public var x1 : Float; public var y1 : Float;
+	public var x2 : Float; public var y2 : Float;
+	
+	public function new()
+	{
+		geo = new PlaneGeometry(1, 1);
+		geo.scaleUV(1, 1);
+		geo.doubleSided = true;
+		
+		var color = new ColorMaterial();
+		
+		super( geo, color );
+		
+		this.rotationX = 90;
+	}
+	
+	public function set( ix1 : Float = null, iy1 : Float = null, ix2 : Float = null, iy2 : Float = null )
+	{
+		if( ix1 != null ) { x1 = ix1; } if( iy1 != null ) { y1 = iy1; }
+		if( ix2 != null ) { x2 = ix2; } if( iy2 != null ) { y2 = iy2; }
+		
+		this.rotationY = Math.atan2(y2-y1,x2-x1) * MathConsts.RADIANS_TO_DEGREES;
+		this.geo.width = TMath.pointDistance(x1, y1, x2, y2);
+		
+		this.x = (x2+x1)/2;
+		this.z = (y2+y1)/2;
+	}
+}
+
 
 class GameView extends Sprite
 {
@@ -106,6 +140,7 @@ class GameView extends Sprite
 	//private var cycle : CycleView;
 	
 	var cycles : Map<UInt,CycleView>;
+	var walls  : Map<UInt,WallView>;
 	
 	var heading : Float;
 	
@@ -121,6 +156,7 @@ class GameView extends Sprite
 		super();
 		
 		cycles = [];
+		walls = [];
 		
 		initScene();
 	}
@@ -175,6 +211,21 @@ class GameView extends Sprite
 					{
 						cycle.rotationY = newDir;
 					}
+				}
+				
+				case t_newWall(id, type, owner, x1, y1, x2, y2):
+				{
+					var wall = new WallView();
+					wall.set(x1, y1, x2, y2);
+					
+					walls[id] = wall;
+					view.scene.addChild(wall);
+				}
+				
+				case t_wall(id, x1, y1, x2, y2):
+				{
+					var wall = walls[id];
+					wall.set(x1, y1, x2, y2);
 				}
 				
 				

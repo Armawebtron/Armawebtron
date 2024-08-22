@@ -99,6 +99,8 @@ class Game
 			events.push( e );
 		}
 		
+		eToSend.splice(0, eToSend.length);
+		
 		
 		
 		var time = Lib.getTimer();
@@ -270,10 +272,15 @@ class Game
 			
 			var range : Float = c.speed * 5;
 			
+			c.dist.f = range;
+			c.dist.l = range;
+			c.dist.r = range;
+			c.collision = false;
+			
 			
 			for( c2 in cycles )
 			{
-				for( wall in c.walls )
+				for( wall in c2.walls )
 				{
 					if( TMath.lineIntersect(
 						c.lastX, c.lastY,
