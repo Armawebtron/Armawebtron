@@ -78,8 +78,6 @@ class Game
 			{
 				var cycle : Cycle = players[0].cycle;
 				
-				trace(dir);
-				
 				if( cycle != null )
 				{
 					cycle.doTurn(dir);
