@@ -578,7 +578,10 @@ class Menu extends Sprite
 		{
 			case mainMenu:
 			{
+				/*
 				title.text = "Armawebtron v1.0.0-beta9";
+				*/
+				title.text = "Armawebtron-next pre-alpha";
 				
 				var m = new MenuItem(this, "Play Game", y, actChangeMenu(playMenu));
 				y += 60;
