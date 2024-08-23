@@ -1,8 +1,12 @@
 
+package game;
+
+
 import GameCore;
-import Object;
-import Sensors;
-import Game;
+
+import game.Object;
+import game.Sensors;
+import game.Game;
 
 class Player
 {

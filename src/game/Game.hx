@@ -1,12 +1,15 @@
 
+package game;
+
+
 import openfl.Lib;
 
 import GameCore;
 import TMath;
 
-import Sensors;
-import Object;
-import Player;
+import game.Sensors;
+import game.Object;
+import game.Player;
 
 
 enum RoundStates { R_COMMENCING;

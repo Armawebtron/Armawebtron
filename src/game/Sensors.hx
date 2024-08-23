@@ -1,9 +1,12 @@
 
+package game;
+
+
 import GameCore;
 import TMath;
 
-import Object;
-import Game;
+import game.Object;
+import game.Game;
 
 class Sensors
 {
