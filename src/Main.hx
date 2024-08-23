@@ -19,7 +19,7 @@ import GameView;
 import GridAnimation;
 
 import GameCore;
-import Game;
+import game.Game;
 
 import UserConfig;
 
