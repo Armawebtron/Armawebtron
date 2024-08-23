@@ -110,6 +110,7 @@ class WallView extends Mesh
 		super( geo, color );
 		
 		this.rotationX = 90;
+		this.setHeight(1);
 	}
 	
 	public function set( ix1 : Float = null, iy1 : Float = null, ix2 : Float = null, iy2 : Float = null )
@@ -123,11 +124,19 @@ class WallView extends Mesh
 		this.x = (x2+x1)/2;
 		this.z = (y2+y1)/2;
 	}
+	
+	public function setHeight( iHeight : Float = null )
+	{
+		if( iHeight != null ) this.geo.height = iHeight;
+		this.y = this.geo.height/2;
+	}
 }
 
 
 class GameView extends Sprite
 {
+	static var maxGridDist : Float = 100;
+	
 	private var view : View3D;
 	
 	private var gridImg : BitmapTexture;
@@ -217,6 +226,7 @@ class GameView extends Sprite
 				{
 					var wall = new WallView();
 					wall.set(x1, y1, x2, y2);
+					wall.setHeight(0.75);
 					
 					walls[id] = wall;
 					view.scene.addChild(wall);
@@ -261,8 +271,8 @@ class GameView extends Sprite
 		this.gridMat.mipmap = true;
 		this.gridMat.anisotropy = Anisotropy.ANISOTROPIC16X;
 		
-		this.gridGeo = new PlaneGeometry(10000, 10000);
-		this.gridGeo.scaleUV(10000, 10000);
+		this.gridGeo = new PlaneGeometry(2000, 2000);
+		this.gridGeo.scaleUV(2000, 2000);
 		
 		this.grid = new Mesh( gridGeo, gridMat );
 		view.scene.addChild(grid);
@@ -331,6 +341,24 @@ class GameView extends Sprite
 				cycle.x+(Math.cos(heading)*-3), 0, 
 				cycle.z+(Math.sin(heading)*-3)
 			));
+		}
+		
+		while( view.camera.x > ( grid.x + maxGridDist ) )
+		{
+			grid.x += maxGridDist;
+		}
+		while( view.camera.x < ( grid.x - maxGridDist ) )
+		{
+			grid.x -= maxGridDist;
+		}
+		
+		while( view.camera.z > ( grid.z + maxGridDist ) )
+		{
+			grid.z += maxGridDist;
+		}
+		while( view.camera.z < ( grid.z - maxGridDist ) )
+		{
+			grid.z -= maxGridDist;
 		}
 		
 		centerMsgTime -= timestep;
