@@ -12,6 +12,13 @@ import openfl.text.TextFormat;
 import openfl.text.TextFormatAlign;
 
 import openfl.display.SimpleButton;
+import openfl.display.Shape;
+import feathers.controls.*;
+import feathers.controls.navigators.*;
+import thirdparty.controls.*;
+
+import feathers.data.*;
+import feathers.layout.*;
 
 import Main;
 
@@ -22,6 +29,7 @@ enum Menus
 	playMenu;
 	configMenu;
 	inGameMenu;
+	netMenu;
 }
 
 enum MenuAction
@@ -116,6 +124,211 @@ class MenuItem extends SimpleButton
 	}
 }
 
+class CfgCommon extends ScrollContainer
+{
+	public function new()
+	{
+		super();
+		
+		var bg = new Shape();
+		bg.graphics.beginFill(0xFFFFFF, 0.75);
+		bg.graphics.drawRect(0, 0, 100, 100);
+		bg.graphics.endFill();
+		backgroundSkin = bg;
+		
+		this.layout = new TiledRowsLayout();
+	}
+}
+
+class CfgKB extends CfgCommon
+{
+	public function new()
+	{
+		super();
+		
+		
+		
+	}
+}
+
+class CfgPlayer extends CfgCommon
+{
+	public function new()
+	{
+		super();
+		
+		var namelabel = new Label();
+		namelabel.text = "Name:";
+		addChild(namelabel);
+		var name = new TextInput();
+		name.text = "Mobile 1";
+		addChild(name);
+		
+		
+		var tnamelabel = new Label();
+		tnamelabel.text = "Teamname:";
+		addChild(tnamelabel);
+		var teamname = new TextInput();
+		teamname.text = "";
+		addChild(teamname);
+		
+		
+		var tspeclabel = new Label();
+		tspeclabel.text = "Spectator:";
+		addChild(tspeclabel);
+		var specMode = new ToggleSwitch();
+		specMode.selected = false;
+		addChild(specMode);
+		
+		
+		var tcolorlabel = new Label();
+		tcolorlabel.text = "Wall Color:";
+		addChild(tcolorlabel);
+		var color = new PopUpSwatchColorPicker();
+		addChild(color);
+		
+		
+		var tcolorlabel = new Label();
+		tcolorlabel.text = "Cycle Color:";
+		addChild(tcolorlabel);
+		var cycleColor = new PopUpSwatchColorPicker();
+		addChild(cycleColor);
+		
+		
+		
+		
+		
+	}
+}
+
+class CfgGfx extends CfgCommon
+{
+	public function new()
+	{
+		super();
+		
+		
+	}
+}
+
+class ConfigMenu extends Sprite
+{
+	var navigator : TabNavigator;
+	var bg : Shape;
+	
+	public function new()
+	{
+		super();
+		
+		navigator = new TabNavigator();
+		addChild(navigator);
+		navigator.dataProvider = new ArrayCollection([
+			TabItem.withClass("Player", CfgPlayer),
+			TabItem.withClass("KeyBinds", CfgKB),
+			TabItem.withClass("Graphics", CfgGfx),
+		]);
+		
+		navigator.tabBarFactory = () ->
+		{
+			var t = new TabBar();
+			var bg = new Shape();
+			t.backgroundSkin = bg;
+			return t;
+		};
+		
+		//onresize();
+	}
+	
+	public function onresize()
+	{
+		navigator.y = 120;
+		navigator.x = 30;
+		
+		navigator.width = MenuItem.defaultWidth - 60;
+		navigator.height = 430;
+	}
+}
+
+
+class ServerBrowser extends Sprite
+{
+	var view : GridView;
+	var actions : LayoutGroup;
+	//var actions : ButtonBar;
+	
+	public function new()
+	{
+		super();
+		
+		view = new GridView();
+		addChild(view);
+		
+		view.dataProvider = new ArrayCollection([
+			{ name: "- The Grid | discord #pickup | SBT | DC - ", type: "sumo", ping: "0", users: "0/12" }
+		]);
+		
+		view.columns = new ArrayCollection([
+			new GridViewColumn("Server Name", (data) -> data.name, 400),
+			new GridViewColumn("Type", (data) -> data.type),
+			new GridViewColumn("Ping", (data) -> data.ping),
+			new GridViewColumn("Users", (data) -> data.users)
+		]);
+		
+		var bg = new Shape();
+		bg.graphics.beginFill(0xFFFFFF, 0.75);
+		bg.graphics.drawRect(0, 0, 100, 100);
+		bg.graphics.endFill();
+		view.backgroundSkin = bg;
+		
+		
+		actions = new LayoutGroup();
+		
+		var buttons = new ButtonBar();
+		this.addChild(actions);
+		
+		buttons.dataProvider = new ArrayCollection([
+			{ text: "Host Server" },
+			{ text: "Refresh" },
+			{ text: "Info" },
+			{ text: "Connect" }
+		]);
+		buttons.itemToText = (item:Dynamic) -> {
+			return item.text;
+		};
+		actions.addChild(buttons);
+	}
+	
+	public function activate()
+	{
+		Alert.show( "This feature doesn't work!", "Error", ["Dismiss"] );
+	}
+	
+	public function onresize( w : UInt, h : UInt )
+	{
+		view.y = 120;
+		view.height = h - 140;
+		
+		view.x = 20;
+		view.width = w - 40;
+		
+		var nW = view.width/1.8;
+		
+		if( nW < 280 )
+		{
+			nW = 280;
+		}
+		
+		view.columns.get(0).width = nW;
+		
+		actions.x = 20;
+		actions.width = w - 40;
+		
+		actions.y = 120 + view.height - 20;
+		
+		view.height -= 26;
+	}
+}
+
 
 class Menu extends Sprite
 {
@@ -180,6 +393,7 @@ class Menu extends Sprite
 		//addChild(exitMenu);
 		
 		this.haxeuiInit = false;
+		//Toolkit.init();
 		
 		startY = 160;
 	}
@@ -190,6 +404,7 @@ class Menu extends Sprite
 	public var menuChanging : Int;
 	public var stateChanging : Bool;
 	public var setState : State;
+	public var extraFrame : Bool;
 	
 	public function render()
 	{
@@ -201,7 +416,11 @@ class Menu extends Sprite
 		this.lastTime = time;
 		
 		
-		switch( menuChanging )
+		if( extraFrame )
+		{
+			extraFrame = false;
+		}
+		else switch( menuChanging )
 		{
 			case 2:
 			{
@@ -230,6 +449,7 @@ class Menu extends Sprite
 				{
 					this.alpha = 0;
 					changeMenu( nextMenu );
+					extraFrame = true;
 					menuChanging -= 1;
 					this.x = -12;
 					title.x = -6;
@@ -268,6 +488,7 @@ class Menu extends Sprite
 					this.title.x = 0;
 					//this.exitMenu.x = 0;
 					menuChanging -= 1;
+					onresize();
 					
 					if( lastMenus.length > 1 )
 					{
@@ -306,14 +527,36 @@ class Menu extends Sprite
 	}
 	
 	private var haxeuiInit : Bool;
+	private var cfgMenu : ConfigMenu;
+	private var svrMenu : ServerBrowser;
 	
 	public var startY : UInt;
 	
+	public function initUI()
+	{
+		if( !haxeuiInit )
+		{
+			haxeuiInit = true;
+			cfgMenu = new ConfigMenu();
+			svrMenu = new ServerBrowser();
+		}
+	}
+	
 	public function changeMenu(menu : Menus)
 	{
-		if( currMenu == configMenu )
+		if( currMenu != null ) switch( currMenu )
 		{
+			case configMenu:
+			{
+				removeChild(cfgMenu);
+			}
 			
+			case netMenu:
+			{
+				removeChild(svrMenu);
+			}
+			
+			default:
 		}
 		
 		while( true )
@@ -362,7 +605,7 @@ class Menu extends Sprite
 				menuItems.push(m);
 				addChild(m);
 				
-				var m = new MenuItem(this, "Internet", y, null);
+				var m = new MenuItem(this, "Internet", y, actChangeMenu( netMenu ));
 				y += 60;
 				menuItems.push(m);
 				addChild(m);
@@ -382,11 +625,24 @@ class Menu extends Sprite
 			{
 				title.text = "Configuration";
 				
-				if( !haxeuiInit )
+				initUI();
+				
+				addChild(cfgMenu);
+				cfgMenu.onresize();
+			}
+			
+			case netMenu:
+			{
+				title.text = "Internet Game";
+				
+				initUI();
+				
+				addChild(svrMenu);
+				svrMenu.onresize(stage.stageWidth, stage.stageHeight);
+				
+				if( currMenu != menu )
 				{
-					haxeuiInit = true;
-					
-					//Toolkit.init();
+					svrMenu.activate();
 				}
 			}
 		}
