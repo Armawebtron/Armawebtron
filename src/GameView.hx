@@ -45,14 +45,11 @@ import TMath;
 class CycleView extends ObjectContainer3D
 {
 	private var texture : TextureMaterial;
+	private static var model : ByteArray = null;
 	
 	public function init()
 	{
-		//static var loaded : Bool = false;
-		//static 
-		var model : ByteArray;
-		
-		//if( !loaded )
+		if( model == null )
 		{
 			//model = Assets.getBytes("models/arma/untitled.obj");
 			model = Assets.getBytes("models/arma/cycle.obj");
@@ -226,7 +223,11 @@ class GameView extends Sprite
 				{
 					var wall = new WallView();
 					wall.set(x1, y1, x2, y2);
-					wall.setHeight(0.75);
+					switch(type)
+					{
+						case wall_rim:   wall.setHeight(4);
+						case wall_cycle: wall.setHeight(0.75);
+					}
 					
 					walls[id] = wall;
 					view.scene.addChild(wall);
@@ -319,13 +320,10 @@ class GameView extends Sprite
 		var cycle = cycles[0];
 		if( cycle != null )
 		{
-			//view.camera.x = cycle.x-20;
-			//view.camera.z = cycle.z-5;
-			
-			//var cdir = Math.atan2(c->ydir, c->xdir);
+			// get current cycle direction, with evil corrections
 			var cdir : Float = MathConsts.DEGREES_TO_RADIANS * ( cycle.rotationY + 90 );
 			cdir = Math.atan2( -Math.sin(cdir), Math.cos(cdir) );
-			//trace(cdir);
+			
 			
 			var test = cdir - heading;
 			while( test < -Math.PI ) test += Math.PI+Math.PI;
@@ -333,6 +331,16 @@ class GameView extends Sprite
 			
 			heading += test * 4 * timestep;
 			
+			// dont bug out camera at really high turn speeds
+			var test2 = cdir - heading;
+			while(test2 < -Math.PI) test2 += Math.PI+Math.PI;
+			while(test2 >  Math.PI) test2 -= Math.PI+Math.PI;
+			if( Math.abs(test) < Math.abs(test2) )
+			{
+				heading = cdir;
+			}
+			
+			// apply heading
 			view.camera.x = cycle.x + ( Math.cos(heading) * 13 );
 			view.camera.z = cycle.z + ( Math.sin(heading) * 13 );
 			view.camera.y = 8;
@@ -342,6 +350,9 @@ class GameView extends Sprite
 				cycle.z+(Math.sin(heading)*-3)
 			));
 		}
+		
+		
+		// move grid with camera so it looks infinite
 		
 		while( view.camera.x > ( grid.x + maxGridDist ) )
 		{
@@ -361,6 +372,8 @@ class GameView extends Sprite
 			grid.z -= maxGridDist;
 		}
 		
+		
+		// fade out center message
 		centerMsgTime -= timestep;
 		if( cenSpr.alpha > 0 && ( centerMsgTime - cenSpd ) < 0 )
 		{

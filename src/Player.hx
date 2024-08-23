@@ -1,5 +1,7 @@
 
 import GameCore;
+import Object;
+import Sensors;
 import Game;
 
 class Player
@@ -35,79 +37,34 @@ class Player
 	}
 }
 
-class CycleWall
+
+class CycleWall extends Wall
 {
-	static var ids : UInt = 0;
-	public var id : UInt;
-	
-	public var x1 : Float; public var y1 : Float;
-	public var x2 : Float; public var y2 : Float;
-	
-	public var dist : Float;
-	
 	public var owner : Cycle;
 	
-	
-	public function new()
+	override public function newState() : TGameEvent
 	{
-		id = ids++;
-		
-		x1 = y1 = 0;
-		x2 = y2 = 0;
-		dist = 0;
-	}
-	
-	public function newState() : TGameEvent
-	{
+		var pid : Int = 0; if( owner != null ) { pid = owner.id; }
 		return t_newWall(
 			id, 
 			wall_cycle, 
-			owner.id, 
-			x1, y1,
-			x2, y2
-		);
-	}
-	
-	public function state() : TGameEvent
-	{
-		return t_wall(
-			id, 
+			pid, 
 			x1, y1,
 			x2, y2
 		);
 	}
 }
 
-class Dist
-{
-	public var f : Float;
-	public var l : Float;
-	public var r : Float;
-	
-	public function new()
-	{
-		f = 9999;
-		l = 9999;
-		r = 9999;
-	}
-}
 
-class Cycle
+class Cycle extends BaseObject
 {
 	static var ids : UInt = 0;
 	public var id : UInt;
 	
 	public var p : Player;
 	
-	public var time : Float;
-	
 	public var collision : Bool;
-	public var dist : Dist;
-	
-	public var lastX : Float; public var lastY : Float;
-	
-	public var x : Float; public var y : Float;
-	public var xdir : Float; public var ydir : Float;
+	public var dist : Sensors;
 	
 	public var dir : UInt;
 	public var axes : Array<Array<Float>>;
@@ -131,6 +88,8 @@ class Cycle
 	
 	public function new( g : Game )
 	{
+		super();
+		
 		id = ids++;
 		game = g;
 		
@@ -140,11 +99,7 @@ class Cycle
 		
 		rubberMax = 5;
 		
-		
-		time = 0;
-		
-		lastX = lastY = 0;
-		x = y = 0;
+		alive = true;
 		
 		rubber = 0;
 		speed = 20;
@@ -156,9 +111,9 @@ class Cycle
 		walls = [];
 		
 		collision = false;
-		dist = new Dist();
+		dist = new Sensors();
 		
-		alive = true;
+		checkLast = true;
 		
 		p = null;
 	}
@@ -173,6 +128,7 @@ class Cycle
 		w.x2 = this.x; w.y2 = this.y;
 		
 		this.walls.push(w);
+		game.walls.push(w);
 		game.eToSend.push(w.newState());
 	}
 	
@@ -247,6 +203,12 @@ class Cycle
 			wall.x2 = x; wall.y2 = y;
 			
 			game.eToSend.push(wall.state());
+		}
+		else
+		{
+			mkNewWall();
+			this.x += this.xdir;
+			this.y += this.ydir;
 		}
 		
 		if( p != null && p.isAI )

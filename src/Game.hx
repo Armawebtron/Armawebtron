@@ -1,10 +1,13 @@
 
 import openfl.Lib;
 
-import Player;
 import GameCore;
-
 import TMath;
+
+import Sensors;
+import Object;
+import Player;
+
 
 enum RoundStates { R_COMMENCING;
 	R_LOAD_GRID; R_LOAD_OBJECTS;
@@ -32,6 +35,7 @@ class Game
 	
 	public var players : Array<Player>;
 	public var cycles : Array<Cycle>;
+	public var walls : Array<Wall>;
 	
 	public var gameTime : Float;
 	
@@ -50,6 +54,7 @@ class Game
 		
 		this.players = [];
 		this.cycles = [];
+		this.walls = [];
 		
 		this.gameTime = 0;
 		
@@ -58,6 +63,8 @@ class Game
 		axes = [[0, -1], [-1, 0], [0, 1], [1, 0]];
 		
 		addedAIs = false;
+		
+		Sensors.game = this;
 	}
 	
 	public function consoleMessage( str : String )
@@ -133,6 +140,34 @@ class Game
 					}
 					
 					addedAIs = true;
+				}
+				
+				var ws = [
+					[ -100, -100 ],
+					[  100, -100 ],
+					[  100,  100 ],
+					[ -100,  100 ],
+					[ -100, -100 ],
+				];
+				var dist : Float = 0;
+				//for( i in 1..size )
+				
+				var i : Int = 0;
+				while( ++i < ws.length )
+				{
+					var wall = new Wall();
+					
+					wall.x1 = ws[i-1][0];
+					wall.y1 = ws[i-1][1];
+					
+					wall.x2 = ws[i][0];
+					wall.y2 = ws[i][1];
+					
+					wall.dist = dist;
+					dist += wall.getLength();
+					
+					walls.push(wall);
+					events.push(wall.newState());
 				}
 				
 				nextState();
@@ -258,138 +293,8 @@ class Game
 	{
 		for( c in cycles )
 		{
-			var lxdir : Float, lydir : Float;
-			if( ( c.dir & 1 ) != 0 )
-			{
-				lxdir = c.ydir;
-				lydir = c.xdir;
-			}
-			else
-			{
-				lxdir = -c.ydir;
-				lydir = -c.xdir;
-			}
-			
-			var range : Float = c.speed * 5;
-			
-			c.dist.f = range;
-			c.dist.l = range;
-			c.dist.r = range;
-			c.collision = false;
-			
-			
-			for( c2 in cycles )
-			{
-				for( wall in c2.walls )
-				{
-					if( TMath.lineIntersect(
-						c.lastX, c.lastY,
-						c.x, c.y,
-						wall.x1, wall.y1,
-						wall.x2, wall.y2
-					) )
-					{
-						var dist = TMath.distanceOfLines(
-							c.lastX, c.lastY,
-							c.lastX, c.lastY,
-							wall.x1, wall.y1,
-							wall.x2, wall.y2
-						) - 0.03;
-						
-						c.x = c.lastX+
-							(c.xdir*dist);
-						c.y = c.lastY+
-							(c.ydir*dist);
-						
-						//if( i != k || c.currWall != j+1 )
-						//	c.collision = 1;
-						
-						if( TMath.lineIntersect(
-							c.lastX, c.lastY,
-							c.x, c.y,
-							wall.x1, wall.y1,
-							wall.x2, wall.y2
-						) )
-						{
-							c.x = c.lastX;
-							c.y = c.lastY;
-						}
-						
-						// hmm, arguably we should try all cycles / walls again
-						//i = MAX_CYCLES;
-						//break;
-						
-						// but that doesn't actually seem to help much
-					}
-					
-					if( TMath.lineIntersect(
-						c.x, c.y,
-						( c.x + c.xdir * range ), ( c.y + c.ydir * range ),
-						wall.x1, wall.y1,
-						wall.x2, wall.y2
-					) )
-					{
-						var ff = TMath.distanceOfLines(
-							c.x, c.y,
-							c.x, c.y,
-							wall.x1, wall.y1,
-							wall.x2, wall.y2
-						);
-						
-						if( ff < 0.03 )
-						{
-							c.collision = true;
-						}
-						
-						if( c.dist.f > ff )
-							c.dist.f = ff;
-					}
-					
-					if( TMath.lineIntersect(
-						c.x, c.y,
-						( c.x + lxdir * range ), ( c.y + lydir * range ),
-						wall.x1, wall.y1,
-						wall.x2, wall.y2
-					) )
-					{
-						var ff = TMath.distanceOfLines(
-							c.x, c.y,
-							c.x, c.y,
-							wall.x1, wall.y1,
-							wall.x2, wall.y2
-						);
-						
-						if( c.dist.l > ff )
-						{
-							c.dist.l = ff;
-							//type_l[k] = 1 + (i == k);
-						}
-					}
-					
-					if( TMath.lineIntersect(
-						c.x, c.y,
-						( c.x - lxdir * range ), ( c.y - lydir * range ),
-						wall.x1, wall.y1,
-						wall.x2, wall.y2
-					) )
-					{
-						var ff = TMath.distanceOfLines(
-							c.x, c.y,
-							c.x, c.y,
-							wall.x1, wall.y1,
-							wall.x2, wall.y2
-						);
-						
-						if( c.dist.r > ff )
-						{
-							c.dist.r = ff;
-							//type_r[k] = 1 + (i == k);
-						}
-					}
-				}
-			}
+			c.collision = c.dist.measure( c, c.speed*5 );
 		}
-		
 		
 		for( cycle in cycles )
 		{
