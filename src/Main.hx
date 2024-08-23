@@ -304,6 +304,16 @@ class Main extends Sprite
 	{
 		switch( currState )
 		{
+			case stateMenu:
+			{
+				switch(e.keyCode)
+				{
+					case 27: menu.triggerMenuBack();
+					//case 38: trace("TODO");
+					//case 40: trace("TODO");
+				}
+			}
+			
 			case stateGame:
 			{
 				//trace(e.keyCode);

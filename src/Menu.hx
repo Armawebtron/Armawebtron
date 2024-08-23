@@ -97,17 +97,7 @@ class MenuItem extends SimpleButton
 			
 			case actExitMenu:
 			{
-				menu.lastMenus.pop();
-				
-				var m = null;
-				if( menu.lastMenus.length > 0 )
-				{
-					menu.triggerMenuChange( menu.lastMenus[ menu.lastMenus.length-1 ] );
-				}
-				else
-				{
-					menu.triggerMenuChange( null );
-				}
+				menu.triggerMenuBack();
 			}
 			
 			case actSetState( s ):
@@ -524,6 +514,21 @@ class Menu extends Sprite
 		this.setState = state;
 		this.stateChanging = true;
 		this.menuChanging = 2;
+	}
+	
+	public function triggerMenuBack()
+	{
+		this.lastMenus.pop();
+		
+		var m = null;
+		if( this.lastMenus.length > 0 )
+		{
+			this.triggerMenuChange( this.lastMenus[ this.lastMenus.length-1 ] );
+		}
+		else
+		{
+			this.triggerMenuChange( null );
+		}
 	}
 	
 	private var haxeuiInit : Bool;
