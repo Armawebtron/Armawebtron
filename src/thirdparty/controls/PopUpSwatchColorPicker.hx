@@ -43,8 +43,15 @@ class SwatchColorPicker extends FeathersControl {
 		super.initialize();
 
 		this._colorsCollection = new ArrayCollection([
-			{color: 0xFF0000}, {color: 0xFF6600}, {color: 0xFFFF00}, {color: 0x00FF00}, {color: 0x00FFFF}, {color: 0x0000FF}, {color: 0xFF00FF},
-			{color: 0x880088}, {color: 0x884411}, {color: 0xFFFFFF}, {color: 0x808080}, {color: 0x000000},
+			{color: 0x000000}, {color: 0x303030}, {color: 0x585858}, {color: 0x808080}, {color: 0xa0a0a0},
+			{color: 0xc3c3c3}, {color: 0xdcdcdc}, {color: 0xffffff}, {color: 0x400000}, {color: 0x800000},
+			{color: 0xc00000}, {color: 0xff0000}, {color: 0xffc0c0}, {color: 0x004000}, {color: 0x008000},
+			{color: 0x00c000}, {color: 0x00ff00}, {color: 0xc0ffc0}, {color: 0x000080}, {color: 0x0000c0},
+			{color: 0x0000ff}, {color: 0xc0c0ff}, {color: 0x404000}, {color: 0x808000}, {color: 0xc0c000},
+			{color: 0xffff00}, {color: 0xffffc0}, {color: 0x004040}, {color: 0x008080}, {color: 0x00c0c0},
+			{color: 0x00ffff}, {color: 0xc0ffff}, {color: 0x800080}, {color: 0xc000c0}, {color: 0xff00ff},
+			{color: 0xffc0ff}, {color: 0xc05800}, {color: 0xff8000}, {color: 0xffa858}, {color: 0xffdca8},
+			{color: 0x884411}, {color: 0xFF6600},
 		]);
 
 		this._listView = new ListView();
