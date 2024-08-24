@@ -122,6 +122,8 @@ class WallView extends Mesh
 		
 		this.x = (x2+x1)/2;
 		this.z = (y2+y1)/2;
+		
+		this.geo.scaleUV(this.geo.width, this.geo.height);
 	}
 	
 	public function setHeight( iHeight : Float = null )
@@ -192,7 +194,7 @@ class GameView extends Sprite
 					}
 				}
 				
-				case t_newCycle(id, x, y, xdir, ydir):
+				case t_newCycle(id, owner, x, y, xdir, ydir):
 				{
 					var cycle = new CycleView();
 					cycle.rotationX = 90;
@@ -225,10 +227,18 @@ class GameView extends Sprite
 				{
 					var wall = new WallView();
 					wall.set(x1, y1, x2, y2);
+					
 					switch(type)
 					{
-						case wall_rim:   wall.setHeight(4);
-						case wall_cycle: wall.setHeight(0.75);
+						case wall_rim:
+						{
+							wall.setHeight(4);
+							cast(wall.material,ColorMaterial).color = 0xaaaaaa;
+						}
+						case wall_cycle:
+						{
+							wall.setHeight(0.75);
+						}
 					}
 					
 					walls[id] = wall;

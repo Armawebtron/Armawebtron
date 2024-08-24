@@ -36,7 +36,10 @@ class Player
 			id,
 			true,
 			name,
-			isAI
+			isAI,
+			0x0, 0x0,
+			0, 0,
+			0
 		);
 	}
 }
@@ -242,33 +245,11 @@ class Cycle extends BaseObject
 		return true;
 	}
 	
-	/*
-	public function newState() : Array<Dynamic>
-	{
-		return [
-			"newCycle",
-			id,
-			x, y,
-			xdir, ydir,
-		];
-	}
-	
-	public function state() : Array<Dynamic>
-	{
-		return [
-			"cycle",
-			id,
-			alive,
-			x, y,
-			xdir, ydir,
-			speed, rubber,
-		];
-	}*/
-	
 	public function newState() : TGameEvent
 	{
+		var pid : Int = 0; if( p != null ) { pid = p.id; }
 		return t_newCycle(
-			id, 
+			id, pid,
 			x, y,
 			xdir, ydir
 		);

@@ -5,6 +5,12 @@ enum GWallType
 	wall_cycle;
 }
 
+enum GObjType
+{
+	obj_cycle;
+	obj_wall;
+}
+
 enum TGameEvent
 {
 	m_pause;
@@ -29,11 +35,14 @@ enum TGameEvent
 		id: UInt,
 		exists: Bool,
 		name: String,
-		isAI: Bool
+		isAI: Bool,
+		cycleColor: UInt, wallColor: UInt,
+		score: Int, ping: Int,
+		team: UInt
 	);
 	
 	t_newCycle(
-		id: UInt, 
+		id: UInt, owner: UInt,
 		x: Float, y: Float,
 		xdir: Float, ydir: Float
 	);
@@ -55,6 +64,11 @@ enum TGameEvent
 		id: UInt,
 		x1: Float, y1: Float,
 		x2: Float, y2: Float
+	);
+	
+	t_delObj(
+		type: GObjType,
+		id: UInt
 	);
 	
 	
