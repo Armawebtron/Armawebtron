@@ -7,6 +7,8 @@ import TMath;
 
 class BaseObject
 {
+	public var id : UInt;
+	
 	public var time : Float;
 	
 	public var x : Float; public var y : Float;	
@@ -26,12 +28,37 @@ class BaseObject
 		
 		xdir = 0; ydir = 0;
 	}
+	
+	public function objType() : GObjType
+	{
+		return null;
+	}
+	
+	public function newState() : TGameEvent
+	{
+		trace("???");
+		return null;
+	}
+	
+	public function state() : TGameEvent
+	{
+		trace("???");
+		return null;
+	}
+	
+	public function delState() : TGameEvent
+	{
+		return t_delObj(
+			objType(),
+			id
+		);
+		return null;
+	}
 }
 
-class Wall
+class Wall extends BaseObject
 {
 	static var ids : UInt = 0;
-	public var id : UInt;
 	
 	public var x1 : Float; public var y1 : Float;
 	public var x2 : Float; public var y2 : Float;
@@ -41,6 +68,8 @@ class Wall
 	
 	public function new()
 	{
+		super();
+		
 		id = ids++;
 		
 		x1 = y1 = 0;
@@ -53,7 +82,12 @@ class Wall
 		return TMath.pointDistance( x1, y1, x2, y2 );
 	}
 	
-	public function newState() : TGameEvent
+	override public function objType() : GObjType
+	{
+		return obj_wall;
+	}
+	
+	override public function newState() : TGameEvent
 	{
 		return t_newWall(
 			id, 
@@ -64,7 +98,7 @@ class Wall
 		);
 	}
 	
-	public function state() : TGameEvent
+	override public function state() : TGameEvent
 	{
 		return t_wall(
 			id, 

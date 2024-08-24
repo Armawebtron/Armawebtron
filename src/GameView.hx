@@ -49,6 +49,8 @@ class CycleView extends ObjectContainer3D
 	private var texture : TextureMaterial;
 	private static var model : ByteArray = null;
 	
+	public var isAlive : Bool;
+	
 	public function init()
 	{
 		if( model == null )
@@ -88,6 +90,7 @@ class CycleView extends ObjectContainer3D
 		this.init();
 		
 		
+		this.isAlive = true;
 	}
 }
 
@@ -123,6 +126,11 @@ class WallView extends Mesh
 		this.x = (x2+x1)/2;
 		this.z = (y2+y1)/2;
 		
+		updateUV();
+	}
+	
+	public function updateUV()
+	{
 		this.geo.scaleUV(this.geo.width, this.geo.height);
 	}
 	
@@ -130,6 +138,8 @@ class WallView extends Mesh
 	{
 		if( iHeight != null ) this.geo.height = iHeight;
 		this.y = this.geo.height/2;
+		
+		updateUV();
 	}
 }
 
@@ -221,6 +231,14 @@ class GameView extends Sprite
 					{
 						cycle.rotationY = newDir;
 					}
+					
+					if( cycle.isAlive != alive )
+					{
+						if( !alive )
+						{
+							view.scene.removeChild(cycle);
+						}
+					}
 				}
 				
 				case t_newWall(id, type, owner, x1, y1, x2, y2):
@@ -243,6 +261,7 @@ class GameView extends Sprite
 					
 					walls[id] = wall;
 					view.scene.addChild(wall);
+					wall.updateUV();
 				}
 				
 				case t_wall(id, x1, y1, x2, y2):
@@ -251,6 +270,26 @@ class GameView extends Sprite
 					wall.set(x1, y1, x2, y2);
 				}
 				
+				case t_delObj(type, id):
+				{
+					switch(type)
+					{
+						case obj_cycle:
+						{
+							var cycle = cycles[id];
+							if( cycle.isAlive )
+							{
+								view.scene.removeChild(cycle);
+							}
+						}
+						
+						case obj_wall:
+						{
+							var wall = walls[id];
+							view.scene.removeChild(wall);
+						}
+					}
+				}
 				
 				
 				default:

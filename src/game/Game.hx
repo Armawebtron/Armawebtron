@@ -284,6 +284,17 @@ class Game
 			
 			case R_UNLOAD_OBJECTS:
 			{
+				var o : BaseObject;
+				
+				while( (o=walls.pop()) != null )
+				{
+					events.push( o.delState() );
+				}
+				
+				while( (o=cycles.pop()) != null )
+				{
+					events.push( o.delState() );
+				}
 				
 				nextState();
 			}
@@ -308,7 +319,7 @@ class Game
 		
 		for( cycle in cycles )
 		{
-			if( cycle.update( timestep ) )
+			if( cycle.alive && cycle.update( timestep ) )
 			{
 				events.push( cycle.state() );
 			}

@@ -66,7 +66,6 @@ class CycleWall extends Wall
 class Cycle extends BaseObject
 {
 	static var ids : UInt = 0;
-	public var id : UInt;
 	
 	public var p : Player;
 	
@@ -194,7 +193,13 @@ class Cycle extends BaseObject
 		
 		if( collision )
 		{
+			rubber += speed * timestep;
 			
+			if( rubber > rubberMax )
+			{
+				alive = false;
+				//game.eToSend.push(delState());
+			}
 		}
 		else
 		{
@@ -245,7 +250,12 @@ class Cycle extends BaseObject
 		return true;
 	}
 	
-	public function newState() : TGameEvent
+	override public function objType() : GObjType
+	{
+		return obj_cycle;
+	}
+	
+	override public function newState() : TGameEvent
 	{
 		var pid : Int = 0; if( p != null ) { pid = p.id; }
 		return t_newCycle(
@@ -255,7 +265,7 @@ class Cycle extends BaseObject
 		);
 	}
 	
-	public function state() : TGameEvent
+	override public function state() : TGameEvent
 	{
 		return t_cycle(
 			id, alive,
