@@ -73,7 +73,7 @@ class Game
 		
 		addedAIs = false;
 		
-		Sensors.game = this;
+		Sensors._game = this;
 	}
 	
 	public function consoleMessage( str : String )

@@ -124,7 +124,7 @@ class Cycle extends BaseObject
 		lastTurnTime = 0;
 		
 		collision = false;
-		dist = new Sensors();
+		dist = new Sensors( g );
 		
 		checkLast = true;
 		

@@ -10,17 +10,23 @@ import game.Game;
 
 class Sensors
 {
-	public static var game : Game;
+	public static var _game : Game;
+	public var game : Game;
 	
 	public var f : Float;
 	public var l : Float;
 	public var r : Float;
 	
-	public function new()
+	public function new( g : Game = null )
 	{
 		f = 9999;
 		l = 9999;
 		r = 9999;
+		
+		if( g != null )
+			game = g
+		else
+			game = _game;
 	}
 	
 	public function measure(c : BaseObject, range : Float)
