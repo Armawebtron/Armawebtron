@@ -282,7 +282,12 @@ class GameView extends Sprite
 						case wall_rim:
 						{
 							wall.setHeight(4);
+							/*
 							cast(wall.material,ColorMaterial).color = 0xaaaaaa;
+							*/
+							
+							var img = new BitmapTexture(Assets.getBitmapData("assets/rim_wall.png"), true);
+							wall.material = new TextureMaterial(img);
 						}
 						case wall_cycle:
 						{
