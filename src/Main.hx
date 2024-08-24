@@ -9,6 +9,8 @@ import openfl.text.TextField;
 import openfl.text.TextFormat;
 import openfl.text.TextFormatAlign;
 
+import controls.KeyBindControl;
+
 #if( target.threaded )
 import sys.thread.Thread;
 #end
@@ -68,7 +70,7 @@ class Main extends Sprite
 		}
 	}
 	
-	var userConfig : UserConfig;
+	public var userConfig : UserConfig;
 	
 	public function initMain()
 	{
@@ -321,6 +323,11 @@ class Main extends Sprite
 		{
 			case stateMenu:
 			{
+				if( KeyBindControl.capture )
+				{
+					KeyBindControl.keyDown(e);
+				}
+				else
 				switch(e.keyCode)
 				{
 					case 27: menu.triggerMenuBack();

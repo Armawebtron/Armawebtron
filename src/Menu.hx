@@ -16,6 +16,7 @@ import openfl.display.Shape;
 import feathers.controls.*;
 import feathers.controls.navigators.*;
 import thirdparty.controls.*;
+import controls.*;
 
 import feathers.data.*;
 import feathers.layout.*;
@@ -116,6 +117,11 @@ class MenuItem extends SimpleButton
 
 class CfgCommon extends ScrollContainer
 {
+	static public var m : Main;
+	
+	public inline function main() { return m; }
+	public inline function user() { return main().userConfig; }
+	
 	public function new()
 	{
 		super();
@@ -136,6 +142,20 @@ class CfgKB extends CfgCommon
 	{
 		super();
 		
+		addChild(new Label("Turn Left:"));
+		addChild(new KeyBindControl(user().players[0].turnLeft));
+		
+		addChild(new Label("Turn Right:"));
+		addChild(new KeyBindControl(user().players[0].turnRight));
+		
+		addChild(new Label("Brake:"));
+		addChild(new KeyBindControl(user().players[0].brake));
+		
+		addChild(new Label("Toggle Brake:"));
+		addChild(new KeyBindControl(user().players[0].toggleBrake));
+		
+		addChild(new Label("Jump:"));
+		addChild(new KeyBindControl(user().players[0].brake));
 		
 		
 	}
@@ -151,7 +171,17 @@ class CfgPlayer extends CfgCommon
 		namelabel.text = "Name:";
 		addChild(namelabel);
 		var name = new TextInput();
-		name.text = "Mobile 1";
+		if( user().players[0] != null )
+		{
+			name.text = user().players[0].name;
+		}
+		name.addEventListener(Event.CHANGE, function( e : Event )
+		{
+			if( user().players[0] != null )
+			{
+				user().players[0].name = name.text;
+			}
+		});
 		addChild(name);
 		
 		
@@ -159,7 +189,17 @@ class CfgPlayer extends CfgCommon
 		tnamelabel.text = "Teamname:";
 		addChild(tnamelabel);
 		var teamname = new TextInput();
-		teamname.text = "";
+		if( user().players[0] != null )
+		{
+			teamname.text = user().players[0].teamName;
+		}
+		teamname.addEventListener(Event.CHANGE, function( e : Event )
+		{
+			if( user().players[0] != null )
+			{
+				user().players[0].teamName = teamname.text;
+			}
+		});
 		addChild(teamname);
 		
 		
@@ -168,6 +208,17 @@ class CfgPlayer extends CfgCommon
 		addChild(tspeclabel);
 		var specMode = new ToggleSwitch();
 		specMode.selected = false;
+		if( user().players[0] != null )
+		{
+			specMode.selected = user().players[0].specMode;
+		}
+		specMode.addEventListener(Event.CHANGE, function( e : Event )
+		{
+			if( user().players[0] != null )
+			{
+				user().players[0].specMode = specMode.selected;
+			}
+		});
 		addChild(specMode);
 		
 		
@@ -175,6 +226,17 @@ class CfgPlayer extends CfgCommon
 		tcolorlabel.text = "Wall Color:";
 		addChild(tcolorlabel);
 		var color = new PopUpSwatchColorPicker();
+		if( user().players[0] != null )
+		{
+			color.selectedColor = user().players[0].color;
+		}
+		color.addEventListener(Event.CHANGE, function( e : Event )
+		{
+			if( user().players[0] != null )
+			{
+				user().players[0].color = color.selectedColor;
+			}
+		});
 		addChild(color);
 		
 		
@@ -182,6 +244,17 @@ class CfgPlayer extends CfgCommon
 		tcolorlabel.text = "Cycle Color:";
 		addChild(tcolorlabel);
 		var cycleColor = new PopUpSwatchColorPicker();
+		if( user().players[0] != null )
+		{
+			cycleColor.selectedColor = user().players[0].colorCycle;
+		}
+		cycleColor.addEventListener(Event.CHANGE, function( e : Event )
+		{
+			if( user().players[0] != null )
+			{
+				user().players[0].colorCycle = cycleColor.selectedColor;
+			}
+		});
 		addChild(cycleColor);
 		
 		
@@ -197,7 +270,10 @@ class CfgGfx extends CfgCommon
 	{
 		super();
 		
-		
+		var fpslabel = new Label();
+		fpslabel.text = "FPS Target:";
+		addChild(fpslabel);
+		//var rate = 
 	}
 }
 
@@ -637,6 +713,7 @@ class Menu extends Sprite
 				
 				addChild(cfgMenu);
 				cfgMenu.onresize();
+				CfgCommon.m = main;
 			}
 			
 			case netMenu:
