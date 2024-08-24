@@ -44,6 +44,24 @@ import GameCore;
 import TMath;
 
 
+class VPlayer
+{
+	public var isAI : Bool;
+	public var name : String;
+	
+	public var cycle : CycleView;
+	
+	public var spectating : Bool;
+	
+	public function new()
+	{
+		name = "";
+		isAI = false;
+		cycle = null;
+		spectating = false;
+	}
+}
+
 class CycleView extends ObjectContainer3D
 {
 	private var texture : TextureMaterial;
@@ -159,6 +177,7 @@ class GameView extends Sprite
 	
 	//private var cycle : CycleView;
 	
+	var players: Map<UInt,VPlayer>;
 	var cycles : Map<UInt,CycleView>;
 	var walls  : Map<UInt,WallView>;
 	
@@ -175,6 +194,7 @@ class GameView extends Sprite
 	{
 		super();
 		
+		players = [];
 		cycles = [];
 		walls = [];
 		
@@ -215,6 +235,16 @@ class GameView extends Sprite
 					cycle.x = x;
 					cycle.z = y;
 					cycle.rotationY = ( ( Math.atan2(-ydir, xdir) * MathConsts.RADIANS_TO_DEGREES ) ) + 90;
+					
+					// TEMPORARY HACK
+					if( players[0] == null || players[0].cycle == null )
+					{
+						if( players[0] == null )
+						{
+							players[0] = new VPlayer();
+						}
+						players[0].cycle = cycle;
+					}
 				}
 				
 				case t_cycle(id, alive, x, y, xdir, ydir, speed, rubber):
@@ -237,6 +267,7 @@ class GameView extends Sprite
 						if( !alive )
 						{
 							view.scene.removeChild(cycle);
+							cycle.isAlive = false;
 						}
 					}
 				}
@@ -280,6 +311,12 @@ class GameView extends Sprite
 							if( cycle.isAlive )
 							{
 								view.scene.removeChild(cycle);
+							}
+							
+							// TEMPORARY HACK
+							if( players[0].cycle == cycle )
+							{
+								players[0].cycle = null;
 							}
 						}
 						
@@ -374,7 +411,11 @@ class GameView extends Sprite
 		//cycle.rotationX += timestep * 4;
 		//cycle.rotationY += timestep * 32;
 		
-		var cycle = cycles[0];
+		var cycle : CycleView = null;
+		if( players[0] != null && players[0].cycle != null )
+		{
+			cycle = players[0].cycle;
+		}
 		if( cycle != null )
 		{
 			// get current cycle direction, with evil corrections

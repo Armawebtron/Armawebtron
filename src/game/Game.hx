@@ -265,7 +265,6 @@ class Game
 						events.push( t_cen( 0, Std.string( countDown ), 1, 1 ) );
 						
 						lastCountDown = countDown;
-						
 					}
 				}
 				else
@@ -278,7 +277,14 @@ class Game
 						lastCountDown = 0;
 					}
 					
-					run( timestep, events );
+					var count : Int = run( timestep, events );
+					
+					{
+						if( count == 0 )
+						{
+							nextState();
+						}
+					}
 				}
 			}
 			
@@ -286,12 +292,7 @@ class Game
 			{
 				var o : BaseObject;
 				
-				while( (o=walls.pop()) != null )
-				{
-					events.push( o.delState() );
-				}
-				
-				while( (o=cycles.pop()) != null )
+				while( (o=walls.pop()) != null || (o=cycles.pop()) != null )
 				{
 					events.push( o.delState() );
 				}
@@ -312,6 +313,8 @@ class Game
 	
 	public function run( timestep : Float, events : Array<TGameEvent> )
 	{
+		var aliveCount : Int = cycles.length;
+		
 		for( c in cycles )
 		{
 			c.collision = c.dist.measure( c, c.speed*5 );
@@ -323,7 +326,13 @@ class Game
 			{
 				events.push( cycle.state() );
 			}
+			else
+			{
+				--aliveCount;
+			}
 		}
+		
+		return aliveCount;
 	}
 }
 
