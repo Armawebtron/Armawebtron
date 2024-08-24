@@ -61,6 +61,12 @@ class Game
 		
 		this.gameTime = 0;
 		
+		// local players
+		{
+			var p = new Player();
+			players.push( p );
+		}
+		
 		this.lastTime = Lib.getTimer();
 		
 		axes = [[0, -1], [-1, 0], [0, 1], [1, 0]];
@@ -133,7 +139,7 @@ class Game
 			{
 				if( !addedAIs )
 				{
-					for(i in 0...4)
+					for(i in 1...4)
 					{
 						var p = new Player();
 						
@@ -231,6 +237,7 @@ class Game
 						events.push( cycle.newState() );
 						
 						p.cycle = cycle;
+						cycle.p = p;
 						
 						++i;
 					}

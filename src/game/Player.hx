@@ -79,6 +79,7 @@ class Cycle extends BaseObject
 	public var speedTarget : Float;
 	public var cycleSpeedDecayBelow : Float;
 	public var cycleSpeedDecayAbove : Float;
+	public var cycleDelay : Float;
 	
 	public var rubber : Float;
 	public var rubberMax : Float;
@@ -87,6 +88,8 @@ class Cycle extends BaseObject
 	public var braking : Bool;
 	
 	public var walls : Array<CycleWall>;
+	
+	public var lastTurnTime : Float;
 	
 	public var game : Game;
 	
@@ -101,6 +104,8 @@ class Cycle extends BaseObject
 		cycleSpeedDecayBelow = 5.;
 		cycleSpeedDecayAbove = 0.1;
 		
+		cycleDelay = 0.02;
+		
 		rubberMax = 5;
 		
 		alive = true;
@@ -113,6 +118,8 @@ class Cycle extends BaseObject
 		dir = 0;
 		
 		walls = [];
+		
+		lastTurnTime = 0;
 		
 		collision = false;
 		dist = new Sensors();
@@ -150,6 +157,8 @@ class Cycle extends BaseObject
 		
 		this.lastX = this.x + this.xdir * 0.0001;
 		this.lastY = this.y + this.ydir * 0.0001;
+		
+		lastTurnTime = time;
 	}
 	
 	public function doTurn( dir )
@@ -217,15 +226,15 @@ class Cycle extends BaseObject
 		
 		if( p != null && p.isAI )
 		{
-			if( time > 1 )
+			if( time > 1 && lastTurnTime+cycleDelay < time && dist.f < 5 )
 			{
 				if( dist.l > dist.r )
 				{
-					
+					turnReady( -1 );
 				}
 				else
 				{
-					
+					turnReady(  1 );
 				}
 			}
 		}
