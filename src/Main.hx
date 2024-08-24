@@ -38,6 +38,9 @@ class Main extends Sprite
 	var game : GameView;
 	var grid : GridAnimation;
 	
+	var gameActivated : Bool;
+	var keepGame : Bool;
+	
 	var gamet : Game;
 #if( target.threaded )
 	var worker : sys.thread.Thread;
@@ -117,6 +120,9 @@ class Main extends Sprite
 		}
 		#end
 		
+		gameActivated = false;
+		keepGame = false;
+		
 		this.setState( stateMenu );
 	}
 	
@@ -149,6 +155,13 @@ class Main extends Sprite
 				if( menu.stateChanging )
 				{
 					this.grid.fadeOut();
+				}
+				
+				if( keepGame )
+				{
+					currState = stateGame;
+					this.render(e);
+					currState = stateMenu;
 				}
 			}
 			
@@ -221,6 +234,7 @@ class Main extends Sprite
 			}
 			
 			case stateGame:
+			if( !keepGame )
 			{
 				this.removeChild(this.game);
 				this.game = null;
@@ -240,7 +254,7 @@ class Main extends Sprite
 			
 			case stateGame:
 			{
-				if( this.gamet == null )
+				if( !gameActivated && this.gamet == null )
 				{
 				#if( target.threaded )
 					if( threadEnabled )
@@ -259,6 +273,7 @@ class Main extends Sprite
 					{
 						this.gamet = new Game();
 					}
+					gameActivated = true;
 				}
 				
 				if( this.game == null )
@@ -317,6 +332,16 @@ class Main extends Sprite
 			case stateGame:
 			{
 				//trace(e.keyCode);
+				
+				switch(e.keyCode)
+				{
+					case 27:
+					{
+						game.doBlur = true;
+						keepGame = true;
+						setState( stateMenu );
+					}
+				}
 				
 				var turnLeft = userConfig.players[0].turnLeft.indexOf(e.keyCode);
 				var turnRight = userConfig.players[0].turnRight.indexOf(e.keyCode);

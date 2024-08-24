@@ -25,6 +25,8 @@ import away3d.materials.*;
 import away3d.primitives.*;
 import away3d.textures.*;
 
+import away3d.filters.*;
+
 import away3d.containers.*;
 
 import away3d.library.*;
@@ -246,6 +248,9 @@ class GameView extends Sprite
 		}
 	}
 	
+	public var doBlur : Bool;
+	private var blurLevel : Float;
+	
 	public function initScene()
 	{
 		this.view = new View3D();
@@ -301,6 +306,9 @@ class GameView extends Sprite
 		cenSpr.alpha = 0;
 		
 		centerMsgTime = 0; cenSpd = 0;
+		
+		doBlur = false;
+		blurLevel = 0;
 		
 		
 		this.lastTime = Lib.getTimer();
@@ -385,6 +393,35 @@ class GameView extends Sprite
 			{
 				cenSpr.alpha = 0;
 				cenSpr.text = "";
+			}
+		}
+		
+		
+		// blur effect
+		if( doBlur && blurLevel < 24 )
+		{
+			blurLevel += timestep*50;
+			
+			if( blurLevel >= 24 )
+			{
+				blurLevel = 24;
+			}
+			
+			view.filters3d = [new BlurFilter3D(Std.int(blurLevel), Std.int(blurLevel))];
+		}
+		else if( !doBlur && blurLevel != 0 )
+		{
+			blurLevel -= timestep*50;
+			
+			if( blurLevel <= 0 )
+			{
+				blurLevel = 0;
+				
+				view.filters3d = [];
+			}
+			else
+			{
+				view.filters3d = [new BlurFilter3D(Std.int(blurLevel), Std.int(blurLevel))];
 			}
 		}
 		
