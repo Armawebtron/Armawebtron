@@ -297,15 +297,30 @@ class GameView extends Sprite
 							cast(wall.material,ColorMaterial).color = 0xaaaaaa;
 							*/
 							
-							var img = new BitmapTexture(Assets.getBitmapData("assets/rim_wall_arma2.png"), true);
+							//var img = new BitmapTexture(Assets.getBitmapData("assets/rim_wall_arma2.png"), true);
+							var img = new BitmapTexture(Assets.getBitmapData("assets/rim_wall_test.png"), true);
 							wall.material = new TextureMaterial(img);
 							wall.material.repeat = true;
 							wall.material.mipmap = true;
 							
-							wall.sX = 100; wall.sY = -50;
+							//wall.sX = 100; wall.sY = -50;
+							wall.sX = 50; wall.sY = -25;
+							//wall.sX = 384; wall.sY = -32;
+							
+							//cast(wall.material,ColorMaterial).color = 0xBDCEFA;
 						}
 						case wall_cycle:
 						{
+							/*var img = new BitmapTexture(Assets.getBitmapData("assets/cycle_trail_0.png"), true);
+							wall.material = new TextureMaterial(img);
+							wall.material.repeat = true;
+							wall.material.mipmap = true;
+							cast(wall.material,TextureMaterial).alpha = 0.99;
+							wall.sY = -0.74;
+							*/
+							cast(wall.material,ColorMaterial).color = 0xaaaaaa;
+							cast(wall.material,ColorMaterial).alpha = 0.8;
+							
 							wall.setHeight(0.75);
 						}
 					}
