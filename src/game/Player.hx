@@ -209,7 +209,7 @@ class Cycle extends BaseObject
 		this.speed += accel * timestep;
 		
 		
-		var move : Float = this.speed * timestep;
+		var move : Float = ( ( speed + lastSpeed ) / 2 ) * timestep;
 		var radj : Float = move;
 		
 		if( time >= collideTime )

@@ -7,6 +7,7 @@ import TMath;
 
 import game.Object;
 import game.Game;
+import game.Player;
 
 class Sensors
 {
@@ -31,6 +32,8 @@ class Sensors
 	
 	public function measure(c : BaseObject, range : Float)
 	{
+		var cycle = cast(c,Cycle);
+		
 		var t = Math.atan2(c.ydir, c.xdir) - ( Math.PI / 2 );
 		var lxdir = Math.cos(t), lydir = Math.sin(t);
 		
@@ -41,6 +44,8 @@ class Sensors
 		
 		for( wall in game.walls )
 		{
+			if( cycle != null && cycle.walls[cycle.walls.length-1] == wall ) continue;
+			
 			if( c.checkLast )
 			{
 				if( TMath.lineIntersect(
