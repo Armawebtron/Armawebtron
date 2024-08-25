@@ -76,6 +76,8 @@ class Sensors
 						c.y = c.lastY;
 					}
 					
+					collision = true;
+					
 					// hmm, arguably we should try all cycles / walls again
 					//i = MAX_CYCLES;
 					//break;
@@ -98,7 +100,7 @@ class Sensors
 					wall.x2, wall.y2
 				);
 				
-				if( ff < 0.03 )
+				if( ff < 0.01 )
 				{
 					collision = true;
 				}

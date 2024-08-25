@@ -78,6 +78,10 @@ class Cycle extends BaseObject
 	
 	public var collision : Bool;
 	public var dist : Sensors;
+	public var minDist : Sensors;
+	public var collideTime : Float;
+	
+	public var lastSpeed : Float;
 	
 	public var dir : UInt;
 	public var axes : Array<Array<Float>>;
@@ -89,6 +93,8 @@ class Cycle extends BaseObject
 	public var cycleSpeedDecayBelow : Float;
 	public var cycleSpeedDecayAbove : Float;
 	public var cycleDelay : Float;
+	static public var rubberMinDist : Float = 0.03;
+	static public var rubberMinAdj : Float = 0.05;
 	
 	public var rubber : Float;
 	public var rubberMax : Float;
@@ -132,6 +138,8 @@ class Cycle extends BaseObject
 		
 		collision = false;
 		dist = new Sensors( g );
+		minDist = new Sensors( g ); minDist.f = rubberMinDist;
+		collideTime = 5; lastSpeed = speed;
 		
 		checkLast = true;
 		
@@ -167,6 +175,9 @@ class Cycle extends BaseObject
 		this.lastX = this.x + this.xdir * 0.0001;
 		this.lastY = this.y + this.ydir * 0.0001;
 		
+		var mult = ( 1 - rubberMinAdj );
+		minDist.f = Math.max(0,Math.min(dist.f*mult,rubberMinDist));
+		
 		lastTurnTime = time;
 	}
 	
@@ -198,9 +209,23 @@ class Cycle extends BaseObject
 		this.speed += accel * timestep;
 		
 		
+		var move : Float = this.speed * timestep;
+		var radj : Float = move;
+		
+		if( time >= collideTime )
+		{
+			collision = true;
+			
+			var adjdist = ( time - this.collideTime ) * this.lastSpeed;
+			radj = timestep;
+			//radj = adjdist;
+			radj *= this.lastSpeed;
+			move -= adjdist;
+		}
+		
 		if( collision )
 		{
-			rubber += speed * timestep;
+			rubber += radj;
 			
 			if( rubber > rubberMax )
 			{
@@ -212,8 +237,8 @@ class Cycle extends BaseObject
 		{
 			lastX = x; lastY = y;
 			
-			this.x += timestep * speed * xdir;
-			this.y += timestep * speed * ydir;
+			this.x += move * xdir;
+			this.y += move * ydir;
 		}
 		
 		if( rubber > 0 )
@@ -238,6 +263,9 @@ class Cycle extends BaseObject
 			this.x += this.xdir;
 			this.y += this.ydir;
 		}
+		
+		collideTime = time + ( ( dist.f - minDist.f ) / this.speed );
+		lastSpeed = speed;
 		
 		if( p != null && p.isAI )
 		{
