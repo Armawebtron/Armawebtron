@@ -66,6 +66,7 @@ class CycleView extends ObjectContainer3D
 {
 	private var texture : TextureMaterial;
 	private static var model : ByteArray = null;
+	private static var test : Bool = false;
 	
 	public var isAlive : Bool;
 	
@@ -80,7 +81,11 @@ class CycleView extends ObjectContainer3D
 		
 		Asset3DLibrary.enableParser(OBJParser);
 		Asset3DLibrary.addEventListener(Asset3DEvent.ASSET_COMPLETE, this.onLoad);
-		Asset3DLibrary.loadData(model);
+		if( !test )
+		{
+			Asset3DLibrary.loadData(model);
+			test = true;
+		}
 	}
 	
 	public function onLoad( event : Asset3DEvent )
@@ -98,6 +103,8 @@ class CycleView extends ObjectContainer3D
 				//mesh.y = -50;
 			}
 		}
+		
+		test = false;
 	}
 	
 	public function new()
