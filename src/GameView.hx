@@ -119,6 +119,8 @@ class WallView extends Mesh
 	public var x1 : Float; public var y1 : Float;
 	public var x2 : Float; public var y2 : Float;
 	
+	public var sX : Float; public var sY : Float;
+	
 	public function new()
 	{
 		geo = new PlaneGeometry(1, 1);
@@ -128,6 +130,8 @@ class WallView extends Mesh
 		var color = new ColorMaterial();
 		
 		super( geo, color );
+		
+		sX = 1; sY = 1;
 		
 		this.rotationX = 90;
 		this.setHeight(1);
@@ -149,7 +153,7 @@ class WallView extends Mesh
 	
 	public function updateUV()
 	{
-		this.geo.scaleUV(this.geo.width, this.geo.height);
+		this.geo.scaleUV(this.geo.width/sX, this.geo.height/sY);
 	}
 	
 	public function setHeight( iHeight : Float = null )
@@ -286,8 +290,12 @@ class GameView extends Sprite
 							cast(wall.material,ColorMaterial).color = 0xaaaaaa;
 							*/
 							
-							var img = new BitmapTexture(Assets.getBitmapData("assets/rim_wall.png"), true);
+							var img = new BitmapTexture(Assets.getBitmapData("assets/rim_wall_arma2.png"), true);
 							wall.material = new TextureMaterial(img);
+							wall.material.repeat = true;
+							wall.material.mipmap = true;
+							
+							wall.sX = 100; wall.sY = -50;
 						}
 						case wall_cycle:
 						{
