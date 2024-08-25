@@ -13,6 +13,7 @@ import game.Player;
 
 
 enum RoundStates { R_COMMENCING;
+	R_WAIT;
 	R_LOAD_GRID; R_LOAD_OBJECTS;
 	R_LOAD_CAMERA;
 	
@@ -47,6 +48,8 @@ class Game
 	
 	public var axes : Array<Array<Float>>;
 	
+	public var ready : Bool;
+	
 	private var lastTime : UInt;
 	
 	public function new()
@@ -61,11 +64,6 @@ class Game
 		
 		this.gameTime = 0;
 		
-		// local players
-		{
-			var p = new Player();
-			players.push( p );
-		}
 		
 		this.lastTime = Lib.getTimer();
 		
@@ -90,6 +88,38 @@ class Game
 	{
 		switch(e)
 		{
+			case m_ready: ready = true;
+			
+			case m_localPlayer(
+				id, vp, spec,
+				name, teamname,
+				color, cycleColor
+			):
+			{
+				var p : Player = null;
+				for( s in players )
+				{
+					if( s.localID == id )
+					{
+						p = s;
+						break;
+					}
+				}
+				
+				if( p == null )
+				{
+					var p = new Player();
+					
+					p.localID = id;
+					
+					p.name = name;
+					p.color = color;
+					p.cycleColor = cycleColor;
+					
+					players.push( p );
+				}
+			}
+			
 			case m_turn( id, dir, key ):
 			{
 				var cycle : Cycle = players[0].cycle;
@@ -132,7 +162,18 @@ class Game
 				gameTime = -4;
 				lastCountDown = 4;
 				
+				events.push( t_ready );
+				ready = false;
+				
 				nextState();
+			}
+			
+			case R_WAIT:
+			{
+				if( ready )
+				{
+					nextState();
+				}
 			}
 			
 			case R_LOAD_GRID:

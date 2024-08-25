@@ -13,6 +13,8 @@ enum GObjType
 
 enum TGameEvent
 {
+	m_ready;
+	
 	m_pause;
 	m_unpause;
 	
@@ -27,7 +29,17 @@ enum TGameEvent
 	m_getSetting( setting : String );
 	
 	
+	m_localPlayer(
+		id: UInt,
+		viewport: Bool, spec: Bool,
+		name: String, teamname: String,
+		color: UInt, cycleColor: UInt
+	);
+	
+	
 	// output
+	t_ready;
+	
 	t_con( recv : UInt, msg : String );
 	t_cen( recv : UInt, msg : String, timeout : Float, speed : Float );
 	

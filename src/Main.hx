@@ -145,6 +145,22 @@ class Main extends Sprite
 	}
 	#end
 	
+	public function sendSettings()
+	{
+		for( i=>p in userConfig.players )
+		{
+			sendMessage(m_localPlayer(
+				i+1, // local player id
+				true, // has viewport?
+				p.specMode,
+				p.name, p.teamName,
+				p.color, p.colorCycle
+			));
+		}
+		
+		sendMessage(m_ready);
+	}
+	
 	public function render(e : Event)
 	{
 		switch( currState )
@@ -176,6 +192,11 @@ class Main extends Sprite
 					while( m != null )
 					{
 						this.game.recvGame(m);
+						switch( m[0] )
+						{
+							case t_ready: sendSettings();
+							default:
+						}
 						m = sys.thread.Thread.readMessage(false);
 					}
 				}
@@ -184,7 +205,17 @@ class Main extends Sprite
 				if( !threadEnabled )
 			#end
 				{
-					this.game.recvGame(this.gamet.loop());
+					var m = this.gamet.loop();
+					if( m != null )
+					{
+						switch( m[0] )
+						{
+							case t_ready: sendSettings();
+							default:
+						}
+						
+						this.game.recvGame(m);
+					}
 				}
 				
 				this.game.render();

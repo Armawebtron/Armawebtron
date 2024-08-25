@@ -13,8 +13,13 @@ class Player
 	static var ids : UInt = 0;
 	public var id : UInt;
 	
+	public var localID : UInt;
+	
 	public var isAI : Bool;
 	public var name : String;
+	
+	public var color : UInt;
+	public var cycleColor : UInt;
 	
 	public var spectating : Bool;
 	
@@ -27,6 +32,8 @@ class Player
 		isAI = false;
 		name = "";
 		
+		localID = 0;
+		
 		spectating = false;
 	}
 	
@@ -37,7 +44,7 @@ class Player
 			true,
 			name,
 			isAI,
-			0x0, 0x0,
+			cycleColor, color,
 			0, 0,
 			0
 		);
