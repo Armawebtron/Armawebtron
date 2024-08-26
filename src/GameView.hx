@@ -179,6 +179,8 @@ class GameView extends Sprite
 	
 	private var view : View3D;
 	
+	private var lookAt : Vector3D;
+	
 	private var gridImg : BitmapTexture;
 	private var gridMat : TextureMaterial;
 	private var gridGeo : PlaneGeometry;
@@ -398,8 +400,8 @@ class GameView extends Sprite
 		this.gridMat.mipmap = true;
 		this.gridMat.anisotropy = Anisotropy.ANISOTROPIC16X;
 		
-		this.gridGeo = new PlaneGeometry(2000, 2000);
-		this.gridGeo.scaleUV(2000, 2000);
+		this.gridGeo = new PlaneGeometry(1500, 1500);
+		this.gridGeo.scaleUV(1500, 1500);
 		
 		this.grid = new Mesh( gridGeo, gridMat );
 		view.scene.addChild(grid);
@@ -453,7 +455,7 @@ class GameView extends Sprite
 		{
 			cycle = players[0].cycle;
 		}
-		if( cycle != null )
+		if( cycle != null && cycle.isAlive )
 		{
 			// get current cycle direction, with evil corrections
 			var cdir : Float = MathConsts.DEGREES_TO_RADIANS * ( cycle.rotationY + 90 );
@@ -480,29 +482,55 @@ class GameView extends Sprite
 			view.camera.z = cycle.z + ( Math.sin(heading) * 13 );
 			view.camera.y = 8;
 			
-			view.camera.lookAt(new Vector3D(
+			view.camera.lookAt(lookAt=new Vector3D(
 				cycle.x+(Math.cos(heading)*-3), 0, 
 				cycle.z+(Math.sin(heading)*-3)
 			));
+			
+			this.grid.y = 0;
+		}
+		else
+		{
+			heading += timestep*0.2;
+			
+			var targX = (Math.cos(heading)*-120), 
+			    targZ = (Math.sin(heading)*-120), 
+			    targY = 40;
+			
+			view.camera.x += (targX - view.camera.x) * timestep;
+			view.camera.z += (targZ - view.camera.z) * timestep;
+			view.camera.y += (targY - view.camera.y) * timestep;
+			
+			if( lookAt == null )
+			{
+				lookAt = new Vector3D(0,0,0);
+				view.camera.lookAt(lookAt);
+			}
+			
+			lookAt.x += ((Math.cos(heading)*30) - lookAt.x) * timestep * 0.2;
+			lookAt.z += ((Math.sin(heading)*30) - lookAt.z) * timestep * 0.2;
+			lookAt.y += (0 - lookAt.y) * timestep;
+			
+			view.camera.lookAt(lookAt);
 		}
 		
 		
 		// move grid with camera so it looks infinite
 		
-		while( view.camera.x > ( grid.x + maxGridDist ) )
+		while( lookAt.x > ( grid.x + maxGridDist ) )
 		{
 			grid.x += maxGridDist;
 		}
-		while( view.camera.x < ( grid.x - maxGridDist ) )
+		while( lookAt.x < ( grid.x - maxGridDist ) )
 		{
 			grid.x -= maxGridDist;
 		}
 		
-		while( view.camera.z > ( grid.z + maxGridDist ) )
+		while( lookAt.z > ( grid.z + maxGridDist ) )
 		{
 			grid.z += maxGridDist;
 		}
-		while( view.camera.z < ( grid.z - maxGridDist ) )
+		while( lookAt.z < ( grid.z - maxGridDist ) )
 		{
 			grid.z -= maxGridDist;
 		}
