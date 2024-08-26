@@ -49,6 +49,7 @@ class Game
 	public var axes : Array<Array<Float>>;
 	
 	public var ready : Bool;
+	public var paused : Bool;
 	
 	private var lastTime : UInt;
 	
@@ -70,6 +71,7 @@ class Game
 		axes = [[0, -1], [-1, 0], [0, 1], [1, 0]];
 		
 		addedAIs = false;
+		paused = false;
 		
 		Sensors._game = this;
 	}
@@ -77,6 +79,7 @@ class Game
 	public function consoleMessage( str : String )
 	{
 		trace( str );
+		eToSend.push( t_con( 0, str ) );
 	}
 	
 	var addedAIs : Bool;
@@ -127,6 +130,24 @@ class Game
 				if( cycle != null )
 				{
 					cycle.doTurn(dir);
+				}
+			}
+			
+			case m_pause:
+			{
+				paused = true;
+			}
+			
+			case m_unpause:
+			{
+				paused = false;
+			}
+			
+			case m_reset:
+			{
+				if( roundState == R_PLAY )
+				{
+					nextState();
 				}
 			}
 			
@@ -295,6 +316,8 @@ class Game
 			
 			case R_PLAY:
 			{
+				if( paused ) timestep = 0;
+				
 				gameTime += timestep;
 				
 				if( gameTime < 0 )

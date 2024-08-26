@@ -18,6 +18,8 @@ enum TGameEvent
 	m_pause;
 	m_unpause;
 	
+	m_reset;
+	
 	// input
 	m_turn( id : UInt, dir : Int, key : UInt );
 	m_brake( id : UInt, braking : Bool );

@@ -435,6 +435,8 @@ class GameView extends Sprite
 		this.lastTime = Lib.getTimer();
 	}
 	
+	var blurFilter : BlurFilter3D;
+	
 	public function render()
 	{
 		var time = Lib.getTimer();
@@ -532,7 +534,12 @@ class GameView extends Sprite
 				blurLevel = 24;
 			}
 			
-			view.filters3d = [new BlurFilter3D(Std.int(blurLevel), Std.int(blurLevel))];
+			if( blurFilter == null )
+				blurFilter = new BlurFilter3D(Std.int(blurLevel), Std.int(blurLevel))
+			else
+				blurFilter.blurX = blurFilter.blurY = Std.int(blurLevel);
+			
+			view.filters3d = [blurFilter];
 		}
 		else if( !doBlur && blurLevel != 0 )
 		{
@@ -546,7 +553,8 @@ class GameView extends Sprite
 			}
 			else
 			{
-				view.filters3d = [new BlurFilter3D(Std.int(blurLevel), Std.int(blurLevel))];
+				blurFilter.blurX = blurFilter.blurY = Std.int(blurLevel);
+				view.filters3d = [blurFilter];
 			}
 		}
 		

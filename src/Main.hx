@@ -179,7 +179,25 @@ class Main extends Sprite
 				{
 					currState = stateGame;
 					this.render(e);
-					currState = stateMenu;
+					
+					if( menu.currMenu == blankMenu || menu.nextMenu == blankMenu )
+					{
+						if( game.doBlur )
+						{
+							game.doBlur = false;
+							sendMessage( m_unpause );
+						}
+					}
+					
+					if( menu.currMenu == blankMenu )
+					{
+						this.removeChild(this.menu);
+						this.removeChild(this.menu.exitMenu);
+					}
+					else
+					{
+						currState = stateMenu;
+					}
 				}
 			}
 			
@@ -264,6 +282,12 @@ class Main extends Sprite
 			{
 				this.removeChild(this.menu);
 				this.removeChild(this.menu.exitMenu);
+				if( keepGame )
+				{
+					keepGame = false;
+					this.removeChild(this.game);
+					this.game = null;
+				}
 			}
 			
 			case stateGame:
@@ -348,6 +372,23 @@ class Main extends Sprite
 		}
 	}
 	
+	public function resetGame()
+	{
+		sendMessage( m_reset );
+	}
+	
+	public function gameMenu()
+	{
+		game.doBlur = true;
+		keepGame = true;
+		setState( stateMenu );
+		menu.lastMenus.push( blankMenu );
+		menu.nextMenu = inGameMenu;
+		menu.changeMenu( menu.nextMenu );
+		menu.lastMenus.push( menu.nextMenu );
+		sendMessage( m_pause );
+	}
+	
 	private function onkeydown( e : KeyboardEvent )
 	{
 		switch( currState )
@@ -375,9 +416,7 @@ class Main extends Sprite
 				{
 					case 27:
 					{
-						game.doBlur = true;
-						keepGame = true;
-						setState( stateMenu );
+						gameMenu();
 					}
 				}
 				

@@ -31,6 +31,7 @@ enum Menus
 	configMenu;
 	inGameMenu;
 	netMenu;
+	blankMenu;
 }
 
 enum MenuAction
@@ -38,6 +39,7 @@ enum MenuAction
 	actChangeMenu( menu : Menus );
 	actExitMenu;
 	actSetState( state : State );
+	actResetGame;
 }
 
 class MenuItem extends SimpleButton
@@ -105,6 +107,11 @@ class MenuItem extends SimpleButton
 			{
 				//menu.main.setState( s );
 				menu.triggerStateChange( s );
+			}
+			
+			case actResetGame:
+			{
+				menu.main.resetGame();
 			}
 			
 			case null:
@@ -277,6 +284,18 @@ class CfgGfx extends CfgCommon
 	}
 }
 
+class CfgCam extends CfgCommon
+{
+	public function new()
+	{
+		super();
+		
+		addChild(new Label("Camera Rise:"));
+		addChild(new Label("Camera Back:"));
+		
+	}
+}
+
 class ConfigMenu extends Sprite
 {
 	var navigator : TabNavigator;
@@ -291,6 +310,7 @@ class ConfigMenu extends Sprite
 		navigator.dataProvider = new ArrayCollection([
 			TabItem.withClass("Player", CfgPlayer),
 			TabItem.withClass("KeyBinds", CfgKB),
+			TabItem.withClass("Camera", CfgCam),
 			TabItem.withClass("Graphics", CfgGfx),
 		]);
 		
@@ -703,6 +723,31 @@ class Menu extends Sprite
 			case inGameMenu:
 			{
 				title.text = "Paused";
+				
+				var m = new MenuItem(this, "Reset Round", y, actResetGame);
+				y += 50;
+				menuItems.push(m);
+				addChild(m);
+				
+				var m = new MenuItem(this, "Change Teams", y, null);
+				y += 50;
+				menuItems.push(m);
+				addChild(m);
+				
+				var m = new MenuItem(this, "Configure", y, actChangeMenu(configMenu));
+				y += 50;
+				menuItems.push(m);
+				addChild(m);
+				
+				var m = new MenuItem(this, "Leave Grid", y, actSetState( stateMenu ));
+				y += 50;
+				menuItems.push(m);
+				addChild(m);
+				
+				var m = new MenuItem(this, "Return to Grid", y, actExitMenu);
+				y += 50;
+				menuItems.push(m);
+				addChild(m);
 			}
 			
 			case configMenu:
@@ -730,6 +775,8 @@ class Menu extends Sprite
 					svrMenu.activate();
 				}
 			}
+			
+			case blankMenu:
 		}
 		
 		currMenu = menu;
