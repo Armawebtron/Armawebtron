@@ -32,7 +32,8 @@ class Sensors
 	
 	public function measure(c : BaseObject, range : Float)
 	{
-		var cycle = cast(c,Cycle);
+		var cycle : Cycle = null;
+		try { cycle = cast(c,Cycle); } catch(e) {}
 		
 		var t = Math.atan2(c.ydir, c.xdir) + ( Math.PI / 2 );
 		var lxdir = Math.cos(t), lydir = Math.sin(t);

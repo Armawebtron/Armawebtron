@@ -119,7 +119,7 @@ class Cycle extends BaseObject
 		cycleSpeedDecayBelow = 5.;
 		cycleSpeedDecayAbove = 0.1;
 		
-		cycleDelay = 0.02;
+		cycleDelay = 0.1;
 		
 		rubberMax = 5;
 		
@@ -130,7 +130,9 @@ class Cycle extends BaseObject
 		
 		xdir = 0;
 		ydir = 1;
+		
 		dir = 0;
+		turnQueue = [];
 		
 		walls = [];
 		
@@ -181,12 +183,63 @@ class Cycle extends BaseObject
 		lastTurnTime = time;
 	}
 	
+	var turnQueue : Array<Bool>;
 	public function doTurn( dir )
 	{
-		turnReady( dir );
+		if( time >= ( lastTurnTime + cycleDelay ) )
+		{
+			turnReady( dir );
+		}
+		else switch( dir )
+		{
+			case -1: turnQueue.push(false);
+			case  1: turnQueue.push(true);
+		}
+	}
+	
+	public function updateTo( t : Float ) : Bool
+	{
+		if( t > time )
+		{
+			return update( t - time );
+		}
+		return false;
 	}
 	
 	public function update( timestep : Float ) : Bool
+	{
+		if( turnQueue.length != 0 )
+		{
+			var next = ( lastTurnTime + cycleDelay );
+			if( time < next && ( time + timestep ) >= next )
+			{
+				var ret = false;
+				
+				// update to when the turn should be
+				var ts = ( lastTurnTime + cycleDelay ) - time;
+				ret = update_only( ts );
+				
+				timestep -= ts;
+				
+				// actually do the turn
+				var dir = turnQueue.shift();
+				if( dir ) this.turnReady(  1 );
+				else      this.turnReady( -1 );
+				
+				// don't bother if nothing would change here
+				if( timestep == 0 ) return ret;
+				
+				// have to calculate sensors for the next update to work
+				dist.measure( this, speed * 5 );
+				
+				// recursive, we gotta make all turns accurate!
+				return update( timestep );
+			}
+		}
+		
+		return update_only( timestep );
+	}
+	public function update_only( timestep : Float ) : Bool
 	{
 		time += timestep;
 		
