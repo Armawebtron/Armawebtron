@@ -206,7 +206,7 @@ class Main extends Sprite
 			#end
 				{
 					var m = this.gamet.loop();
-					if( m != null )
+					if( m != null && m[0] != null )
 					{
 						switch( m[0] )
 						{
