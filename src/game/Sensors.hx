@@ -34,7 +34,7 @@ class Sensors
 	{
 		var cycle = cast(c,Cycle);
 		
-		var t = Math.atan2(c.ydir, c.xdir) - ( Math.PI / 2 );
+		var t = Math.atan2(c.ydir, c.xdir) + ( Math.PI / 2 );
 		var lxdir = Math.cos(t), lydir = Math.sin(t);
 		
 		
