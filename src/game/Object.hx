@@ -16,6 +16,7 @@ class BaseObject
 	
 	public var checkLast : Bool;
 	public var lastX : Float; public var lastY : Float;
+	public var lastdirX : Float; public var lastdirY : Float;
 	
 	public function new()
 	{
@@ -27,6 +28,7 @@ class BaseObject
 		x = y = 0;
 		
 		xdir = 0; ydir = 0;
+		lastdirX = 0; lastdirY = 0;
 	}
 	
 	public function objType() : GObjType

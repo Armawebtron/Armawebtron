@@ -48,7 +48,7 @@ class Sensors
 		
 		for( wall in game.walls )
 		{
-			if( cycle != null && cycle.walls[cycle.walls.length-1] == wall ) continue;
+			if( cycle != null && ( cycle.walls[cycle.walls.length-1] == wall || cycle.walls[cycle.walls.length-2] == wall ) ) continue;
 			
 			if( c.checkLast )
 			{
@@ -60,16 +60,20 @@ class Sensors
 				) )
 				{
 					var dist = TMath.distanceOfLines(
-						c.lastX, c.lastY,
-						c.lastX, c.lastY,
+						c.x, c.y,
+						c.x, c.y,
 						wall.x1, wall.y1,
 						wall.x2, wall.y2
-					) - 0.03;
+					);
 					
-					c.x = c.lastX+
-						(c.xdir*dist);
-					c.y = c.lastY+
-						(c.ydir*dist);
+					if( cycle != null )
+					{
+						dist -= cycle.minDist.f;
+						if( dist < 0 ) dist = 0;
+					}
+					
+					c.x -= (c.lastdirX*dist);
+					c.y -= (c.lastdirY*dist);
 					
 					//if( i != k || c.currWall != j+1 )
 					//	c.collision = 1;
@@ -81,8 +85,36 @@ class Sensors
 						wall.x2, wall.y2
 					) )
 					{
-						c.x = c.lastX;
-						c.y = c.lastY;
+						//c.x = c.lastX;
+						//c.y = c.lastY;
+						
+						dist = TMath.distanceOfLines(
+							c.lastX, c.lastY,
+							c.x, c.y,
+							wall.x1, wall.y1,
+							wall.x2, wall.y2
+						);
+						if( cycle != null )
+						{
+							dist -= cycle.minDist.f;
+							if( dist < 0 ) dist = 0;
+						}
+						
+						c.x = c.lastX+
+							(c.lastdirX*dist);
+						c.y = c.lastY+
+							(c.lastdirY*dist);
+						
+						
+						if( cycle != null && TMath.lineIntersect(
+						c.lastX, c.lastY,
+						c.x, c.y,
+						wall.x1, wall.y1,
+						wall.x2, wall.y2
+						) )
+						{
+							cycle.alive = false;
+						}
 					}
 					
 					collision = true;

@@ -101,6 +101,8 @@ class Cycle extends BaseObject
 	public var rubber : Float;
 	public var rubberMax : Float;
 	
+	public var rubberTime : Float;
+	
 	public var brake : Float;
 	public var braking : Bool;
 	
@@ -124,6 +126,7 @@ class Cycle extends BaseObject
 		cycleDelay = 0.1;
 		
 		rubberMax = 5;
+		rubberTime = 10;
 		
 		alive = true;
 		
@@ -178,8 +181,11 @@ class Cycle extends BaseObject
 		mkNewWall();
 		
 		
-		this.lastX = this.x + this.xdir * 0.0001;
-		this.lastY = this.y + this.ydir * 0.0001;
+		switch( dir )
+		{
+			case -1: collideTime = time + ( dist.l / this.speed );
+			case  1: collideTime = time + ( dist.r / this.speed );
+		}
 		
 		var mult = ( 1 - rubberMinAdj );
 		minDist.f = Math.max(0,Math.min(dist.f*mult,rubberMinDist));
@@ -224,6 +230,9 @@ class Cycle extends BaseObject
 				ret = update_only( ts );
 				
 				timestep -= ts;
+				
+				// lol..
+				dist.measure( this, speed * 5 );
 				
 				// actually do the turn
 				var dir = turnQueue.shift();
@@ -291,10 +300,18 @@ class Cycle extends BaseObject
 				alive = false;
 				//game.eToSend.push(delState());
 			}
+			
+			move *= dist.f;
+			if( dist.f < this.minDist.f )
+			{
+				this.minDist.f = Math.max(0,dist.f);
+			}
 		}
-		else
+		
+		
 		{
 			lastX = x; lastY = y;
+			lastdirX = xdir; lastdirY = ydir;
 			
 			this.x += move * xdir;
 			this.y += move * ydir;
@@ -302,7 +319,7 @@ class Cycle extends BaseObject
 		
 		if( rubber > 0 )
 		{
-			rubber -= timestep * rubber;
+			rubber -= ( timestep / rubberTime ) * rubber;
 		}
 		else if( rubber != 0 )
 		{
