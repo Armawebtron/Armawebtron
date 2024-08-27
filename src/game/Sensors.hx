@@ -18,6 +18,9 @@ class Sensors
 	public var l : Float;
 	public var r : Float;
 	
+	public var lWall : Wall;
+	public var rWall : Wall;
+	
 	public function new( g : Game = null )
 	{
 		f = 9999;
@@ -87,6 +90,7 @@ class Sensors
 					// hmm, arguably we should try all cycles / walls again
 					//i = MAX_CYCLES;
 					//break;
+					return this.measure(c, range);
 					
 					// but that doesn't actually seem to help much
 				}
@@ -132,7 +136,7 @@ class Sensors
 				if( this.l > ff )
 				{
 					this.l = ff;
-					//type_l[k] = 1 + (i == k);
+					lWall = wall;
 				}
 			}
 			
@@ -153,7 +157,7 @@ class Sensors
 				if( this.r > ff )
 				{
 					this.r = ff;
-					//type_r[k] = 1 + (i == k);
+					rWall = wall;
 				}
 			}
 		}

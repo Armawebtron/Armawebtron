@@ -96,6 +96,8 @@ class Cycle extends BaseObject
 	static public var rubberMinDist : Float = 0.03;
 	static public var rubberMinAdj : Float = 0.05;
 	
+	public var wallAccel : CycleAccel;
+	
 	public var rubber : Float;
 	public var rubberMax : Float;
 	
@@ -135,6 +137,8 @@ class Cycle extends BaseObject
 		turnQueue = [];
 		
 		walls = [];
+		
+		wallAccel = new CycleAccel(this);
 		
 		lastTurnTime = 0;
 		
@@ -259,6 +263,8 @@ class Cycle extends BaseObject
 			accel -= 10;
 		}
 		
+		accel += wallAccel.calc();
+		
 		this.speed += accel * timestep;
 		
 		
@@ -361,6 +367,79 @@ class Cycle extends BaseObject
 			xdir, ydir,
 			speed, rubber
 		);
+	}
+}
+
+class CycleAccel
+{
+	public var target : Cycle;
+	
+	static public var _accelBase : Float = 20;
+	public var accelBase : Float;
+	
+	static public var _rimMult : Float = 0;
+	public var rimMult : Float;
+	
+	static public var _selfMult : Float = 1;
+	public var selfMult : Float;
+	
+	static public var _teamMult : Float = 1;
+	public var teamMult : Float;
+	
+	static public var _enemyMult : Float = 1;
+	public var enemyMult : Float;
+	
+	static public var _offset : Float = 2;
+	public var offset : Float;
+	
+	static public var _wallNear : Float = 6;
+	public var wallNear : Float;
+	
+	public function new( t )
+	{
+		target = t;
+		
+		accelBase = _accelBase;
+		rimMult = _rimMult;
+		selfMult = _selfMult;
+		teamMult = _teamMult;
+		enemyMult = _enemyMult;
+		offset = _offset;
+		wallNear = _wallNear;
+	}
+	
+	public function against( dist : Float, w : Wall ) : Float
+	{
+		if( wallNear < dist ) return 0;
+		
+		var wallAccel : Float = accelBase;
+		
+		var c : CycleWall = try cast(w,CycleWall) catch(e) null;
+		
+		if( c == null )
+			wallAccel *= rimMult;
+		else if( c.owner == target )
+			wallAccel *= selfMult;
+		else
+			wallAccel *= enemyMult;
+		
+		return wallAccel * (
+			( 1 / ( dist + offset ) ) -
+			( 1 / ( wallNear + offset ) )
+		);
+	}
+	
+	public function calc() : Float
+	{
+		var finalAccel : Float = 0;
+		
+		if( accelBase != 0 && target.dist.l < wallNear || target.dist.r < wallNear )
+		{
+			finalAccel += against( target.dist.l, target.dist.lWall );
+			finalAccel += against( target.dist.r, target.dist.rWall );
+		}
+		
+		return finalAccel;
 	}
 }
 
