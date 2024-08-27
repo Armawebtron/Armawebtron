@@ -2,7 +2,7 @@ package;
 
 import openfl.Lib;
 
-import openfl.display.Sprite;
+import openfl.display.*;
 import openfl.events.*;
 
 import openfl.text.TextField;
@@ -63,6 +63,9 @@ class Main extends Sprite
 	
 	public var userConfig : UserConfig;
 	
+	public var chFullscreen : Bool;
+	public var fullscreen : Bool;
+	
 	public function initMain()
 	{
 		threadEnabled = true;
@@ -90,6 +93,9 @@ class Main extends Sprite
 		this.game = null;
 		this.gamet = null;
 		//this.worker = null;
+		
+		chFullscreen = false;
+		fullscreen = false;
 		
 		this.userConfig = new UserConfig();
 		
@@ -216,6 +222,15 @@ class Main extends Sprite
 			
 			case null:
 			default:
+		}
+		
+		if( chFullscreen )
+		{
+			chFullscreen = false;
+			if( fullscreen )
+				Lib.current.stage.displayState = StageDisplayState.FULL_SCREEN_INTERACTIVE;
+			else
+				Lib.current.stage.displayState = StageDisplayState.NORMAL;
 		}
 	}
 #if( !target.threaded && js )
@@ -386,6 +401,15 @@ class Main extends Sprite
 	
 	private function onkeydown( e : KeyboardEvent )
 	{
+		if( !KeyBindControl.capture )
+		{
+			if( userConfig.global.toggleFS.indexOf(e.keyCode) != -1 )
+			{
+				chFullscreen = true;
+				fullscreen = !fullscreen;
+			}
+		}
+		
 		switch( currState )
 		{
 			case stateMenu:
@@ -442,6 +466,8 @@ class Main extends Sprite
 			{
 				this.grid.onresize();
 				this.menu.onresize();
+				
+				if( keepGame ) this.game.onresize();
 			}
 			
 			case stateGame:

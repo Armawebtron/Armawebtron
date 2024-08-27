@@ -37,9 +37,20 @@ class PlayerConfig
 	}
 }
 
+class GlobalConfig
+{
+	public var toggleFS : Array<UInt>;
+	
+	public function new()
+	{
+		toggleFS = [];
+	}
+}
+
 class UserConfig
 {
 	public var players : Array<PlayerConfig>;
+	public var global : GlobalConfig;
 	
 	public function new()
 	{
@@ -53,5 +64,8 @@ class UserConfig
 		p.turnRight.push(39);
 		
 		players.push(p);
+		
+		global = new GlobalConfig();
+		global.toggleFS.push(122);
 	}
 }
