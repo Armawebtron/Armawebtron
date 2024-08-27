@@ -628,5 +628,7 @@ class GameView extends Sprite
 		
 		cenSpr.width = stage.stageWidth;
 		cenSpr.y = stage.stageHeight*0.7;
+		
+		hud.onresize();
 	}
 }
