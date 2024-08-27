@@ -112,6 +112,7 @@ class MenuItem extends SimpleButton
 			case actResetGame:
 			{
 				menu.main.resetGame();
+				menu.triggerMenuBack();
 			}
 			
 			case null:

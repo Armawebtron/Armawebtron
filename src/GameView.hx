@@ -43,6 +43,9 @@ import openfl.text.TextFormatAlign;
 import GameCore;
 import TMath;
 
+import HUD;
+import UserConfig;
+
 
 class VPlayer
 {
@@ -69,6 +72,11 @@ class CycleView extends ObjectContainer3D
 	private static var test : Bool = false;
 	
 	public var isAlive : Bool;
+	public var speed : Float;
+	public var rubber : Float;
+	
+	public var lastTime : Float;
+	public var stopped : Bool;
 	
 	public function init()
 	{
@@ -116,6 +124,9 @@ class CycleView extends ObjectContainer3D
 		
 		
 		this.isAlive = true;
+		this.speed = 0;
+		this.rubber = 0;
+		this.stopped = true;
 	}
 }
 
@@ -181,6 +192,8 @@ class GameView extends Sprite
 	
 	private var lookAt : Vector3D;
 	
+	private var user : UserConfig;
+	
 	private var gridImg : BitmapTexture;
 	private var gridMat : TextureMaterial;
 	private var gridGeo : PlaneGeometry;
@@ -195,6 +208,7 @@ class GameView extends Sprite
 	var walls  : Map<UInt,WallView>;
 	
 	var heading : Float;
+	var smoothSpeed : Float;
 	
 	
 	var centerMsg : String; var centerMsgTime : Float;
@@ -203,13 +217,17 @@ class GameView extends Sprite
 	
 	var fpsDisp : away3d.debug.AwayFPS;
 	
-	public function new()
+	var hud : HUD;
+	
+	public function new( u : UserConfig )
 	{
 		super();
 		
 		players = [];
 		cycles = [];
 		walls = [];
+		
+		user = u;
 		
 		initScene();
 	}
@@ -258,9 +276,10 @@ class GameView extends Sprite
 						}
 						players[0].cycle = cycle;
 					}
+					cycle.lastTime = Lib.getTimer();
 				}
 				
-				case t_cycle(id, alive, x, y, xdir, ydir, speed, rubber):
+				case t_cycle(id, alive, x, y, xdir, ydir, stopped, speed, rubber):
 				{
 					var cycle = cycles[id];
 					
@@ -283,6 +302,10 @@ class GameView extends Sprite
 							cycle.isAlive = false;
 						}
 					}
+					cycle.lastTime = Lib.getTimer();
+					cycle.speed = speed;
+					cycle.rubber = rubber;
+					cycle.stopped = stopped;
 				}
 				
 				case t_newWall(id, type, owner, x1, y1, x2, y2):
@@ -390,6 +413,7 @@ class GameView extends Sprite
 		view.camera.lookAt(new Vector3D(0, 0, 0));
 		
 		heading = 0;
+		smoothSpeed = 20;
 		
 		view.camera.lens.near = 0.01;
 		
@@ -433,6 +457,10 @@ class GameView extends Sprite
 		doBlur = false;
 		blurLevel = 0;
 		
+		hud = new HUD();
+		addChild( hud );
+		hud.alpha = 0;
+		
 		
 		this.lastTime = Lib.getTimer();
 	}
@@ -461,33 +489,29 @@ class GameView extends Sprite
 			var cdir : Float = MathConsts.DEGREES_TO_RADIANS * ( cycle.rotationY + 90 );
 			cdir = Math.atan2( -Math.sin(cdir), Math.cos(cdir) );
 			
-			
-			var test = cdir - heading;
-			while( test < -Math.PI ) test += Math.PI+Math.PI;
-			while( test >  Math.PI ) test -= Math.PI+Math.PI;
-			
-			heading += test * 4 * timestep;
-			
-			// dont bug out camera at really high turn speeds
-			var test2 = cdir - heading;
-			while(test2 < -Math.PI) test2 += Math.PI+Math.PI;
-			while(test2 >  Math.PI) test2 -= Math.PI+Math.PI;
-			if( Math.abs(test) < Math.abs(test2) )
+			// update cycle position if necessary
+			if( !cycle.stopped )
 			{
-				heading = cdir;
+				var ts = ( time - cycle.lastTime ) / 1000;
+				cycle.x -= ts * cycle.speed * Math.cos(cdir);
+				cycle.z -= ts * cycle.speed * Math.sin(cdir);
+				cycle.lastTime = time;
 			}
 			
-			// apply heading
-			view.camera.x = cycle.x + ( Math.cos(heading) * 13 );
-			view.camera.z = cycle.z + ( Math.sin(heading) * 13 );
-			view.camera.y = 8;
+			var cam = user.players[0].cam;
+			cam.run( timestep, cycle, cdir );
 			
-			view.camera.lookAt(lookAt=new Vector3D(
-				cycle.x+(Math.cos(heading)*-3), 0, 
-				cycle.z+(Math.sin(heading)*-3)
-			));
+			view.camera.x = cam.pos.x;
+			view.camera.z = cam.pos.z;
+			view.camera.y = cam.pos.y;
 			
-			this.grid.y = 0;
+			view.camera.lookAt(lookAt=cam.lookAt);
+			
+			// update hud
+			hud.setMeters( cycle.rubber, cycle.speed, 0, false );
+			hud.alpha += timestep;
+			
+			if( hud.alpha > 1 ) hud.alpha = 1;
 		}
 		else
 		{
@@ -512,6 +536,9 @@ class GameView extends Sprite
 			lookAt.y += (0 - lookAt.y) * timestep;
 			
 			view.camera.lookAt(lookAt);
+			
+			hud.alpha -= timestep;
+			if( hud.alpha < 0 ) hud.alpha = 0;
 		}
 		
 		

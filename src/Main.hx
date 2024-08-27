@@ -345,7 +345,7 @@ class Main extends Sprite
 				
 				if( this.game == null )
 				{
-					this.game = new GameView();
+					this.game = new GameView( userConfig );
 					this.addChild(this.game);
 				}
 			}

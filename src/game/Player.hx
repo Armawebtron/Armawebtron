@@ -382,6 +382,7 @@ class Cycle extends BaseObject
 			id, alive,
 			x, y, 
 			xdir, ydir,
+			collision || game.paused || time < 0,
 			speed, rubber
 		);
 	}

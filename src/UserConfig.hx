@@ -1,4 +1,6 @@
 
+import Camera;
+
 class PlayerConfig
 {
 	public var name : String;
@@ -17,6 +19,8 @@ class PlayerConfig
 	
 	public var specMode : Bool;
 	
+	public var cam : Camera;
+	
 	public function new()
 	{
 		name = "";
@@ -32,6 +36,8 @@ class PlayerConfig
 		toggleBrake = [];
 		
 		jump = [];
+		
+		cam = new CustomCamera();
 		
 		specMode = false;
 	}

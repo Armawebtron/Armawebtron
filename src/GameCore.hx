@@ -64,6 +64,7 @@ enum TGameEvent
 		id: UInt, alive: Bool,
 		x: Float, y: Float, 
 		xdir: Float, ydir: Float,
+		stopped : Bool,
 		speed: Float, rubber: Float
 	);
 	

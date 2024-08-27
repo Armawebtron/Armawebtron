@@ -148,6 +148,13 @@ class Game
 			case m_pause:
 			{
 				paused = true;
+				
+				{
+					for( c in cycles )
+					{
+						eToSend.push( c.state() );
+					}
+				}
 			}
 			
 			case m_unpause:
