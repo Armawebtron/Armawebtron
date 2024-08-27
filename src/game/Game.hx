@@ -2,7 +2,9 @@
 package game;
 
 
+#if !noOpenFL
 import openfl.Lib;
+#end
 
 import GameCore;
 import TMath;
@@ -10,6 +12,16 @@ import TMath;
 import game.Sensors;
 import game.Object;
 import game.Player;
+
+#if noOpenFL
+class Lib
+{
+	static public inline function getTimer()
+	{
+		return Std.int( Date.now().getTime() );
+	}
+}
+#end
 
 
 enum RoundStates { R_COMMENCING;
@@ -331,7 +343,7 @@ class Game
 						lastCountDown = countDown;
 					}
 				}
-				else
+				else if( timestep != 0 )
 				{
 					if( lastCountDown != 0 )
 					{

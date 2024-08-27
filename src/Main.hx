@@ -49,21 +49,12 @@ class Main extends Sprite
 	var main : sys.thread.Thread;
 #elseif( js )
 	var worker : js.html.Worker;
-	var maint : js.html.DedicatedWorkerGlobalScope;
 #end
 	
 	var currState : State;
 	
 	public function new()
 	{
-		#if( !target.threaded && js )
-		if( try js.Browser.document == null catch (e:Dynamic) true ) 
-		{
-			super();
-			initWorker();
-		}
-		else
-		#end
 		{
 			super();
 			initMain();
@@ -104,7 +95,7 @@ class Main extends Sprite
 		
 		#if( !target.threaded && js )
 			// workers not working?!
-			threadEnabled = false;
+			//threadEnabled = false;
 		#end
 		
 		
@@ -118,7 +109,8 @@ class Main extends Sprite
 			{
 				scriptPath = scriptPath.substr(scriptPath.indexOf("@")+1);
 			}
-			worker = new js.html.Worker(scriptPath);
+			worker = new js.html.Worker("worker.js");
+			worker.onmessage = msgFromWorker;
 		}
 		#end
 		
@@ -127,23 +119,6 @@ class Main extends Sprite
 		
 		this.setState( stateMenu );
 	}
-	
-	#if( !target.threaded && js )
-	public function initWorker()
-	{
-		trace("hello");
-		
-		maint = untyped self;
-		
-		gamet = new Game();
-		maint.onmessage = msgFromMain;
-	}
-	
-	function msgFromMain( e : js.html.MessageEvent )
-	{
-		gamet.recvMsg( e.data );
-	}
-	#end
 	
 	public function sendSettings()
 	{
@@ -243,6 +218,20 @@ class Main extends Sprite
 			default:
 		}
 	}
+#if( !target.threaded && js )
+	function msgFromWorker( e : js.html.MessageEvent )
+	{
+		var m : Array<TGameEvent> = haxe.Json.parse( e.data );
+		
+		switch( m[0] )
+		{
+			case t_ready: sendSettings();
+			default:
+		}
+		
+		this.game.recvGame(m);
+	}
+#end
 	
 #if( target.threaded )
 	function t_doGame()
@@ -326,6 +315,12 @@ class Main extends Sprite
 						lock.wait();
 					}
 					else
+				#elseif( js )
+					if( threadEnabled )
+					{
+						sendMessage( m_unpause );
+					}
+					else
 				#end
 					{
 						this.gamet = new Game();
@@ -360,7 +355,7 @@ class Main extends Sprite
 		if( threadEnabled )
 		{
 			#if( !target.threaded && js )
-				worker.postMessage(e);
+				worker.postMessage( haxe.Json.stringify( e ) );
 			#else
 				worker.sendMessage(e);
 			#end

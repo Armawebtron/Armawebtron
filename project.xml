@@ -21,4 +21,8 @@
 	
 	<window background="#000000" fps="240" />
 	
+	<section if="html5">
+		<postbuild command="haxe -cp src -js build/html5/bin/worker.js WebWorker -D noOpenFL"/>
+	</section>
+	
 </project>
