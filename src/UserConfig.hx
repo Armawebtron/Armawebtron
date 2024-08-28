@@ -179,6 +179,16 @@ class UserConfig
 				}
 			}
 			
+			{
+				var e = xmlGet(g, "Threading");
+				var f = e.get("enabled");
+				if( f != null )
+				{
+					var v = haxe.Json.parse( f );
+					main.disableThread = ( Std.isOfType(v, Bool) && cast(v, Bool) == false ) || ( Std.isOfType(v, Int) && cast(v, Int) == 0 );
+				}
+			}
+			
 			var xplayers = pConf.elementsNamed("Player");
 			for( xp in xplayers )
 			{
@@ -320,7 +330,16 @@ class UserConfig
 				e.set( "resolution", main.stage.stageWidth+"x"+main.stage.stageHeight );
 			}
 			
-			e.set( "frameRate", ""+main.stage.frameRate );
+			if( main.stage.frameRate != 0 )
+			{
+				e.set( "frameRate", ""+main.stage.frameRate );
+			}
+		}
+		
+		{
+			var e = xmlGet(g, "Threading");
+			
+			e.set("enabled", ""+!main.disableThread);
 		}
 		
 		{

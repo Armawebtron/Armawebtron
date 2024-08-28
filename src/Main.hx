@@ -65,6 +65,7 @@ class Main extends Sprite
 	
 	public var chFullscreen : Bool;
 	public var fullscreen : Bool;
+	public var disableThread : Bool;
 	
 	public function initMain()
 	{
@@ -96,6 +97,7 @@ class Main extends Sprite
 		
 		chFullscreen = false;
 		fullscreen = false;
+		disableThread = false;
 		
 		this.userConfig = new UserConfig();
 		userConfig.load(this);
@@ -107,6 +109,11 @@ class Main extends Sprite
 		#if( js )
 			js.Browser.window.onbeforeunload = ( (e) -> { userConfig.save(this); return null; } );
 		#end
+		
+		if( disableThread )
+		{
+			threadEnabled = false;
+		}
 		
 		#if( !target.threaded && js )
 			// workers not working?!
