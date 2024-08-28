@@ -45,6 +45,7 @@ import TMath;
 
 import HUD;
 import UserConfig;
+import Camera;
 
 
 class VPlayer
@@ -189,6 +190,7 @@ class GameView extends Sprite
 	static var maxGridDist : Float = 100;
 	
 	private var view : View3D;
+	private var views : Array<View3D>;
 	
 	private var lookAt : Vector3D;
 	
@@ -200,6 +202,8 @@ class GameView extends Sprite
 	private var grid    : Mesh;
 	
 	private var lastTime : UInt;
+	
+	public static var splitScreen : UInt = 0;
 	
 	//private var cycle : CycleView;
 	
@@ -402,6 +406,16 @@ class GameView extends Sprite
 		this.view = new View3D();
 		this.addChild(view);
 		
+		this.views = [];
+		this.views.push(view);
+		
+		if( splitScreen != 0 )
+		{
+			var v = new View3D(view.scene);
+			this.views.push(v);
+			this.addChild(v);
+		}
+		
 		this.addChild(fpsDisp=(new away3d.debug.AwayFPS(view, 700, 10, 0xffffff, 1)));
 		
 		
@@ -468,6 +482,19 @@ class GameView extends Sprite
 	var blurFilter : BlurFilter3D;
 	
 	public function render()
+	{
+		if( splitScreen != 0 )
+		{
+			for( i=>v in views )
+			{
+				view = v;
+				this.renderView(i);
+			}
+		}
+		else this.renderView(0);
+	}
+	
+	public function renderView( id : Int )
 	{
 		var time = Lib.getTimer();
 		

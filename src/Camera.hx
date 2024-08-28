@@ -20,6 +20,23 @@ class Camera
 		lookAt = new Vector3D();
 	}
 	
+	public function idle( timestep : Float )
+	{
+		heading += timestep*0.2;
+		
+		var targX = (Math.cos(heading)*-120), 
+			targZ = (Math.sin(heading)*-120), 
+			targY = 40;
+		
+		pos.x += (targX - pos.x) * timestep;
+		pos.z += (targZ - pos.z) * timestep;
+		pos.y += (targY - pos.y) * timestep;
+		
+		lookAt.x += ((Math.cos(heading)*30) - lookAt.x) * timestep * 0.2;
+		lookAt.z += ((Math.sin(heading)*30) - lookAt.z) * timestep * 0.2;
+		lookAt.y += (0 - lookAt.y) * timestep;
+	}
+	
 	public function run( timestep : Float, cycle : CycleView, cdir : Float )
 	{
 		

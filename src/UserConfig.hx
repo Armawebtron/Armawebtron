@@ -20,6 +20,7 @@ class PlayerConfig
 	public var specMode : Bool;
 	
 	public var cam : Camera;
+	public var viewTarget : Int;
 	
 	public function new()
 	{
