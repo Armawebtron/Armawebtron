@@ -425,6 +425,14 @@ class Main extends Sprite
 		{
 			case stateMenu:
 			{
+				if( keepGame && !game.doBlur )
+				{
+					currState = stateGame;
+					onkeydown( e );
+					currState = stateMenu;
+					return;
+				}
+				
 				if( KeyBindControl.capture )
 				{
 					KeyBindControl.keyDown(e);
