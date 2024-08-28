@@ -292,6 +292,10 @@ class Main extends Sprite
 					this.removeChild(this.game);
 					this.game = null;
 				}
+				else
+				{
+					this.removeChild(this.grid);
+				}
 			}
 			
 			case stateGame:
