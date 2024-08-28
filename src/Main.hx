@@ -104,6 +104,9 @@ class Main extends Sprite
 		{
 			userConfig.save(this);
 		});
+		#if( js )
+			js.Browser.window.onbeforeunload = ( (e) -> { userConfig.save(this); return null; } );
+		#end
 		
 		#if( !target.threaded && js )
 			// workers not working?!

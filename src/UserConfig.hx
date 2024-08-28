@@ -84,10 +84,22 @@ class UserConfig
 		global.toggleFS.push(122);
 	}
 	
+	static inline function appDir()
+	{
+	#if( !js )
+		return File.applicationStorageDirectory;
+	#else
+		return "Armawebtron2";
+	#end
+	}
+	
 	static function getPrefsFile()
 	{
-		var prefsFile : File = File.applicationStorageDirectory;
-		return prefsFile.resolvePath("preferences.xml");
+	#if( !js )
+		return appDir().resolvePath("preferences.xml");
+	#else
+		return appDir()+"/preferences.xml";
+	#end
 	}
 	
 	static public function xmlGet( x : Xml, tag : String )
@@ -128,14 +140,23 @@ class UserConfig
 	{
 		var prefsFile = getPrefsFile();
 		
+	#if( js )
+		var f = js.Browser.getLocalStorage().getItem(prefsFile);
+		if( f != null )
+	#else
 		if( prefsFile.exists )
+	#end
 		{
+		#if( !js )
 			var f : FileStream = new FileStream();
 			f.open(prefsFile, FileMode.READ);
 			
 			var x = Xml.parse(f.readUTFBytes(f.bytesAvailable));
 			
 			f.close();
+		#else
+			var x = Xml.parse(f);
+		#end
 			
 			
 			var g = xmlGet(x, "GlobalConfig");
@@ -253,6 +274,13 @@ class UserConfig
 		var x : Xml = null;
 		var isNew : Bool = false;
 		
+		#if( js )
+		var f = js.Browser.getLocalStorage().getItem(prefsFile);
+		if( f != null )
+		{
+			x = Xml.parse( f );
+		}
+		#else
 		if( prefsFile.exists )
 		{
 			var f : FileStream = new FileStream();
@@ -262,6 +290,7 @@ class UserConfig
 			
 			f.close();
 		}
+		#end
 		else
 		{
 			x = Xml.createElement("UserConfig");
@@ -269,8 +298,10 @@ class UserConfig
 			isNew = true;
 		}
 		
+		#if( !js )
 		var f : FileStream = new FileStream();
 		f.open(prefsFile, FileMode.WRITE);
+		#end
 		
 		var g = xmlGet(x, "GlobalConfig");
 		var pConf = xmlGet(x, "PlayerConfig");
@@ -326,12 +357,16 @@ class UserConfig
 			}
 		}
 		
+		#if( !js )
 		if( isNew )
 			f.writeUTFBytes(Printer.print(x, true));
 		else
 			f.writeUTFBytes(x.toString());
 		
 		f.close();
+		#else
+			js.Browser.getLocalStorage().setItem(prefsFile,(isNew)?(Printer.print(x, true)):(x.toString()));
+		#end
 	}
 	
 	
