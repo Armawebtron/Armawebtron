@@ -468,10 +468,10 @@ class Main extends Sprite
 		{
 			case stateMenu:
 			{
-				this.grid.onresize();
 				this.menu.onresize();
 				
 				if( keepGame ) this.game.onresize();
+				else this.grid.onresize();
 			}
 			
 			case stateGame:
