@@ -218,18 +218,34 @@ class Game
 			
 			case R_LOAD_GRID:
 			{
-				if( !addedAIs )
+				var numAIs = 0;
+				var numHumans = 0;
+				
+				for( p in players )
 				{
-					for(i in 1...4)
-					{
-						var p = new Player();
-						
-						p.isAI = true;
-						
-						players.push( p );
-					}
+					if( p.isAI ) numAIs++;
+					else if( !p.spectating ) numHumans++;
+				}
+				
+				while( numAIs < Math.max(0, 4-numHumans) )
+				{
+					var p = new Player();
 					
-					addedAIs = true;
+					p.isAI = true;
+					numAIs++;
+					
+					players.push( p );
+				}
+				
+				while( numAIs > Math.max(0, 4-numHumans) )
+				{
+					for( p in players )
+					{
+						if( p.isAI )
+						{
+							players.remove( p );
+						}
+					}
 				}
 				
 				var ws = [
