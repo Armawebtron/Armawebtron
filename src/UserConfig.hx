@@ -75,6 +75,9 @@ class UserConfig
 		p.turnLeft.push(37);
 		p.turnRight.push(39);
 		
+		p.turnLeft.push(90);
+		p.turnRight.push(88);
+		
 		players.push(p);
 		
 		global = new GlobalConfig();
@@ -105,6 +108,22 @@ class UserConfig
 		return e;
 	}
 	
+	static public function parseColor( c : String ) : UInt
+	{
+		if( c.indexOf("0x") == 0 )
+		{
+			return Std.parseInt(c);
+		}
+		else if( c.indexOf("#") == 0 )
+		{
+			return Std.parseInt("0x"+c.substr(1));
+		}
+		else
+		{
+			return Std.parseInt("0x"+c);
+		}
+	}
+	
 	public function load( main : Main )
 	{
 		var prefsFile = getPrefsFile();
@@ -116,8 +135,11 @@ class UserConfig
 			
 			var x = Xml.parse(f.readUTFBytes(f.bytesAvailable));
 			
+			f.close();
+			
+			
 			var g = xmlGet(x, "GlobalConfig");
-			var p = xmlGet(x, "PlayerConfig");
+			var pConf = xmlGet(x, "PlayerConfig");
 			var t = xmlGet(x, "GameConfig");
 			
 			{
@@ -132,11 +154,73 @@ class UserConfig
 				var f = e.get("frameRate");
 				if( f != null )
 				{
-					main.stage.frameRate = haxe.Json.parse(f);
+					main.stage.frameRate = Std.parseFloat(f);
 				}
 			}
 			
-			f.close();
+			var xplayers = pConf.elementsNamed("Player");
+			for( xp in xplayers )
+			{
+				var id = Std.parseInt(xp.get("id"));
+				
+				if( id > 100 ) continue;
+				
+				if( id >= players.length )
+				{
+					var p = new PlayerConfig();
+					players.push(p);
+				}
+				
+				var p = players[id];
+				
+				var e = xmlGet(xp, "Name");
+				p.name = e.get("value");
+				if( p.name == null ) p.name = "";
+				
+				var e = xmlGet(xp, "TeamName");
+				p.teamName = e.get("value");
+				if( p.teamName == null ) p.name = "";
+				
+				var e = xmlGet(xp, "Color");
+				p.colorCycle = parseColor(e.get("cycle"));
+				p.color = parseColor(e.get("wall"));
+				
+				var d = xmlGet(xp, "KeyBinds");
+				var e = xmlGet(d, "cycle");
+				
+				var k = e.get("left");
+				if( k != null )
+				{
+					p.turnLeft.splice(0, p.turnLeft.length);
+					var i : Array<Int> = haxe.Json.parse(k);
+					trace(haxe.Json.parse(k));
+					for( b in i ) { p.turnLeft.push( b ); }
+				}
+				
+				var k = e.get("right");
+				if( k != null )
+				{
+					p.turnRight.splice(0, p.turnRight.length);
+					var i : Array<Int> = haxe.Json.parse(k);
+					for( b in i ) { p.turnRight.push( b ); }
+				}
+				
+				var k = e.get("brake");
+				if( k != null )
+				{
+					p.brake.splice(0, p.brake.length);
+					var i : Array<Int> = haxe.Json.parse(k);
+					for( b in i ) { p.brake.push( b ); }
+				}
+				
+				var k = e.get("toggleBrake");
+				if( k != null )
+				{
+					p.toggleBrake.splice(0, p.toggleBrake.length);
+					var i : Array<Int> = haxe.Json.parse(k);
+					for( b in i ) { p.toggleBrake.push( b ); }
+				}
+			}
 		}
 	}
 	
@@ -145,12 +229,12 @@ class UserConfig
 		var e = xmlGet(xp, "Name");
 		e.set("value", p.name);
 		
-		var e = xmlGet(xp, "Teamname");
+		var e = xmlGet(xp, "TeamName");
 		e.set("value", p.teamName);
 		
 		var e = xmlGet(xp, "Color");
-		e.set("cycle", StringTools.hex(p.colorCycle));
-		e.set("wall", StringTools.hex(p.color));
+		e.set("cycle", "#"+StringTools.hex(p.colorCycle,6));
+		e.set("wall", "#"+StringTools.hex(p.color,6));
 		
 		var k = xmlGet(xp, "KeyBinds");
 		var e = xmlGet(k, "cycle");
