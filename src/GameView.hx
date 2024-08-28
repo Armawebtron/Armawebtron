@@ -506,12 +506,30 @@ class GameView extends Sprite
 		//cycle.rotationY += timestep * 32;
 		
 		var cycle : CycleView = null;
-		if( players[0] != null && players[0].cycle != null )
+		if( players[id] != null && players[id].cycle != null )
 		{
-			cycle = players[0].cycle;
+			cycle = players[id].cycle;
 		}
-		if( cycle != null && cycle.isAlive )
+		
+		var cam : Camera = null;
+		if( user.players[id] != null )
 		{
+			cam = user.players[id].cam;
+			
+			if(
+				( cycle == null || !cycle.isAlive ) && user.players[id].viewTarget >= 0 &&
+				players[user.players[id].viewTarget] != null && players[user.players[id].viewTarget].cycle != null
+			)
+			{
+				cycle = players[user.players[id].viewTarget].cycle;
+			}
+			else user.players[id].viewTarget = -1;
+		}
+		
+		if( cam != null )
+		{
+			if( cycle != null && cycle.isAlive )
+			{
 			// get current cycle direction, with evil corrections
 			var cdir : Float = MathConsts.DEGREES_TO_RADIANS * ( cycle.rotationY + 90 );
 			cdir = Math.atan2( -Math.sin(cdir), Math.cos(cdir) );
@@ -525,47 +543,31 @@ class GameView extends Sprite
 				cycle.lastTime = time;
 			}
 			
-			var cam = user.players[0].cam;
 			cam.run( timestep, cycle, cdir );
-			
-			view.camera.x = cam.pos.x;
-			view.camera.z = cam.pos.z;
-			view.camera.y = cam.pos.y;
-			
-			view.camera.lookAt(lookAt=cam.lookAt);
 			
 			// update hud
 			hud.setMeters( cycle.rubber, cycle.speed, 0, false );
 			hud.alpha += timestep;
 			
 			if( hud.alpha > 1 ) hud.alpha = 1;
-		}
-		else
-		{
-			heading += timestep*0.2;
-			
-			var targX = (Math.cos(heading)*-120), 
-			    targZ = (Math.sin(heading)*-120), 
-			    targY = 40;
-			
-			view.camera.x += (targX - view.camera.x) * timestep;
-			view.camera.z += (targZ - view.camera.z) * timestep;
-			view.camera.y += (targY - view.camera.y) * timestep;
-			
-			if( lookAt == null )
+			}
+			else
 			{
-				lookAt = new Vector3D(0,0,0);
-				view.camera.lookAt(lookAt);
+				cam.idle( timestep );
+				
+				hud.alpha -= timestep;
+				if( hud.alpha < 0 ) hud.alpha = 0;
 			}
 			
-			lookAt.x += ((Math.cos(heading)*30) - lookAt.x) * timestep * 0.2;
-			lookAt.z += ((Math.sin(heading)*30) - lookAt.z) * timestep * 0.2;
-			lookAt.y += (0 - lookAt.y) * timestep;
+			view.camera.x = cam.pos.x;
+			view.camera.z = cam.pos.z;
+			view.camera.y = cam.pos.y;
 			
-			view.camera.lookAt(lookAt);
-			
-			hud.alpha -= timestep;
-			if( hud.alpha < 0 ) hud.alpha = 0;
+			view.camera.lookAt(lookAt=cam.lookAt);
+		}
+		else if( lookAt == null )
+		{
+			lookAt = new Vector3D();
 		}
 		
 		
@@ -648,8 +650,23 @@ class GameView extends Sprite
 	
 	public function onresize()
 	{
-		view.width = stage.stageWidth;
-		view.height = stage.stageHeight;
+		if( splitScreen == 0 )
+		{
+			view.width = stage.stageWidth;
+			view.height = stage.stageHeight;
+		}
+		else
+		{
+			views[0].width = stage.stageWidth / 2;
+			views[0].height = stage.stageHeight;
+			
+			if( views[1] != null )
+			{
+				views[1].width = stage.stageWidth / 2;
+				views[1].height = stage.stageHeight;
+				views[1].x = stage.stageWidth / 2;
+			}
+		}
 		
 		fpsDisp.x = stage.stageWidth-100;
 		
