@@ -436,7 +436,16 @@ class GameView extends Sprite
 		this.gridMat = new TextureMaterial(this.gridImg);
 		this.gridMat.repeat = true;
 		this.gridMat.mipmap = true;
-		this.gridMat.anisotropy = Anisotropy.ANISOTROPIC16X;
+		if( user.global.anisotropy >= 12 )
+			gridMat.anisotropy = Anisotropy.ANISOTROPIC16X;
+		else if( user.global.anisotropy >= 6 )
+			gridMat.anisotropy = Anisotropy.ANISOTROPIC8X;
+		else if( user.global.anisotropy >= 3 )
+			gridMat.anisotropy = Anisotropy.ANISOTROPIC4X;
+		else if( user.global.anisotropy >= 2 )
+			gridMat.anisotropy = Anisotropy.ANISOTROPIC2X;
+		else if( user.global.anisotropy >= 0 )
+			gridMat.anisotropy = Anisotropy.NONE;
 		
 		this.gridGeo = new PlaneGeometry(1500, 1500);
 		this.gridGeo.scaleUV(1500, 1500);

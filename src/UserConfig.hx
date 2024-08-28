@@ -53,9 +53,13 @@ class GlobalConfig
 {
 	public var toggleFS : Array<UInt>;
 	
+	public var anisotropy : Int;
+	
 	public function new()
 	{
 		toggleFS = [];
+		
+		anisotropy = 16;
 	}
 }
 
@@ -176,6 +180,17 @@ class UserConfig
 				if( f != null )
 				{
 					main.stage.frameRate = Std.parseFloat(f);
+				}
+			}
+			
+			{
+				var gfx = xmlGet(g, "Graphics");
+				
+				var e = xmlGet(gfx, "Grid");
+				var a = e.get("anisotropy");
+				if( a != null )
+				{
+					global.anisotropy = Std.parseInt(a);
 				}
 			}
 			
@@ -334,6 +349,29 @@ class UserConfig
 			{
 				e.set( "frameRate", ""+main.stage.frameRate );
 			}
+		}
+		
+		{
+			var gfx = xmlGet(g, "Graphics");
+			
+			var e = xmlGet(gfx, "Grid");
+			e.set("anisotropy", ""+global.anisotropy);
+			
+			var e = xmlGet(gfx, "Cycle");
+			if( e.get("model") == null ) e.set("model", "cycle.obj");
+			
+			var e = xmlGet(gfx, "CycleWall");
+			if( e.get("alpha") == null ) e.set("alpha", "0.8");
+			if( e.get("height") == null ) e.set("height", "0.75");
+			
+			var r = xmlGet(gfx, "RimWall");
+			var e = xmlGet(r, "Texture");
+			if( e.get("file") == null ) e.set("file", "rim_wall_test.png");
+			if( e.get("w") == null ) e.set("w", "50");
+			if( e.get("h") == null ) e.set("h", "25");
+			if( e.get("repeatY") == null ) e.set("repeatY", "false");
+			if( e.get("enabled") == null ) e.set("enabled", "true");
+			
 		}
 		
 		{
