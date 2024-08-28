@@ -98,6 +98,12 @@ class Main extends Sprite
 		fullscreen = false;
 		
 		this.userConfig = new UserConfig();
+		userConfig.load(this);
+		
+		openfl.Lib.current.stage.application.onExit.add(function(code)
+		{
+			userConfig.save(this);
+		});
 		
 		#if( !target.threaded && js )
 			// workers not working?!
@@ -356,6 +362,7 @@ class Main extends Sprite
 			
 			case stateQuit:
 			{
+				userConfig.save(this);
 			#if( sys )
 				Sys.exit(0);
 			#else
