@@ -116,6 +116,9 @@ class Cycle extends BaseObject
 	
 	public var rubberTime : Float;
 	
+	public var extraRubber : Float;
+	public var extraTime : Float;
+	
 	public var maxWallLen : Float;
 	
 	public var explRadius : Float;
@@ -160,6 +163,9 @@ class Cycle extends BaseObject
 		
 		rubber = 0;
 		speed = 20;
+		
+		extraRubber = 0;
+		extraTime = 0;
 		
 		xdir = 0;
 		ydir = 1;
@@ -211,6 +217,8 @@ class Cycle extends BaseObject
 		
 		this.speed *= 0.95;
 		
+		this.extraRubber = 1 + ( rubber / rubberMax * ( 1 + rubber / 4 ) );
+		
 		mkNewWall();
 		
 		
@@ -240,11 +248,14 @@ class Cycle extends BaseObject
 		}
 	}
 	
-	public function updateTo( t : Float ) : Bool
+	public function updateTo( t : Float, timestep : Float = 1 ) : Bool
 	{
 		if( t > time )
 		{
-			return update( t - time );
+			if( timestep == 1 )
+				return update( t - time );
+			else
+				return update( ( ( t - time ) + ( timestep * 6 ) ) / 7 );
 		}
 		return false;
 	}
@@ -330,7 +341,16 @@ class Cycle extends BaseObject
 			
 			if( rubber > rubberMax )
 			{
-				alive = false;
+				if( rubber > rubberMax + extraRubber )
+				{
+					alive = false;
+				}
+				else
+				{
+					time -= timestep;
+					speed = lastSpeed;
+					return true;
+				}
 				//game.eToSend.push(delState());
 			}
 			
@@ -352,7 +372,11 @@ class Cycle extends BaseObject
 			totalDist += move;
 		}
 		
-		if( rubber > 0 )
+		if( rubber > rubberMax )
+		{
+			rubber = rubberMax;
+		}
+		else if( rubber > 0 )
 		{
 			rubber -= ( timestep / rubberTime ) * rubber;
 		}

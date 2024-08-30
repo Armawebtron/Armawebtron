@@ -479,7 +479,7 @@ class Game
 						lastCountDown = 0;
 					}
 					
-					var count : Int = run( timestep, events );
+					var count : Int = run( gameTime, timestep, events );
 					
 					{
 						if( count == 0 )
@@ -513,7 +513,7 @@ class Game
 		return events;
 	}
 	
-	public function run( timestep : Float, events : Array<TGameEvent> )
+	public function run( time : Float, timestep : Float, events : Array<TGameEvent> )
 	{
 		var aliveCount : Int = cycles.length;
 		
@@ -524,7 +524,7 @@ class Game
 		
 		for( cycle in cycles )
 		{
-			if( cycle.alive && cycle.update( timestep ) )
+			if( cycle.alive && cycle.updateTo( time, timestep ) )
 			{
 				events.push( cycle.state() );
 			}
