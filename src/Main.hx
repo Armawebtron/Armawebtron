@@ -345,7 +345,11 @@ class Main extends Sprite
 						this.worker = sys.thread.Thread.create(() -> {
 							this.gamet = new Game();
 							lock.release();
+						#if( haxe_ver >= 4.2 )
 							sys.thread.Thread.runWithEventLoop( t_doGame );
+						#else
+							t_doGame();
+						#end
 						});
 						lock.wait();
 					}
