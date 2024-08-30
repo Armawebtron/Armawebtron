@@ -474,10 +474,12 @@ class Main extends Sprite
 				if( turnLeft != -1 )
 				{
 					sendMessage( m_turn(0, -1, turnLeft+1) );
+					userConfig.players[0].cam.lastTurnDir = -1;
 				}
 				else if( turnRight != -1 )
 				{
 					sendMessage( m_turn(0, 1, turnRight+1) );
+					userConfig.players[0].cam.lastTurnDir = 1;
 				}
 				
 				//;

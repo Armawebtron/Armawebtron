@@ -11,10 +11,14 @@ class Camera
 	public var pos : Vector3D;
 	public var lookAt : Vector3D;
 	
+	public var lastTurnDir : Int;
+	
 	public function new()
 	{
 		heading = 0;
 		smoothSpeed = 20;
+		
+		lastTurnDir = 0;
 		
 		pos = new Vector3D();
 		lookAt = new Vector3D();
@@ -57,6 +61,10 @@ class CustomCamera extends Camera
 	public var pitch : Float;
 	public var offset : Float;
 	
+	public var alreadyRotating : Bool;
+	
+	public var cdirSmooth : Float;
+	
 	public function new()
 	{
 		super();
@@ -70,21 +78,48 @@ class CustomCamera extends Camera
 		
 		riseFromSpeed = 0.4;
 		backFromSpeed = 0.5;
+		
+		alreadyRotating = false;
+		
+		cdirSmooth = 0;
 	}
 	
 	override public function run( timestep : Float, cycle : CycleView, cdir : Float )
 	{
-		var test = cdir - heading;
-		while( test < -Math.PI ) test += Math.PI+Math.PI;
-		while( test >  Math.PI ) test -= Math.PI+Math.PI;
+		// first calculate a fast rotation that
+		// we'll use later for the slower rotation
+		// this is a little silly, but it seems to work well
+		
+		var diff = ( cdir - cdirSmooth );
+		
+		while( diff < -Math.PI ) diff += Math.PI+Math.PI;
+		while( diff >  Math.PI ) diff -= Math.PI+Math.PI;
+		
+		var smooth = diff * 100;
+		if( smooth > 100 ) smooth = 100;
+		if( smooth < -100 ) smooth = -100;
+		
+		cdirSmooth += smooth * timestep;
+		
+		diff = ( cdir - cdirSmooth );
+		while( diff < -Math.PI ) diff += Math.PI+Math.PI;
+		while( diff >  Math.PI ) diff -= Math.PI+Math.PI;
+		if( Math.abs(diff) < Math.abs(diff) )
+		{
+			cdirSmooth = cdir;
+		}
+		
+		
+		// now work on the cam rotation
+		var test = cdirSmooth - heading;
 		
 		var mult : Float = 1;
-		if( test > Math.PI*0.8 || test < -Math.PI*0.8 ) mult = turnSpeed180;
+		if( test > Math.PI || test < -Math.PI ) mult = turnSpeed180;
 		
 		heading += test * turnSpeed * mult * timestep;
 		
 		// dont bug out camera at really high turn speeds
-		var test2 = cdir - heading;
+		var test2 = cdirSmooth - heading;
 		while(test2 < -Math.PI) test2 += Math.PI+Math.PI;
 		while(test2 >  Math.PI) test2 -= Math.PI+Math.PI;
 		if( Math.abs(test) < Math.abs(test2) )
