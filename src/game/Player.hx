@@ -49,6 +49,19 @@ class Player
 			0
 		);
 	}
+	
+	public function delState() : TGameEvent
+	{
+		return t_player(
+			id,
+			false,
+			name,
+			isAI,
+			cycleColor, color,
+			0, 0,
+			0
+		);
+	}
 }
 
 

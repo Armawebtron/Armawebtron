@@ -55,6 +55,9 @@ class VPlayer
 	
 	public var cycle : CycleView;
 	
+	public var color : UInt;
+	public var cycleColor : UInt;
+	
 	public var spectating : Bool;
 	
 	public function new()
@@ -63,6 +66,9 @@ class VPlayer
 		isAI = false;
 		cycle = null;
 		spectating = false;
+		
+		color = 0xaaaaaa;
+		cycleColor = 0xaaaaaa;
 	}
 }
 
@@ -259,6 +265,31 @@ class GameView extends Sprite
 					}
 				}
 				
+				case t_player(
+					id, exists, name, isAI,
+					cycleColor, wallColor,
+					score, ping,
+					team
+				):
+				{
+					var p = players[id];
+					if( p == null )
+					{
+						p = new VPlayer();
+						
+						if( exists )
+						{
+							players[id] = p;
+						}
+					}
+					
+					p.name = name;
+					p.isAI = isAI;
+					p.color = wallColor;
+					p.cycleColor = cycleColor;
+					p.spectating = ( team != 0 );
+				}
+				
 				case t_newCycle(id, owner, x, y, xdir, ydir):
 				{
 					var cycle = new CycleView();
@@ -340,6 +371,17 @@ class GameView extends Sprite
 						}
 						case wall_cycle:
 						{
+							var color : UInt = 0xaaaaaa;
+							
+							for( p in players )
+							{
+								if( p.cycle == cycles[owner] )
+								{
+									color = p.color;
+									break;
+								}
+							}
+							
 							/*var img = new BitmapTexture(Assets.getBitmapData("assets/cycle_trail_0.png"), true);
 							wall.material = new TextureMaterial(img);
 							wall.material.repeat = true;
@@ -347,7 +389,8 @@ class GameView extends Sprite
 							cast(wall.material,TextureMaterial).alpha = 0.99;
 							wall.sY = -0.74;
 							*/
-							cast(wall.material,ColorMaterial).color = 0xaaaaaa;
+							
+							cast(wall.material,ColorMaterial).color = color;
 							cast(wall.material,ColorMaterial).alpha = 0.8;
 							
 							wall.setHeight(0.75);

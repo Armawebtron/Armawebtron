@@ -132,6 +132,8 @@ class Game
 					p.cycleColor = cycleColor;
 					
 					players.push( p );
+					
+					eToSend.push( p.state() );
 				}
 			}
 			
@@ -341,6 +343,8 @@ class Game
 						if( p.isAI )
 						{
 							players.remove( p );
+							
+							events.push( p.delState() );
 						}
 					}
 				}
@@ -398,6 +402,8 @@ class Game
 				var i : UInt = 0;
 				for(p in players)
 				{
+					events.push( p.state() );
+					
 					if( !p.spectating )
 					{
 						var cycle = new Cycle(this);
