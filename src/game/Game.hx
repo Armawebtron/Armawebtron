@@ -174,6 +174,103 @@ class Game
 		}
 	}
 	
+	private function _blastHole( w : Wall,
+		startX : Float, startY : Float, 
+		wallX : Float, wallY : Float
+	) : Wall
+	{
+		// create new wall of same type before the hole
+		var w2 = Type.createInstance(Type.getClass(w),[]);
+		w2.x1 = w.x1; w2.y1 = w.y1;
+		w2.x2 = startX; w2.y2 = startY;
+		w2.dist = w.dist;
+		
+		
+		if( Std.isOfType( w, CycleWall ) )
+		{
+			var cw = cast( w, CycleWall ), cw2 = cast( w2, CycleWall );
+			
+			if( cw.owner != null )
+			{
+				cw.owner.walls.push( cw2 );
+				cw2.owner = cw.owner;
+			}
+		}
+		
+		// move the original wall's starting point to after the hole
+		w.x1 = wallX; w.y1 = wallY;
+		w.dist += TMath.pointDistance( startX, startY, w.x1, w.y1 );
+		
+		eToSend.push( w.state() );
+		
+		return w2;
+	}
+	
+	public function blastHole( x : Float, y : Float, radius : Float, type : Class<Wall> )
+	{
+		var dist : Float, dir : Float, xdir : Float, ydir : Float;
+		var wallX : Float, wallY : Float;
+		var mkHole : Bool, startX : Float = 0, startY : Float = 0;
+		var newWalls : Array<Wall> = [];
+		var i : UInt = 0;
+		for( w in walls )
+		{
+			if( Std.isOfType( w, type ) )
+			{
+				i++;
+				dist = w.getLength();
+				
+				dir = Math.atan2( ( w.y2 - w.y1 ), ( w.x2 - w.x1 ) );
+				xdir = Math.cos(dir)/100; ydir = Math.sin(dir)/100;
+				
+				mkHole = false;
+				
+				wallX = w.x1; wallY = w.y1;
+				
+				// loop through this wall by 0.01 chunks
+				while( dist > 0 )
+				{
+					wallX += xdir; wallY += ydir;
+					dist -= 0.01;
+					
+					// check if this piece of the wall is in the blast area
+					if( TMath.pointDistance( wallX, wallY, x, y ) <= radius )
+					{
+						if( !mkHole )
+						{
+							startX = wallX; startY = wallY;
+							
+							mkHole = true;
+						}
+					}
+					else if( mkHole )
+					{
+						mkHole = false;
+						
+						newWalls.push( _blastHole( w, startX, startY, wallX, wallY ) );
+					}
+				}
+				
+				if( mkHole )
+				{
+					mkHole = false;
+					
+					newWalls.push( _blastHole( w, startX, startY, wallX, wallY ) );
+				}
+			}
+		}
+		
+		trace(i+" considered");
+		
+		for( w in newWalls )
+		{
+			eToSend.push( w.newState() );
+			walls.push( w );
+		}
+		
+		trace(newWalls.length+" new walls");
+	}
+	
 	//public function loop() : Array<Array<Dynamic>>
 	public function loop() : Array<TGameEvent>
 	{

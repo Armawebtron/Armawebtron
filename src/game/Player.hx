@@ -103,10 +103,19 @@ class Cycle extends BaseObject
 	
 	public var rubberTime : Float;
 	
+	public var maxWallLen : Float;
+	
+	public var explRadius : Float;
+	public var explSpeedMult : Float;
+	
+	
 	public var brake : Float;
 	public var braking : Bool;
 	
 	public var walls : Array<CycleWall>;
+	public var wallLen : Float;
+	
+	public var totalDist : Float;
 	
 	public var lastTurnTime : Float;
 	
@@ -128,6 +137,12 @@ class Cycle extends BaseObject
 		rubberMax = 5;
 		rubberTime = 10;
 		
+		explRadius = 2;
+		explSpeedMult = 0;
+		
+		maxWallLen = 400;
+		
+		
 		alive = true;
 		
 		rubber = 0;
@@ -140,8 +155,11 @@ class Cycle extends BaseObject
 		turnQueue = [];
 		
 		walls = [];
+		wallLen = 0;
 		
 		wallAccel = new CycleAccel(this);
+		
+		totalDist = 0;
 		
 		lastTurnTime = 0;
 		
@@ -163,6 +181,8 @@ class Cycle extends BaseObject
 		
 		w.x1 = this.x; w.y1 = this.y;
 		w.x2 = this.x; w.y2 = this.y;
+		
+		w.dist = totalDist;
 		
 		this.walls.push(w);
 		game.walls.push(w);
@@ -315,6 +335,8 @@ class Cycle extends BaseObject
 			
 			this.x += move * xdir;
 			this.y += move * ydir;
+			
+			totalDist += move;
 		}
 		
 		if( rubber > 0 )
@@ -330,14 +352,24 @@ class Cycle extends BaseObject
 		{
 			var wall = walls[walls.length-1];
 			wall.x2 = x; wall.y2 = y;
+			wallLen += move;
 			
 			game.eToSend.push(wall.state());
 		}
 		else
 		{
 			mkNewWall();
-			this.x += this.xdir;
-			this.y += this.ydir;
+			//this.x += this.xdir;
+			//this.y += this.ydir;
+		}
+		
+		if( !alive )
+		{
+			game.blastHole( x, y, explRadius + ( explSpeedMult * speed ), CycleWall );
+		}
+		else
+		{
+			wallShrink();
 		}
 		
 		collideTime = time + ( ( dist.f - minDist.f ) / this.speed );
@@ -361,6 +393,51 @@ class Cycle extends BaseObject
 		return true;
 	}
 	
+	public function wallShrink()
+	{
+		var diff = wallLen - maxWallLen;
+		
+		var minD : Float = Math.POSITIVE_INFINITY;
+		var w : CycleWall = null;
+		
+		if( diff > 0 )
+		{
+			for( w2 in walls )
+			{
+				if( w2.dist < minD )
+				{
+					minD = w2.dist;
+					w = w2;
+				}
+			}
+			
+			if( w != null )
+			{
+				var len = w.getLength();
+				if( diff >= len )
+				{
+					this.walls.remove(w);
+					game.walls.remove(w);
+					
+					wallLen -= len;
+					
+					game.eToSend.push( w.delState() );
+				}
+				else
+				{
+					var dir = Math.atan2( ( w.y2 - w.y1 ), ( w.x2 - w.x1 ) );
+					var xdir = Math.cos(dir), ydir = Math.sin(dir);
+					
+					w.x1 += xdir * diff;
+					w.y1 += ydir * diff;
+					
+					wallLen -= diff;
+					
+					game.eToSend.push( w.state() );
+				}
+			}
+		}
+	}
 	override public function objType() : GObjType
 	{
 		return obj_cycle;
