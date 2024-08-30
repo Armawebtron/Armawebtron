@@ -84,6 +84,7 @@ class Main extends Sprite
 		addEventListener(Event.ENTER_FRAME, render);
 		stage.addEventListener(Event.RESIZE, onresize);
 		stage.addEventListener(KeyboardEvent.KEY_DOWN, onkeydown);
+		stage.addEventListener(KeyboardEvent.KEY_UP, onkeyup);
 		
 		this.grid = new GridAnimation();
 		this.addChild(this.grid);
@@ -485,8 +486,52 @@ class Main extends Sprite
 					sendMessage( m_turn(0, 1, turnRight+1) );
 					userConfig.players[0].cam.lastTurnDir = 1;
 				}
+				else if( userConfig.players[0].glanceBack.indexOf(e.keyCode) != -1 )
+				{
+					userConfig.players[0].cam.glanceBack = true;
+				}
+				else if( userConfig.players[0].glanceFwd.indexOf(e.keyCode) != -1 )
+				{
+					userConfig.players[0].cam.glanceFwd = true;
+				}
+				else if( userConfig.players[0].glanceLeft.indexOf(e.keyCode) != -1 )
+				{
+					userConfig.players[0].cam.glanceLeft = true;
+				}
+				else if( userConfig.players[0].glanceRight.indexOf(e.keyCode) != -1 )
+				{
+					userConfig.players[0].cam.glanceRight = true;
+				}
 				
 				//;
+			}
+			
+			default:
+		}
+	}
+	
+	private function onkeyup( e : KeyboardEvent )
+	{
+		switch( currState )
+		{
+			case stateGame:
+			{
+				if( userConfig.players[0].glanceBack.indexOf(e.keyCode) != -1 )
+				{
+					userConfig.players[0].cam.glanceBack = false;
+				}
+				else if( userConfig.players[0].glanceFwd.indexOf(e.keyCode) != -1 )
+				{
+					userConfig.players[0].cam.glanceFwd = false;
+				}
+				else if( userConfig.players[0].glanceLeft.indexOf(e.keyCode) != -1 )
+				{
+					userConfig.players[0].cam.glanceLeft = false;
+				}
+				else if( userConfig.players[0].glanceRight.indexOf(e.keyCode) != -1 )
+				{
+					userConfig.players[0].cam.glanceRight = false;
+				}
 			}
 			
 			default:

@@ -13,6 +13,13 @@ class Camera
 	
 	public var lastTurnDir : Int;
 	
+	public var lastGlance : Bool;
+	public var glanceDir : Float;
+	public var glanceBack : Bool;
+	public var glanceFwd : Bool;
+	public var glanceLeft : Bool;
+	public var glanceRight : Bool;
+	
 	public function new()
 	{
 		heading = 0;
@@ -22,6 +29,10 @@ class Camera
 		
 		pos = new Vector3D();
 		lookAt = new Vector3D();
+		
+		glanceBack = glanceFwd = glanceLeft = glanceRight = false;
+		glanceDir = 0;
+		lastGlance = false;
 	}
 	
 	public function idle( timestep : Float )
@@ -61,7 +72,7 @@ class CustomCamera extends Camera
 	public var pitch : Float;
 	public var offset : Float;
 	
-	public var alreadyRotating : Bool;
+	public var finishGlancing : Float;
 	
 	public var cdirSmooth : Float;
 	
@@ -79,13 +90,40 @@ class CustomCamera extends Camera
 		riseFromSpeed = 0.4;
 		backFromSpeed = 0.5;
 		
-		alreadyRotating = false;
+		finishGlancing = 0;
 		
 		cdirSmooth = 0;
 	}
 	
 	override public function run( timestep : Float, cycle : CycleView, cdir : Float )
 	{
+		// check if the user wants to glance
+		if( glanceBack || glanceLeft || glanceRight || glanceFwd )
+		{
+			if( !lastGlance )
+			{
+				lastGlance = true;
+				glanceDir = cdir;
+			}
+			
+			cdir = glanceDir;
+			
+			if( glanceLeft )
+			{
+				cdir -= Math.PI / 2;
+			}
+			if( glanceRight )
+			{
+				cdir += Math.PI / 2;
+			}
+		}
+		else if( lastGlance )
+		{
+			// user is no longer glancing, stop checking
+			lastGlance = false;
+			finishGlancing = 0.1;
+		}
+		
 		// first calculate a fast rotation that
 		// we'll use later for the slower rotation
 		// this is a little silly, but it seems to work well
@@ -116,6 +154,14 @@ class CustomCamera extends Camera
 		var mult : Float = 1;
 		if( test > Math.PI || test < -Math.PI ) mult = turnSpeed180;
 		
+		// camera turn speed increase while glancing
+		if( lastGlance ) mult = 10;
+		else if( finishGlancing > 0 )
+		{
+			finishGlancing -= timestep;
+			mult = 10;
+		}
+		
 		heading += test * turnSpeed * mult * timestep;
 		
 		// dont bug out camera at really high turn speeds
@@ -125,6 +171,12 @@ class CustomCamera extends Camera
 		if( Math.abs(test) < Math.abs(test2) )
 		{
 			heading = cdir;
+		}
+		
+		// don't pass back glances through rotation code
+		if( glanceBack )
+		{
+			heading -= Math.PI;
 		}
 		
 		// calculate camera properties
@@ -143,6 +195,12 @@ class CustomCamera extends Camera
 		lookAt.x = cycle.x + ( Math.cos(heading) * loffset );
 		lookAt.z = cycle.z + ( Math.sin(heading) * loffset );
 		lookAt.y = cycle.y;
+		
+		// rotation code should never see back glance
+		if( glanceBack )
+		{
+			heading += Math.PI;
+		}
 	}
 }
 

@@ -20,6 +20,11 @@ class PlayerConfig
 	
 	public var jump : Array<UInt>;
 	
+	public var glanceLeft : Array<UInt>;
+	public var glanceRight : Array<UInt>;
+	public var glanceFwd : Array<UInt>;
+	public var glanceBack : Array<UInt>;
+	
 	public var specMode : Bool;
 	
 	public var cam : Camera;
@@ -38,6 +43,11 @@ class PlayerConfig
 		
 		brake = [];
 		toggleBrake = [];
+		
+		glanceBack = [];
+		glanceFwd = [];
+		glanceLeft = [];
+		glanceRight = [];
 		
 		jump = [];
 		
@@ -266,6 +276,43 @@ class UserConfig
 					var i : Array<Int> = haxe.Json.parse(k);
 					for( b in i ) { p.toggleBrake.push( b ); }
 				}
+				
+				
+				var e = xmlGet(d, "glance");
+				var k = e.get("left");
+				if( k != null )
+				{
+					p.glanceLeft.splice(0, p.glanceLeft.length);
+					var i : Array<Int> = haxe.Json.parse(k);
+					trace(haxe.Json.parse(k));
+					for( b in i ) { p.glanceLeft.push( b ); }
+				}
+				
+				var k = e.get("right");
+				if( k != null )
+				{
+					p.glanceRight.splice(0, p.glanceRight.length);
+					var i : Array<Int> = haxe.Json.parse(k);
+					for( b in i ) { p.glanceRight.push( b ); }
+				}
+				
+				var k = e.get("back");
+				if( k != null )
+				{
+					p.glanceBack.splice(0, p.glanceBack.length);
+					var i : Array<Int> = haxe.Json.parse(k);
+					trace(haxe.Json.parse(k));
+					for( b in i ) { p.glanceBack.push( b ); }
+				}
+				
+				var k = e.get("forward");
+				if( k != null )
+				{
+					p.glanceFwd.splice(0, p.glanceFwd.length);
+					var i : Array<Int> = haxe.Json.parse(k);
+					trace(haxe.Json.parse(k));
+					for( b in i ) { p.glanceFwd.push( b ); }
+				}
 			}
 		}
 	}
@@ -288,6 +335,12 @@ class UserConfig
 		e.set("right", haxe.Json.stringify(p.turnRight));
 		e.set("brake", haxe.Json.stringify(p.brake));
 		e.set("toggleBrake", haxe.Json.stringify(p.toggleBrake));
+		
+		var e = xmlGet(k, "glance");
+		e.set("left", haxe.Json.stringify(p.glanceLeft));
+		e.set("right", haxe.Json.stringify(p.glanceRight));
+		e.set("forward", haxe.Json.stringify(p.glanceFwd));
+		e.set("back", haxe.Json.stringify(p.glanceBack));
 	}
 	
 	public function save( main : Main )

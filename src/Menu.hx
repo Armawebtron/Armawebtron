@@ -166,6 +166,19 @@ class CfgKB extends CfgCommon
 		addChild(new KeyBindControl(user().players[0].brake));
 		
 		
+		addChild(new Label("Glance Forward:"));
+		addChild(new KeyBindControl(user().players[0].glanceFwd));
+		
+		addChild(new Label("Glance Back:"));
+		addChild(new KeyBindControl(user().players[0].glanceBack));
+		
+		addChild(new Label("Glance Left:"));
+		addChild(new KeyBindControl(user().players[0].glanceLeft));
+		
+		addChild(new Label("Glance Right:"));
+		addChild(new KeyBindControl(user().players[0].glanceRight));
+		
+		
 	}
 }
 
