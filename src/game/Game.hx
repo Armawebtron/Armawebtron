@@ -528,7 +528,7 @@ class Game
 			{
 				events.push( cycle.state() );
 			}
-			else
+			else if( !cycle.alive )
 			{
 				--aliveCount;
 			}
