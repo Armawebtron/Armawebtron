@@ -110,11 +110,11 @@ class CustomCamera extends Camera
 			
 			if( glanceLeft )
 			{
-				cdir -= Math.PI / 2;
+				cdir += Math.PI / 2;
 			}
 			if( glanceRight )
 			{
-				cdir += Math.PI / 2;
+				cdir -= Math.PI / 2;
 			}
 		}
 		else if( lastGlance )
