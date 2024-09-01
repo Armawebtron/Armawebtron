@@ -163,6 +163,8 @@ class Cycle extends BaseObject
 		
 		rubber = 0;
 		speed = 20;
+		brake = 1;
+		braking = false;
 		
 		extraRubber = 0;
 		extraTime = 0;
@@ -313,8 +315,19 @@ class Cycle extends BaseObject
 		
 		if( this.braking )
 		{
-			accel -= 10;
+			if( this.brake > 0 )
+			{
+				accel -= 30;
+				this.brake -= timestep * 1;
+			}
 		}
+		else if( this.brake < 1 )
+		{
+			this.brake += timestep * 0.1;
+		}
+		
+		if(this.brake > 1) this.brake = 1;
+		else if(this.brake < 0) this.brake = 0;
 		
 		accel += wallAccel.calc();
 		
@@ -497,6 +510,7 @@ class Cycle extends BaseObject
 			x, y, 
 			xdir, ydir,
 			collision || game.paused || time < 0,
+			brake,
 			speed, rubber
 		);
 	}

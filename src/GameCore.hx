@@ -23,6 +23,7 @@ enum TGameEvent
 	// input
 	m_turn( id : UInt, dir : Int, key : UInt );
 	m_brake( id : UInt, braking : Bool );
+	m_brakeToggle( id: UInt );
 	m_away( id : UInt, away : Bool );
 	
 	m_chat( id : UInt, message : String );
@@ -65,6 +66,7 @@ enum TGameEvent
 		x: Float, y: Float, 
 		xdir: Float, ydir: Float,
 		stopped : Bool,
+		brakes: Float,
 		speed: Float, rubber: Float
 	);
 	

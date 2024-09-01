@@ -67,6 +67,8 @@ class Main extends Sprite
 	public var fullscreen : Bool;
 	public var disableThread : Bool;
 	
+	public var keyDown : Map<UInt, Bool>;
+	
 	public function initMain()
 	{
 		threadEnabled = true;
@@ -139,6 +141,8 @@ class Main extends Sprite
 		
 		gameActivated = false;
 		keepGame = false;
+		
+		keyDown = [];
 		
 		this.setState( stateMenu );
 	}
@@ -478,13 +482,30 @@ class Main extends Sprite
 				
 				if( turnLeft != -1 )
 				{
+					if( keyDown[e.keyCode] ) return;
+					keyDown[e.keyCode] = true;
+					
 					sendMessage( m_turn(0, -1, turnLeft+1) );
 					userConfig.players[0].cam.lastTurnDir = -1;
 				}
 				else if( turnRight != -1 )
 				{
+					if( keyDown[e.keyCode] ) return;
+					keyDown[e.keyCode] = true;
+					
 					sendMessage( m_turn(0, 1, turnRight+1) );
 					userConfig.players[0].cam.lastTurnDir = 1;
+				}
+				else if( userConfig.players[0].brake.indexOf(e.keyCode) != -1 )
+				{
+					sendMessage( m_brake(0, true) );
+				}
+				else if( userConfig.players[0].toggleBrake.indexOf(e.keyCode) != -1 )
+				{
+					if( keyDown[e.keyCode] ) return;
+					keyDown[e.keyCode] = true;
+					
+					sendMessage( m_brakeToggle(0) );
 				}
 				else if( userConfig.players[0].glanceBack.indexOf(e.keyCode) != -1 )
 				{
@@ -532,10 +553,16 @@ class Main extends Sprite
 				{
 					userConfig.players[0].cam.glanceRight = false;
 				}
+				else if( userConfig.players[0].brake.indexOf(e.keyCode) != -1 )
+				{
+					sendMessage( m_brake(0, false) );
+				}
 			}
 			
 			default:
 		}
+		
+		if( keyDown[e.keyCode] ) keyDown[e.keyCode] = false;
 	}
 	
 	private function onresize( e : Event = null )

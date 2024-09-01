@@ -81,6 +81,8 @@ class CycleView extends ObjectContainer3D
 	public var isAlive : Bool;
 	public var speed : Float;
 	public var rubber : Float;
+	public var brake : Float;
+	public var lastBrake : Float;
 	
 	public var lastTime : Float;
 	public var stopped : Bool;
@@ -133,6 +135,8 @@ class CycleView extends ObjectContainer3D
 		this.isAlive = true;
 		this.speed = 0;
 		this.rubber = 0;
+		this.brake = 0;
+		this.lastBrake = 0;
 		this.stopped = true;
 	}
 }
@@ -172,6 +176,8 @@ class WallView extends Mesh
 		
 		this.x = (x2+x1)/2;
 		this.z = (y2+y1)/2;
+		
+		_boundsInvalid = true;
 		
 		updateUV();
 	}
@@ -314,7 +320,7 @@ class GameView extends Sprite
 					cycle.lastTime = Lib.getTimer();
 				}
 				
-				case t_cycle(id, alive, x, y, xdir, ydir, stopped, speed, rubber):
+				case t_cycle(id, alive, x, y, xdir, ydir, stopped, brake, speed, rubber):
 				{
 					var cycle = cycles[id];
 					
@@ -338,8 +344,10 @@ class GameView extends Sprite
 						}
 					}
 					cycle.lastTime = Lib.getTimer();
+					cycle.lastBrake = cycle.brake;
 					cycle.speed = speed;
 					cycle.rubber = rubber;
+					cycle.brake = brake;
 					cycle.stopped = stopped;
 				}
 				
@@ -598,7 +606,7 @@ class GameView extends Sprite
 			cam.run( timestep, cycle, cdir );
 			
 			// update hud
-			hud.setMeters( cycle.rubber, cycle.speed, 0, false );
+			hud.setMeters( cycle.rubber, cycle.speed, cycle.brake, ( cycle.brake < cycle.lastBrake || cycle.brake == 1 ) );
 			hud.alpha += timestep;
 			
 			if( hud.alpha > 1 ) hud.alpha = 1;
