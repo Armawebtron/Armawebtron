@@ -99,6 +99,32 @@ class Game
 	
 	var lastCountDown : Int;
 	
+	public function playerByLocalID( id : UInt ) : Player
+	{
+		for( p in players )
+		{
+			if( p.localID == id )
+			{
+				return p;
+			}
+		}
+		
+		return null;
+	}
+	
+	public function cycleByLocalID( id : UInt ) : Cycle
+	{
+		for( p in players )
+		{
+			if( p.localID == id )
+			{
+				return p.cycle;
+			}
+		}
+		
+		return null;
+	}
+	
 	public function recvMsg( e : TGameEvent )
 	{
 		switch(e)
@@ -111,15 +137,7 @@ class Game
 				color, cycleColor
 			):
 			{
-				var p : Player = null;
-				for( s in players )
-				{
-					if( s.localID == id )
-					{
-						p = s;
-						break;
-					}
-				}
+				var p : Player = playerByLocalID( id );
 				
 				if( p == null )
 				{
@@ -135,15 +153,41 @@ class Game
 					
 					eToSend.push( p.state() );
 				}
+				else
+				{
+					p.name = name;
+					p.color = color;
+					p.cycleColor = cycleColor;
+				}
 			}
 			
 			case m_turn( id, dir, key ):
 			{
-				var cycle : Cycle = players[0].cycle;
+				var cycle : Cycle = cycleByLocalID(id+1);
 				
 				if( cycle != null )
 				{
 					cycle.doTurn(dir);
+				}
+			}
+			
+			case m_brake( id, braking ):
+			{
+				var cycle : Cycle = cycleByLocalID(id+1);
+				
+				if( cycle != null )
+				{
+					cycle.braking = braking;
+				}
+			}
+			
+			case m_brakeToggle( id ):
+			{
+				var cycle : Cycle = cycleByLocalID(id+1);
+				
+				if( cycle != null )
+				{
+					cycle.braking = !cycle.braking;
 				}
 			}
 			
