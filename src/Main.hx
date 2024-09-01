@@ -290,7 +290,7 @@ class Main extends Sprite
 			if ( time < nextTime )
 				Sys.sleep( nextTime - time );
 			
-			nextTime = time + 0.005;
+			nextTime = time + 0.002;
 		}
 	}
 #end
