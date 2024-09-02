@@ -150,6 +150,8 @@ class CfgKB extends CfgCommon
 	{
 		super();
 		
+		this.layout = new FormLayout();
+		
 		addChild(new Label("Turn Left:"));
 		addChild(new KeyBindControl(user().players[0].turnLeft));
 		
@@ -162,8 +164,10 @@ class CfgKB extends CfgCommon
 		addChild(new Label("Toggle Brake:"));
 		addChild(new KeyBindControl(user().players[0].toggleBrake));
 		
+		/*
 		addChild(new Label("Jump:"));
-		addChild(new KeyBindControl(user().players[0].brake));
+		addChild(new KeyBindControl(user().players[0].jump));
+		*/
 		
 		
 		addChild(new Label("Glance Forward:"));
@@ -188,10 +192,11 @@ class CfgPlayer extends CfgCommon
 	{
 		super();
 		
-		var namelabel = new Label();
-		namelabel.text = "Name:";
-		addChild(namelabel);
+		
+		var item = new FormItem();
+		item.text = "Name:";
 		var name = new TextInput();
+		item.content = name;
 		if( user().players[0] != null )
 		{
 			name.text = user().players[0].name;
@@ -203,13 +208,13 @@ class CfgPlayer extends CfgCommon
 				user().players[0].name = name.text;
 			}
 		});
-		addChild(name);
+		addChild(item);
 		
 		
-		var tnamelabel = new Label();
-		tnamelabel.text = "Teamname:";
-		addChild(tnamelabel);
+		var item = new FormItem();
+		item.text = "Teamname:";
 		var teamname = new TextInput();
+		item.content = teamname;
 		if( user().players[0] != null )
 		{
 			teamname.text = user().players[0].teamName;
@@ -221,13 +226,13 @@ class CfgPlayer extends CfgCommon
 				user().players[0].teamName = teamname.text;
 			}
 		});
-		addChild(teamname);
+		addChild(item);
 		
 		
-		var tspeclabel = new Label();
-		tspeclabel.text = "Spectator:";
-		addChild(tspeclabel);
+		var item = new FormItem();
+		item.text = "Spectator:";
 		var specMode = new ToggleSwitch();
+		item.content = specMode;
 		specMode.selected = false;
 		if( user().players[0] != null )
 		{
@@ -240,13 +245,14 @@ class CfgPlayer extends CfgCommon
 				user().players[0].specMode = specMode.selected;
 			}
 		});
-		addChild(specMode);
+		addChild(item);
 		
 		
+		var item = new FormItem();
+		item.text = "Wall Color:";
 		var tcolorlabel = new Label();
-		tcolorlabel.text = "Wall Color:";
-		addChild(tcolorlabel);
 		var color = new PopUpSwatchColorPicker();
+		item.content = color;
 		if( user().players[0] != null )
 		{
 			color.selectedColor = user().players[0].color;
@@ -258,13 +264,13 @@ class CfgPlayer extends CfgCommon
 				user().players[0].color = color.selectedColor;
 			}
 		});
-		addChild(color);
+		addChild(item);
 		
 		
-		var tcolorlabel = new Label();
-		tcolorlabel.text = "Cycle Color:";
-		addChild(tcolorlabel);
+		var item = new FormItem();
+		item.text = "Cycle Color:";
 		var cycleColor = new PopUpSwatchColorPicker();
+		item.content = cycleColor;
 		if( user().players[0] != null )
 		{
 			cycleColor.selectedColor = user().players[0].colorCycle;
@@ -276,7 +282,7 @@ class CfgPlayer extends CfgCommon
 				user().players[0].colorCycle = cycleColor.selectedColor;
 			}
 		});
-		addChild(cycleColor);
+		addChild(item);
 		
 		
 		
