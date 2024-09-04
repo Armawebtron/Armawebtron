@@ -13,6 +13,8 @@ import game.Sensors;
 import game.Object;
 import game.Player;
 
+import network.*;
+
 #if noOpenFL
 class Lib
 {
@@ -48,6 +50,9 @@ class Game
 		
 		trace(roundState);
 	}
+	
+	public var netCli : Client;
+	//var netSvr : 
 	
 	public var players : Array<Player>;
 	public var cycles : Array<Cycle>;

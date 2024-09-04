@@ -21,7 +21,9 @@ import controls.*;
 import feathers.data.*;
 import feathers.layout.*;
 
+
 import Main;
+import ServerBrowser;
 
 
 enum Menus
@@ -356,86 +358,6 @@ class ConfigMenu extends Sprite
 }
 
 
-class ServerBrowser extends Sprite
-{
-	var view : GridView;
-	var actions : LayoutGroup;
-	//var actions : ButtonBar;
-	
-	public function new()
-	{
-		super();
-		
-		view = new GridView();
-		addChild(view);
-		
-		view.dataProvider = new ArrayCollection([
-			{ name: "- The Grid | discord #pickup | SBT | DC - ", type: "sumo", ping: "0", users: "0/12" }
-		]);
-		
-		view.columns = new ArrayCollection([
-			new GridViewColumn("Server Name", (data) -> data.name, 400),
-			new GridViewColumn("Type", (data) -> data.type),
-			new GridViewColumn("Ping", (data) -> data.ping),
-			new GridViewColumn("Users", (data) -> data.users)
-		]);
-		
-		var bg = new Shape();
-		bg.graphics.beginFill(0xFFFFFF, 0.75);
-		bg.graphics.drawRect(0, 0, 100, 100);
-		bg.graphics.endFill();
-		view.backgroundSkin = bg;
-		
-		
-		actions = new LayoutGroup();
-		
-		var buttons = new ButtonBar();
-		this.addChild(actions);
-		
-		buttons.dataProvider = new ArrayCollection([
-			{ text: "Host Server" },
-			{ text: "Refresh" },
-			{ text: "Info" },
-			{ text: "Connect" }
-		]);
-		buttons.itemToText = (item:Dynamic) -> {
-			return item.text;
-		};
-		actions.addChild(buttons);
-	}
-	
-	public function activate()
-	{
-		Alert.show( "This feature doesn't work!", "Error", ["Dismiss"] );
-	}
-	
-	public function onresize( w : UInt, h : UInt )
-	{
-		view.y = 120;
-		view.height = h - 140;
-		
-		view.x = 20;
-		view.width = w - 40;
-		
-		var nW = view.width/1.8;
-		
-		if( nW < 280 )
-		{
-			nW = 280;
-		}
-		
-		view.columns.get(0).width = nW;
-		
-		actions.x = 20;
-		actions.width = w - 40;
-		
-		actions.y = 120 + view.height - 20;
-		
-		view.height -= 26;
-	}
-}
-
-
 class Menu extends Sprite
 {
 	private var title : TextField;
@@ -615,6 +537,11 @@ class Menu extends Sprite
 			}
 		}
 		
+		if( svrMenu != null )
+		{
+			svrMenu.run();
+		}
+		
 		
 	}
 	
@@ -786,6 +713,8 @@ class Menu extends Sprite
 				title.text = "Internet Game";
 				
 				initUI();
+				
+				ServerBrowser.m = main;
 				
 				addChild(svrMenu);
 				svrMenu.onresize(stage.stageWidth, stage.stageHeight);

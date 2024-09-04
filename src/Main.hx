@@ -25,6 +25,8 @@ import game.Game;
 
 import UserConfig;
 
+import network.*;
+
 enum State
 {
 	stateMenu;
@@ -51,6 +53,8 @@ class Main extends Sprite
 	var worker : js.html.Worker;
 #end
 	
+	public var netMult : Array<Client>;
+	
 	var currState : State;
 	
 	public function new()
@@ -68,6 +72,18 @@ class Main extends Sprite
 	public var disableThread : Bool;
 	
 	public var keyDown : Map<UInt, Bool>;
+	
+	public function onExit()
+	{
+		userConfig.save(this);
+		for( n in netMult )
+		{
+			if( n.clientID != 0 )
+			{
+				n.disconnect();
+			}
+		}
+	}
 	
 	public function initMain()
 	{
@@ -107,10 +123,10 @@ class Main extends Sprite
 		
 		openfl.Lib.current.stage.application.onExit.add(function(code)
 		{
-			userConfig.save(this);
+			this.onExit();
 		});
 		#if( js )
-			js.Browser.window.onbeforeunload = ( (e) -> { userConfig.save(this); return null; } );
+			js.Browser.window.onbeforeunload = ( (e) -> { this.onExit(); return null; } );
 		#end
 		
 		if( disableThread )
@@ -142,6 +158,8 @@ class Main extends Sprite
 		gameActivated = false;
 		keepGame = false;
 		
+		netMult = [];
+		
 		keyDown = [];
 		
 		this.setState( stateMenu );
@@ -165,6 +183,18 @@ class Main extends Sprite
 	
 	public function render(e : Event)
 	{
+		if( netMult.length > 0 )
+		{
+			for( n in netMult )
+			{
+				n.run();
+				if( n.done )
+				{
+					netMult.remove(n);
+				}
+			}
+		}
+		
 		switch( currState )
 		{
 			case stateMenu:
