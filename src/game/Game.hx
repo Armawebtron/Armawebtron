@@ -46,12 +46,26 @@ class Game
 	function nextState()
 	{
 		var e = Type.allEnums(RoundStates);
-		roundState = e[e.indexOf(roundState)+1];
+		if( netCli == null )
+		{
+			roundState = e[e.indexOf(roundState)+1];
+		}
+		else
+		{
+			var r = e.indexOf(roundState);
+			var n = e.indexOf(netState);
+			
+			if( n != r )
+			{
+				roundState = e[e.indexOf(roundState)+1];
+			}
+		}
 		
 		trace(roundState);
 	}
 	
 	public var netCli : Client;
+	public var netState : RoundStates;
 	//var netSvr : 
 	
 	public var players : Array<Player>;
@@ -194,6 +208,13 @@ class Game
 				{
 					cycle.braking = !cycle.braking;
 				}
+			}
+			
+			case m_connect( host, port ):
+			{
+				this.netCli = new Client( udp( host, port ), this );
+				this.netCli.connect();
+				netState = R_WAIT;
 			}
 			
 			case m_pause:
@@ -341,6 +362,31 @@ class Game
 		
 		var delta = time - this.lastTime;
 		var timestep : Float = delta / 1000.0;
+		
+		
+		if( netCli != null )
+		{
+			netCli.run();
+			switch( roundState )
+			{
+				case R_PLAY:
+				{
+					// pass
+				}
+				
+				default:
+				{
+					var e = Type.allEnums(RoundStates);
+					var r = e.indexOf(roundState);
+					var n = e.indexOf(netState);
+					
+					if( n == r )
+					{
+						return events;
+					}
+				}
+			}
+		}
 		
 		
 		switch( roundState )

@@ -13,6 +13,9 @@ import feathers.data.*;
 import feathers.layout.*;
 import feathers.skins.activity.*;
 
+import openfl.events.*;
+import feathers.events.*;
+
 
 import Main;
 import Color;
@@ -20,6 +23,8 @@ import network.*;
 
 class BServer
 {
+	public var m : Main;
+	
 	public var host : String;
 	public var hostByServer : String;
 	public var port : UInt;
@@ -41,7 +46,7 @@ class BServer
 	
 	public var type : String;
 	
-	public function new()
+	public function new( n : Main )
 	{
 		name = "";
 		
@@ -58,6 +63,8 @@ class BServer
 		
 		waiting = true;
 		online = false;
+		
+		m = n;
 	}
 	
 	public function getName() : String
@@ -84,6 +91,39 @@ class BServer
 	{
 		if( !online ) return "offline";
 		return players+" / "+maxPlayers;
+	}
+	
+	public function poll()
+	{
+	#if( target.threaded )
+		sys.thread.Thread.create(() -> {
+			// let's hope this is good enough...
+			try
+			{
+				var f = new FetchClient( udp(host, port), null, this );
+				f.socket.setBlocking(true);
+				f.m = m;
+				f.getInfo();
+				f.recv();
+			}
+			catch(e)
+			{
+				online = false;
+			}
+		});
+	#else
+		try
+		{
+			var f = new FetchClient( udp(host, port), null, this );
+			f.m = m;
+			f.getInfo();
+			m.netMult.push(f);
+		}
+		catch(e)
+		{
+			online = false;
+		}
+	#end
 	}
 }
 
@@ -134,7 +174,7 @@ class FetchClient extends Client
 				
 				if( add )
 				{
-					b = new BServer();
+					b = new BServer(m);
 					b.host = host;
 					b.port = port;
 					list.add( b );
@@ -144,17 +184,7 @@ class FetchClient extends Client
 				{
 					if( host != "" )
 					{
-						try
-						{
-							var f = new FetchClient( udp(host, port), this.list, b );
-							f.m = m;
-							f.getInfo();
-							m.netMult.push(f);
-						}
-						catch(e)
-						{
-							
-						}
+						b.poll();
 					}
 				}
 				
@@ -202,6 +232,8 @@ class ServerBrowser extends Sprite
 	
 	var view : GridView;
 	var actions : LayoutGroup;
+	var buttons : ButtonBar;
+	
 	var loading : ActivityIndicator;
 	var loadingAct : Bool;
 	
@@ -218,8 +250,10 @@ class ServerBrowser extends Sprite
 		view = new GridView();
 		addChild(view);
 		
+		var b = new BServer(m);
+		b.host = "127.0.0.1"; b.port = 4534;
 		view.dataProvider = new ArrayCollection([
-			new BServer(),
+			b,
 		]);
 		
 		view.columns = new ArrayCollection([
@@ -238,18 +272,29 @@ class ServerBrowser extends Sprite
 		
 		actions = new LayoutGroup();
 		
-		var buttons = new ButtonBar();
+		buttons = new ButtonBar();
 		this.addChild(actions);
 		
 		buttons.dataProvider = new ArrayCollection([
-			{ text: "Host Server" },
-			{ text: "Refresh" },
-			{ text: "Info" },
-			{ text: "Connect" }
+			{ text: "Host Server", call: hostServer },
+			{ text: "Refresh", call: refresh },
+			{ text: "Info", call: info },
+			{ text: "Connect", call: connect },
 		]);
 		buttons.itemToText = (item:Dynamic) -> {
 			return item.text;
 		};
+		buttons.addEventListener(ButtonBarEvent.ITEM_TRIGGER, function(e)
+		{
+			for( x in buttons.dataProvider )
+			{
+				if( x.text == e.state.text )
+				{
+					x.call();
+					break;
+				}
+			}
+		});
 		actions.addChild(buttons);
 		
 		loading = new ActivityIndicator();
@@ -270,6 +315,7 @@ class ServerBrowser extends Sprite
 	public function autoRefresh()
 	{
 		addChild(loading);
+		loadingAct = true;
 		
 		var time = Lib.getTimer();
 		
@@ -286,8 +332,20 @@ class ServerBrowser extends Sprite
 			
 			fetch = f;
 			
-			nextMasterFetch = time + 512;
+			nextMasterFetch = time + 512000;
 		}
+		else
+		{
+			for( x in view.dataProvider )
+			{
+				x.poll();
+			}
+		}
+	}
+	
+	public function refresh()
+	{
+		autoRefresh();
 	}
 	
 	public function run()
@@ -305,6 +363,48 @@ class ServerBrowser extends Sprite
 				loadingAct = true;
 			}
 		}
+	}
+	
+	
+	public function hostServer()
+	{
+		Alert.show( "This feature isn't implemented yet!", "Error", ["Dismiss"] );
+	}
+	
+	public function info()
+	{
+		if( view.selectedIndex == -1 ) return;
+		
+		var sel = view.dataProvider.get(view.selectedIndex);
+		
+		var name = sel.getName();
+		
+		var fav = "Add to Favorites";
+		var buttons = [fav, "Close"];
+		Alert.show("",
+			name,
+			buttons,
+			function(state:ButtonBarItemState)
+			{
+				switch( state.text )
+				{
+					case fav:
+					{
+						
+					}
+				}
+			}
+		);
+	}
+	
+	public function connect()
+	{
+		if( view.selectedIndex == -1 ) return;
+		
+		var sel = view.dataProvider.get(view.selectedIndex);
+		
+		m.setState( stateGame );
+		m.connectToGame( sel.host, sel.port );
 	}
 	
 	public function onresize( w : UInt, h : UInt )
@@ -328,6 +428,8 @@ class ServerBrowser extends Sprite
 		actions.width = w - 40;
 		
 		actions.y = 120 + view.height - 20;
+		
+		buttons.x = actions.width - buttons.width;
 		
 		view.height -= 26;
 		

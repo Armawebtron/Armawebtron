@@ -20,6 +20,9 @@ enum TGameEvent
 	
 	m_reset;
 	
+	m_connect( host: String, port: UInt );
+	m_leave;
+	
 	// input
 	m_turn( id : UInt, dir : Int, key : UInt );
 	m_brake( id : UInt, braking : Bool );

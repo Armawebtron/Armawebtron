@@ -9,6 +9,7 @@ import network.core.Base;
 import network.NetMode;
 
 import game.Game;
+import GameCore;
 
 
 class Client extends NetBase
@@ -256,6 +257,46 @@ class Client extends NetBase
 					msg.getInt(); msg.getInt();
 					
 					onConnect();
+				}
+			}
+			
+			case Descriptor.loginDeny:
+			{
+				var reason = msg.getStr();
+				
+				done = true;
+			}
+			
+			case Descriptor.config:
+			{
+				
+			}
+			
+			case Descriptor.chatMessage:
+			{
+				if( game != null )
+				{
+					game.consoleMessage(msg.getStr());
+				}
+			}
+			
+			case Descriptor.consoleMessage:
+			{
+				if( game != null )
+				{
+					game.consoleMessage(msg.getStr());
+				}
+			}
+			
+			case Descriptor.centerMessage:
+			{
+				var str = msg.getStr();
+				var timeout = 5000;
+				if( !msg.end() ) timeout = msg.getInt();
+				
+				if( game != null )
+				{
+					game.eToSend.push( t_cen( 0, str, timeout/1000.0, 1 ) );
 				}
 			}
 		}
