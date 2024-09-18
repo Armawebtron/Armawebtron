@@ -45,6 +45,8 @@ class Main extends Sprite
 	var gameActivated : Bool;
 	var keepGame : Bool;
 	
+	var gameAdded : Bool;
+	
 	var gamet : Game;
 #if( target.threaded )
 	var worker : sys.thread.Thread;
@@ -268,6 +270,12 @@ class Main extends Sprite
 					}
 				}
 				
+				if( !gameAdded )
+				{
+					this.addChild(this.game);
+					gameAdded = true;
+				}
+				
 				this.game.render();
 			}
 			
@@ -407,6 +415,7 @@ class Main extends Sprite
 					this.game = new GameView( userConfig );
 					this.addChild(this.game);
 				}
+				gameAdded = false;
 			}
 			
 			case stateQuit:
@@ -440,6 +449,13 @@ class Main extends Sprite
 		{
 			gamet.recvMsg(e);
 		}
+	}
+	
+	public function connectToGame( host : String, port : UInt, name : String = "" )
+	{
+		if( name == "" ) name = host+":"+port;
+		
+		sendMessage( m_connect(host, port) );
 	}
 	
 	public function resetGame()

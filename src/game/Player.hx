@@ -8,7 +8,9 @@ import game.Object;
 import game.Sensors;
 import game.Game;
 
-class Player
+import network.Message;
+
+class Player extends NetObject
 {
 	static var ids : UInt = 0;
 	public var id : UInt;
@@ -21,7 +23,13 @@ class Player
 	public var color : UInt;
 	public var cycleColor : UInt;
 	
+	public var chatting : Bool;
 	public var spectating : Bool;
+	
+	public var score : Int;
+	public var ping : Int;
+	
+	public var pingCharity : Int;
 	
 	public var cycle : Cycle;
 	
@@ -34,7 +42,11 @@ class Player
 		
 		localID = 0;
 		
+		chatting = false;
 		spectating = false;
+		
+		score = 0;
+		ping = 0;
 	}
 	
 	public function state() : TGameEvent
@@ -61,6 +73,48 @@ class Player
 			0, 0,
 			0
 		);
+	}
+	
+	override public function readNetInit( msg : Message, from : Int, game : Game ) : Void
+	{
+		super.readNetInit( msg, from, game );
+		game.players.push( this );
+	}
+	
+	override public function readNetFromSvr( msg : Message )
+	{
+		var r = msg.getShort();
+		var g = msg.getShort();
+		var b = msg.getShort();
+		color = (
+			( Std.int( 0xff0000 * Math.min(r,15) ) & 0xff0000 ) +
+			( Std.int( 0x00ff00 * Math.min(g,15) ) & 0x00ff00 ) +
+			( Std.int( 0x0000ff * Math.min(b,15) ) & 0x0000ff )
+		);
+		
+		this.pingCharity = msg.getShort();
+		
+		this.name = msg.getString();
+		
+		
+		this.ping = Math.round(msg.getFloat() * 1000);
+		
+		var flags = msg.getShort();
+		this.chatting = ( flags & 1 ) != 0;
+		this.spectating = ( flags & 2 ) != 0;
+		
+		this.score = msg.getInt();
+		
+		msg.getBool(); // newdisc
+		
+		var nextTeamID = msg.getShort();
+		var teamID = msg.getShort();
+		var idealPlayersPerTeam = msg.getShort();
+	}
+	
+	override public function readNetFromCli( msg : Message )
+	{
+		
 	}
 }
 
@@ -513,6 +567,11 @@ class Cycle extends BaseObject
 			brake,
 			speed, rubber
 		);
+	}
+	
+	override public function readNetFromSvr( msg : Message )
+	{
+		
 	}
 }
 

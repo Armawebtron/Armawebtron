@@ -226,6 +226,27 @@ class FetchClient extends Client
 	}
 }
 
+class UserGridViewColumn extends GridViewColumn
+{
+	public function new()
+	{
+		super( "Users", (data) -> data.getClients() );
+		this.defaultSortOrder = DESCENDING;
+		this.sortCompareFunction = _sortCompareFunction;
+	}
+	
+	private function _sortCompareFunction( aa : Dynamic, bb : Dynamic ) : Int
+	{
+		var a : BServer = cast(aa, BServer);
+		var b : BServer = cast(bb, BServer);
+		
+		if( !b.online ) return 1;
+		if( !a.online ) return -1;
+		
+		return ( a.players == b.players ) ? 0 : ( ( a.players > b.players ) ? 1 : -1 );
+	}
+}
+
 class ServerBrowser extends Sprite
 {
 	static public var m : Main;
@@ -238,6 +259,7 @@ class ServerBrowser extends Sprite
 	var loadingAct : Bool;
 	
 	public var nextMasterFetch : UInt;
+	public var nextSort : UInt;
 	
 	public var fetch : FetchClient;
 	
@@ -260,8 +282,11 @@ class ServerBrowser extends Sprite
 			new GridViewColumn("Server Name", (data) -> data.getName(), 400),
 			new GridViewColumn("Type", (data) -> data.getType()),
 			new GridViewColumn("Ping", (data) -> data.getPing()),
-			new GridViewColumn("Users", (data) -> data.getClients())
+			new UserGridViewColumn(),
 		]);
+		view.sortableColumns = true;
+		view.sortedColumn = view.columns.get(3);
+		view.sortOrder = DESCENDING;
 		
 		var bg = new Shape();
 		bg.graphics.beginFill(0xFFFFFF, 0.75);
@@ -350,6 +375,8 @@ class ServerBrowser extends Sprite
 	
 	public function run()
 	{
+		var time = Lib.getTimer();
+		
 		if( fetch != null )
 		{
 			if( fetch.done && loadingAct )
@@ -362,6 +389,12 @@ class ServerBrowser extends Sprite
 				addChild(loading);
 				loadingAct = true;
 			}
+		}
+		
+		if( time > nextSort )
+		{
+			view.dataProvider.updateAll();
+			nextSort = time + 3072;
 		}
 	}
 	

@@ -5,7 +5,38 @@ package game;
 import GameCore;
 import TMath;
 
-class BaseObject
+import game.Game;
+
+import network.Message;
+
+class NetObject
+{
+	public var netid : UInt;
+	public var ownerid : UInt;
+	
+	public function readNetInit( msg : Message, from : Int, game : Game ) : Void
+	{
+		netid = msg.getShort();
+		ownerid = msg.getShort();
+		readNet(msg, from);
+	}
+	
+	public function readNet( msg : Message, from : Int )
+	{
+		if( from == 0 ) readNetFromSvr(msg);
+		else readNetFromCli(msg);
+	}
+	
+	public function readNetFromCli( msg : Message ) : Void
+	{
+	}
+	
+	public function readNetFromSvr( msg : Message ) : Void
+	{
+	}
+}
+
+class BaseObject extends NetObject
 {
 	public var id : UInt;
 	

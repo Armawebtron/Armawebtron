@@ -1,6 +1,7 @@
 package network.core;
 
 import network.NetMode;
+import game.Object;
 
 class Descriptor
 {
@@ -15,12 +16,26 @@ class Descriptor
 	static public inline var wantObjs = 25;
 	static public inline var objSync = 24;
 	static public inline var objDestroy = 22;
+
+	static public var obj : Map<String, UInt> = [
+		"timer"     => 210,
+		"game"      => 310,
+		"player"    => 201,
+		"player_ai" => 330,
+		"team"      => 220,
+		"team_ai"   => 331,
+		"cycle"     => 320,
+		"cycleWall" => 300,
+		"zone"      => 340,
+		"zoneCirc"  => 350,
+		"zonePoly"  => 360,
+	];
+
 	static public inline var sync = 28;
 	static public inline var syncAck = 27;
 
 
 	static public inline var gameStateSync = 311;
-	
 
 
 	static public inline var requestID = 21;
@@ -56,11 +71,11 @@ class Descriptor
 
 class NetBase
 {
-	
+	public var netObjs : Map<UInt, NetObject>;
 	
 	public function new()
 	{
-		
+		netObjs = [];
 	}
 }
 

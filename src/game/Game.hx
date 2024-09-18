@@ -39,7 +39,22 @@ enum RoundStates { R_COMMENCING;
 	R_END;
 }
 
-class Game
+class NetTimer extends NetObject
+{
+	var game : Game;
+	
+	public function new( g : Game )
+	{
+		game = g;
+	}
+	
+	override public function readNetFromSvr( msg : Message )
+	{
+		game.readTimer( msg );
+	}
+}
+
+class Game extends NetObject
 {
 	public var roundState : RoundStates;
 	
@@ -343,6 +358,76 @@ class Game
 		trace(newWalls.length+" new walls");
 	}
 	
+	static public var netStateMap : Map<UInt, RoundStates> = [
+		7 => R_WAIT,
+		10 => R_LOAD_GRID,
+		20 => R_LOAD_OBJECTS,
+		35 => R_LOAD_CAMERA,
+		50 => R_PLAY,
+		60 => R_UNLOAD_OBJECTS,
+		70 => R_COMMENCING,
+		//80 => R_END,
+	];
+	public var netStateInt : UInt;
+	override public function readNetFromSvr( msg : Message )
+	{
+		netStateInt = msg.getShort();
+		trace("netState",netStateInt);
+		
+		for( x in netStateMap.keys() )
+		{
+			if( x < netStateInt )
+			{
+				netState = netStateMap[x];
+			}
+		}
+	}
+	
+	public function readTimer( msg : Message )
+	{
+		
+	}
+	
+	public function readConfig( msg : Message )
+	{
+		var setting = msg.getStr();
+		var type : String = "";
+		var value : Dynamic;
+		
+		switch(setting)
+		{
+			case "CYCLE_WALLS_LENGTH": setting = "WALLS_LENGTH";
+			case "CYCLE_WALLS_STAY_UP_DELAY": setting = "WALLS_STAY_UP_DELAY";
+			case "CYCLE_EXPLOSION_RADIUS": setting = "EXPLOSION_RADIUS";
+			case "ARENA_AXES": type = "int";
+			
+			case "REAL_ARENA_SIZE_FACTOR":
+				setting = "SIZE_FACTOR";
+				type = " "; //bogus type so our value isn't overwritten
+				//value = Math.log2(msg.getFloat(), 2)*2;
+				value = (Math.log(msg.getFloat())/Math.log(2))*2;
+			
+			/*
+			case "RESOURCE_REPOSITORY_SERVER":
+				chsetting(setting, msg.getStr());
+				return;
+			*/
+		}
+		
+		switch(type)
+		{
+			case "number": value = msg.getFloat();
+			case "int": value = msg.getInt();
+			case "string": value = msg.getStr();
+			case "boolean": value = msg.getBool();
+		}
+	}
+	
+	public function parseConfig()
+	{
+		
+	}
+	
 	//public function loop() : Array<Array<Dynamic>>
 	public function loop() : Array<TGameEvent>
 	{
@@ -421,6 +506,8 @@ class Game
 					else if( !p.spectating ) numHumans++;
 				}
 				
+			if( netCli == null )
+			{
 				while( numAIs < Math.max(0, 4-numHumans) )
 				{
 					var p = new Player();
@@ -443,6 +530,7 @@ class Game
 						}
 					}
 				}
+			}
 				
 				var ws = [
 					[ -100, -100 ],
@@ -477,6 +565,12 @@ class Game
 			
 			case R_LOAD_OBJECTS:
 			{
+				if( netCli != null )
+				{
+					
+					return events;
+				}
+				
 				//fade_out(64);
 				switch(Std.int(time%10))
 				{
@@ -576,11 +670,16 @@ class Game
 					
 					var count : Int = run( gameTime, timestep, events );
 					
+					if( netCli != null )
 					{
 						if( count == 0 )
 						{
 							nextState();
 						}
+					}
+					else
+					{
+						nextState();
 					}
 				}
 			}

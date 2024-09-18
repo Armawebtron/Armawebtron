@@ -8,7 +8,9 @@ import network.objects.*;
 import network.core.Base;
 import network.NetMode;
 
+import game.Object;
 import game.Game;
+import game.Player;
 import GameCore;
 
 
@@ -33,6 +35,7 @@ class Client extends NetBase
 	public var inRate : UInt;
 	public var usePB : Bool;
 	
+	public var eatObjErr : Bool;
 	public var challenge : Bool;
 	
 	public var game : Game;
@@ -49,6 +52,7 @@ class Client extends NetBase
 		
 		game = g;
 		
+		eatObjErr = false;
 		challenge = false;
 		
 		// some defaults
@@ -269,7 +273,10 @@ class Client extends NetBase
 			
 			case Descriptor.config:
 			{
-				
+				if( game != null )
+				{
+					game.readConfig( msg );
+				}
 			}
 			
 			case Descriptor.chatMessage:
@@ -299,6 +306,56 @@ class Client extends NetBase
 					game.eToSend.push( t_cen( 0, str, timeout/1000.0, 1 ) );
 				}
 			}
+			
+			case Descriptor.objSync:
+			{
+				var objid = msg.getShort();
+				var obj : NetObject = netObjs[objid];
+				
+				if( obj != null )
+				{
+					obj.readNet( msg, 0 );
+				}
+				else if( !this.eatObjErr )
+				{
+					if( game != null )
+					{
+						game.consoleMessage("Ignoring sync for unrecieved network object "+objid);
+					}
+					trace("Ignoring sync for unrecieved network object "+objid);
+				}
+			}
+			
+			default:
+			{
+				for( type in Descriptor.obj.keys() )
+				{
+					if( Descriptor.obj[type] == msg.descriptor )
+					{
+						trace(type);
+						var obj : NetObject = null;
+						switch( type )
+						{
+							case "game": if( game != null ) obj = game;
+							case "timer": if( game != null ) obj = new NetTimer( game );
+							case "player": obj = new Player();
+							case "player_ai":
+							{
+								obj = new Player();
+								//obj.isAI = true;
+							}
+							case "cycle": if( game != null ) obj = new Cycle( game );
+							case "cycleWall": obj = new CycleWall();
+						}
+						
+						if( obj != null )
+						{
+							obj.readNetInit( msg, 0, game );
+							netObjs[obj.netid] = obj;
+						}
+					}
+				}
+			}
 		}
 	}
 	
@@ -316,7 +373,8 @@ class Client extends NetBase
 	
 	public function onConnect()
 	{
-		
+		var msg = new Message( Descriptor.wantObjs );
+		this.send( msg );
 	}
 	
 	public function customHandler( msg : Message )
