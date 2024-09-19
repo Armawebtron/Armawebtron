@@ -58,6 +58,8 @@ class Game extends NetObject
 {
 	public var roundState : RoundStates;
 	
+	public var reqNextState : Bool;
+	
 	function nextState()
 	{
 		var e = Type.allEnums(RoundStates);
@@ -73,6 +75,15 @@ class Game extends NetObject
 			if( n != r )
 			{
 				roundState = e[e.indexOf(roundState)+1];
+				reqNextState = false;
+			}
+			else
+			{
+				reqNextState = true;
+				
+				var msg = new Message(311);
+				msg.pushShort(netStateInt);
+				this.netCli.send(msg);
 			}
 		}
 		
@@ -102,6 +113,8 @@ class Game extends NetObject
 	public function new()
 	{
 		this.roundState = R_COMMENCING;
+		
+		reqNextState = false;
 		
 		this.eToSend = [];
 		
@@ -372,14 +385,20 @@ class Game extends NetObject
 	override public function readNetFromSvr( msg : Message )
 	{
 		netStateInt = msg.getShort();
-		trace("netState",netStateInt);
 		
+		var m = 0;
 		for( x in netStateMap.keys() )
 		{
-			if( x < netStateInt )
+			if( x > m && x <= netStateInt )
 			{
 				netState = netStateMap[x];
+				m = x;
 			}
+		}
+		trace("netState",netStateInt,netState);
+		if( reqNextState )
+		{
+			nextState();
 		}
 	}
 	
@@ -465,7 +484,7 @@ class Game extends NetObject
 					var r = e.indexOf(roundState);
 					var n = e.indexOf(netState);
 					
-					if( n == r )
+					if( reqNextState )
 					{
 						return events;
 					}
@@ -567,7 +586,7 @@ class Game extends NetObject
 			{
 				if( netCli != null )
 				{
-					
+					nextState();
 					return events;
 				}
 				
@@ -670,7 +689,7 @@ class Game extends NetObject
 					
 					var count : Int = run( gameTime, timestep, events );
 					
-					if( netCli != null )
+					if( netCli == null )
 					{
 						if( count == 0 )
 						{
@@ -679,7 +698,7 @@ class Game extends NetObject
 					}
 					else
 					{
-						nextState();
+						
 					}
 				}
 			}

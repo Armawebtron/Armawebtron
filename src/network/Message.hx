@@ -17,6 +17,8 @@ class Message
 	
 	public var header : UInt;
 	
+	public var time : UInt;
+	
 	public function new(desc : Dynamic, i : UInt = null, alloc : Int = 0 )
 	{
 		len = 0;
@@ -24,6 +26,8 @@ class Message
 		
 		bufpos = 0;
 		header = 0;
+		
+		time = 0;
 		
 		switch( Type.typeof( desc ) )
 		{

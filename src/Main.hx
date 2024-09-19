@@ -272,6 +272,7 @@ class Main extends Sprite
 				
 				if( !gameAdded )
 				{
+					this.removeChild(this.game);
 					this.addChild(this.game);
 					gameAdded = true;
 				}

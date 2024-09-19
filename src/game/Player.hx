@@ -185,9 +185,14 @@ class Cycle extends BaseObject
 	public var walls : Array<CycleWall>;
 	public var wallLen : Float;
 	
+	public var turnCount : UInt;
+	
 	public var totalDist : Float;
 	
 	public var lastTurnTime : Float;
+	public var lastTurnX : Float;
+	public var lastTurnY : Float;
+	public var lastTurnZ : Float;
 	
 	public var game : Game;
 	
@@ -235,6 +240,7 @@ class Cycle extends BaseObject
 		wallAccel = new CycleAccel(this);
 		
 		totalDist = 0;
+		turnCount = 0;
 		
 		lastTurnTime = 0;
 		
@@ -270,6 +276,8 @@ class Cycle extends BaseObject
 		
 		this.xdir = axes[this.dir][0];
 		this.ydir = axes[this.dir][1];
+		
+		this.lastTurnX = this.x; this.lastTurnY = this.y;
 		
 		this.speed *= 0.95;
 		
@@ -569,9 +577,47 @@ class Cycle extends BaseObject
 		);
 	}
 	
+	override public function readNetInit( msg : Message, from : Int, g : Game ) : Void
+	{
+		super.readNetInit( msg, from, g );
+		
+		this.game = g;
+		
+		game.cycles.push( this );
+		game.eToSend.push(newState());
+		
+		msg.getShort();
+		
+		var r : Float = msg.getFloat()*15;
+		var g : Float = msg.getFloat()*15;
+		var b : Float = msg.getFloat()*15;
+	}
+	
 	override public function readNetFromSvr( msg : Message )
 	{
+		var gtime = msg.getFloat();
 		
+		this.xdir = msg.getFloat(); this.ydir = msg.getFloat();
+		
+		this.x = msg.getFloat(); this.y = msg.getFloat();
+		
+		this.speed = msg.getFloat();
+		this.alive = msg.getBool();
+		this.totalDist = msg.getFloat();
+		var lastWallId = msg.getShort();
+		this.turnCount = msg.getShort();
+		
+		this.braking = msg.getBool();
+		
+		this.lastTurnX = msg.getFloat(); this.lastTurnY = msg.getFloat();
+		
+		this.rubber = ( msg.getShort() / 65535.0 ) * this.rubberMax;
+		
+		msg.bufpos += 2; // eat unknown short
+		msg.bufpos += 2; // eat unknown short
+		
+		// brake usage
+		this.brake = ( msg.getShort() / 65535.0 );
 	}
 }
 

@@ -2,6 +2,10 @@ package network;
 
 import sys.net.*;
 
+#if !noOpenFL
+import openfl.Lib;
+#end
+
 
 import network.Message;
 import network.objects.*;
@@ -28,7 +32,7 @@ class Client extends NetBase
 	
 	public var msgsToAck : Array<UInt>;
 	public var msgsIn : Map<UInt, Float>;
-	public var msgsOut : Map<UInt, Float>;
+	public var msgsOut : Map<UInt, Message>;
 	
 	public var done : Bool;
 	
@@ -114,7 +118,8 @@ class Client extends NetBase
 	{
 		if( n.id != 0 )
 		{
-			//msgsOut[n.id] = 
+			msgsOut[n.id] = n;
+			n.time = Lib.getTimer();
 		}
 		
 		var smsg = n.get();
@@ -218,7 +223,18 @@ class Client extends NetBase
 		{
 			case Descriptor.ack:
 			{
-				
+				var id : UInt;
+				while(!msg.end())
+				{
+					id = msg.getShort();
+					
+					if( this.msgsOut[id] != null )
+					{
+						// TODO: calculate ping
+						
+						this.msgsOut[id] = null;
+					}
+				}
 			}
 			
 			case Descriptor.serverInfo:
