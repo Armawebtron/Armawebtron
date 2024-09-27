@@ -263,7 +263,11 @@ class ServerBrowser extends Sprite
 	
 	public var fetch : FetchClient;
 	
-	
+#if( target.threaded )
+	public var fLock : sys.thread.Lock;
+	public var fLock2 : sys.thread.Lock;
+	public var fLockR : Bool;
+#end
 	
 	public function new()
 	{
@@ -329,6 +333,12 @@ class ServerBrowser extends Sprite
 		loadingAct = true;
 		
 		nextMasterFetch = 0;
+		
+	#if( target.threaded )
+		fLock = new sys.thread.Lock();
+		fLock2 = new sys.thread.Lock();
+		fLockR = false;
+	#end
 	}
 	
 	public function activate()
@@ -348,14 +358,63 @@ class ServerBrowser extends Sprite
 		{
 			trace("Fetching servers");
 			
-			var f = new FetchClient( udp("master"+(1+Std.random(3))+".armagetronad.net", 4533), view.dataProvider );
-			//var f = new FetchClient( udp("127.0.0.1", 4534), view.dataProvider );
+		#if( target.threaded )
+			sys.thread.Thread.create(() ->
+			{
+				var f : FetchClient = null;
+				
+				try
+				{
+					f = new FetchClient( udp("master"+(1+Std.random(3))+".armagetronad.net", 4533), view.dataProvider );
+					//f = new FetchClient( udp("127.0.0.1", 4534), view.dataProvider );
+				}
+				catch(e)
+				{
+					
+				}
+				
+				if( f != null )
+				{
+					trace("in");
+					
+					fLockR = true;
+					
+					fLock.wait();
+					
+					m.netMult.push(f);
+					f.m = m;
+					f.connect();
+					
+					fetch = f;
+					
+					fLockR = false;
+					
+					fLock2.release();
+				}
 			
-			m.netMult.push(f);
-			f.m = m;
-			f.connect();
+			});
+		#else
+			var f : FetchClient = null;
 			
-			fetch = f;
+			try
+			{
+				f = new FetchClient( udp("master"+(1+Std.random(3))+".armagetronad.net", 4533), view.dataProvider );
+				//f = new FetchClient( udp("127.0.0.1", 4534), view.dataProvider );
+			}
+			catch(e)
+			{
+				
+			}
+			
+			if( f != null )
+			{
+				m.netMult.push(f);
+				f.m = m;
+				f.connect();
+				
+				fetch = f;
+			}
+		#end
 			
 			nextMasterFetch = time + 512000;
 		}
@@ -375,6 +434,15 @@ class ServerBrowser extends Sprite
 	
 	public function run()
 	{
+	#if( target.threaded )
+		if( fLockR )
+		{
+			trace("fLockR");
+			fLock.release();
+			fLock2.wait();
+		}
+	#end
+		
 		var time = Lib.getTimer();
 		
 		if( fetch != null )
