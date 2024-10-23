@@ -361,7 +361,13 @@ class Client extends NetBase
 								//obj.isAI = true;
 							}
 							case "cycle": if( game != null ) obj = new Cycle( game );
-							case "cycleWall": obj = new CycleWall();
+							//case "cycleWall": obj = new CycleWall();
+						}
+						
+						if( obj == null )
+						{
+							// this shouldn't be needed
+							obj = new BaseObject();
 						}
 						
 						if( obj != null )

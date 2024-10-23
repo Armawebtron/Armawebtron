@@ -134,6 +134,20 @@ class CycleWall extends Wall
 			x2, y2
 		);
 	}
+	
+	override public function readNetInit( msg : Message, from : Int, game : Game ) : Void
+	{
+		super.readNetInit( msg, from, game );
+		
+		for( c in game.cycles )
+		{
+			if( c.netid == ownerid )
+			{
+				owner = c;
+				break;
+			}
+		}
+	}
 }
 
 
@@ -416,7 +430,7 @@ class Cycle extends BaseObject
 			
 			if( rubber > rubberMax )
 			{
-				if( rubber > rubberMax + extraRubber )
+				if( game.netCli == null && rubber > rubberMax + extraRubber )
 				{
 					alive = false;
 				}
@@ -475,9 +489,9 @@ class Cycle extends BaseObject
 			//this.y += this.ydir;
 		}
 		
-		if( !alive )
+		if( game.netCli == null && !alive )
 		{
-			game.blastHole( x, y, explRadius + ( explSpeedMult * speed ), CycleWall );
+			onDeath();
 		}
 		else
 		{
@@ -550,6 +564,11 @@ class Cycle extends BaseObject
 			}
 		}
 	}
+	public function onDeath()
+	{
+		game.blastHole( x, y, explRadius + ( explSpeedMult * speed ), CycleWall );
+	}
+	
 	override public function objType() : GObjType
 	{
 		return obj_cycle;
@@ -602,7 +621,7 @@ class Cycle extends BaseObject
 		this.x = msg.getFloat(); this.y = msg.getFloat();
 		
 		this.speed = msg.getFloat();
-		this.alive = msg.getBool();
+		var alive = msg.getBool();
 		this.totalDist = msg.getFloat();
 		var lastWallId = msg.getShort();
 		this.turnCount = msg.getShort();
@@ -618,6 +637,13 @@ class Cycle extends BaseObject
 		
 		// brake usage
 		this.brake = ( msg.getShort() / 65535.0 );
+		
+		if( this.alive && !alive )
+		{
+			this.alive = false;
+			onDeath();
+			game.eToSend.push( state() );
+		}
 	}
 }
 
