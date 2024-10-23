@@ -602,29 +602,29 @@ class GameView extends Sprite
 		{
 			if( cycle != null && cycle.isAlive )
 			{
-			// get current cycle direction, with evil corrections
-			var cdir : Float = MathConsts.DEGREES_TO_RADIANS * ( cycle.rotationY + 90 );
-			cdir = Math.atan2( -Math.sin(cdir), Math.cos(cdir) );
+				// get current cycle direction, with evil corrections
+				var cdir : Float = MathConsts.DEGREES_TO_RADIANS * ( cycle.rotationY + 90 );
+				cdir = Math.atan2( -Math.sin(cdir), Math.cos(cdir) );
 			
-			// update cycle position if necessary
-			if( !cycle.stopped )
-			{
-				var ts = ( time - cycle.lastTime ) / 1000;
-				cycle.x -= ts * cycle.speed * Math.cos(cdir);
-				cycle.z -= ts * cycle.speed * Math.sin(cdir);
-				cycle.lastTime = time;
-			}
+				// update cycle position if necessary
+				if( !cycle.stopped )
+				{
+					var ts = ( time - cycle.lastTime ) / 1000;
+					cycle.x -= ts * cycle.speed * Math.cos(cdir);
+					cycle.z -= ts * cycle.speed * Math.sin(cdir);
+					cycle.lastTime = time;
+				}
 			
-			// FIXME: temporary hack to fix camera on below 100 fps
-			cam.run( timestep * 0.3, cycle, cdir );
-			cam.run( timestep * 0.4, cycle, cdir );
-			cam.run( timestep * 0.3, cycle, cdir );
+				// FIXME: temporary hack to fix camera on below 100 fps
+				cam.run( timestep * 0.3, cycle, cdir );
+				cam.run( timestep * 0.4, cycle, cdir );
+				cam.run( timestep * 0.3, cycle, cdir );
 			
-			// update hud
-			hud.setMeters( cycle.rubber, cycle.speed, cycle.brake, ( cycle.brake < cycle.lastBrake || cycle.brake == 1 ) );
-			hud.alpha += timestep;
+				// update hud
+				hud.setMeters( cycle.rubber, cycle.speed, cycle.brake, ( cycle.brake < cycle.lastBrake || cycle.brake == 1 ) );
+				hud.alpha += timestep;
 			
-			if( hud.alpha > 1 ) hud.alpha = 1;
+				if( hud.alpha > 1 ) hud.alpha = 1;
 			}
 			else
 			{
