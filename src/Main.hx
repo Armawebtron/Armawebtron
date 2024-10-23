@@ -622,11 +622,18 @@ class Main extends Sprite
 				
 				if( keepGame ) this.game.onresize();
 				else this.grid.onresize();
+				
+				openfl.ui.Mouse.show();
 			}
 			
 			case stateGame:
 			{
 				this.game.onresize();
+				
+				if( fullscreen )
+					openfl.ui.Mouse.hide();
+				else
+					openfl.ui.Mouse.show();
 			}
 			
 			default:
