@@ -47,6 +47,8 @@ import HUD;
 import UserConfig;
 import Camera;
 
+import ConsoleOut;
+
 
 class VPlayer
 {
@@ -231,6 +233,8 @@ class GameView extends Sprite
 	var cenSpd : Float;
 	var cenSpr : TextField;
 	
+	var con : Array<ConsoleOut>;
+	
 	var fpsDisp : away3d.debug.AwayFPS;
 	
 	var hud : HUD;
@@ -259,7 +263,8 @@ class GameView extends Sprite
 			{
 				case t_con(recv, msg):
 				{
-					
+					// FIXME: actually support multiple console outputs for splitscreen
+					con[0].print(msg);
 				}
 				case t_cen(recv, msg, timeout, speed):
 				{
@@ -538,6 +543,11 @@ class GameView extends Sprite
 		hud.alpha = 0;
 		
 		
+		con = [new ConsoleOut()];
+		
+		addChild(con[0]);
+		
+		
 		this.lastTime = Lib.getTimer();
 	}
 	
@@ -605,7 +615,10 @@ class GameView extends Sprite
 				cycle.lastTime = time;
 			}
 			
-			cam.run( timestep, cycle, cdir );
+			// FIXME: temporary hack to fix camera on below 100 fps
+			cam.run( timestep * 0.3, cycle, cdir );
+			cam.run( timestep * 0.4, cycle, cdir );
+			cam.run( timestep * 0.3, cycle, cdir );
 			
 			// update hud
 			hud.setMeters( cycle.rubber, cycle.speed, cycle.brake, ( cycle.brake < cycle.lastBrake || cycle.brake == 1 ) );
