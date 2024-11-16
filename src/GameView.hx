@@ -272,7 +272,7 @@ class GameView extends Sprite
 					{
 						cenSpr.alpha = 1;
 						cenSpr.text = msg;
-						cenSpr.x = 10 + ( ( Math.min( 5, timeout ) / 5 ) * 25);
+						cenSpr.y = stage.stageHeight*0.7 - 10 + ( ( Math.min( 5, timeout ) / 5 ) * 25);
 						centerMsgTime = timeout;
 						cenSpd = speed;
 					}
@@ -667,9 +667,9 @@ class GameView extends Sprite
 		}
 		
 		
-		if( cenSpr.x > 0 )
+		if( cenSpr.y < (stage.stageHeight*0.7) )
 		{
-			cenSpr.x -= Math.max( 22, cenSpr.x ) * timestep * 0.5;
+			cenSpr.y += Math.max( 22, (cenSpr.y-stage.stageHeight*0.7) ) * timestep * 0.5;
 		}
 		
 		// fade out center message
@@ -686,7 +686,7 @@ class GameView extends Sprite
 				cenSpr.text = "";
 			}
 			
-			cenSpr.x -= timestep * 20;
+			cenSpr.y += timestep * 20;
 		}
 		
 		
