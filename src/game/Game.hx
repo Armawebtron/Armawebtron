@@ -25,6 +25,10 @@ class Lib
 }
 #end
 
+#if !js
+import sys.io.*;
+#end
+
 
 enum RoundStates { R_COMMENCING;
 	R_WAIT;
@@ -110,6 +114,8 @@ class Game extends NetObject
 	
 	private var lastTime : UInt;
 	
+	public var startTime : Float;
+	
 	public function new()
 	{
 		this.roundState = R_COMMENCING;
@@ -133,6 +139,8 @@ class Game extends NetObject
 		paused = false;
 		
 		Sensors._game = this;
+		
+		startTime = Date.now().getTime();
 	}
 	
 	public function consoleMessage( str : String )
@@ -241,6 +249,13 @@ class Game extends NetObject
 			case m_connect( host, port ):
 			{
 				this.netCli = new Client( udp( host, port ), this );
+				this.netCli.connect();
+				netState = R_WAIT;
+			}
+			
+			case m_aarec( file ):
+			{
+				this.netCli = new Client( aarec( new AARECNet( sys.io.File.read( file ) ) ), this );
 				this.netCli.connect();
 				netState = R_WAIT;
 			}
@@ -470,6 +485,15 @@ class Game extends NetObject
 		
 		if( netCli != null )
 		{
+			switch( netCli.connection )
+			{
+				case aarec( playback ):
+				{
+					playback.update( Date.now().getTime() - startTime );
+				}
+				
+				default:
+			}
 			netCli.run();
 			switch( roundState )
 			{

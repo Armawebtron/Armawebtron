@@ -21,6 +21,7 @@ enum TGameEvent
 	m_reset;
 	
 	m_connect( host: String, port: UInt );
+	m_aarec( file : String );
 	m_leave;
 	
 	// input

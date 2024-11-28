@@ -59,6 +59,8 @@ class Main extends Sprite
 	
 	var currState : State;
 	
+	var startTime : Int;
+	
 	public function new()
 	{
 		{
@@ -120,6 +122,47 @@ class Main extends Sprite
 		fullscreen = false;
 		disableThread = false;
 		
+		var connectType : String = null;
+		var connect : String = null;
+		
+#if( !js )
+		var argv = Sys.args();
+		var i = 0;
+		while( i < argv.length )
+		{
+			var arg = argv[i];
+			if( arg == "-h" || arg == "--help" )
+			{
+				Sys.exit(0);
+			}
+			else if( arg == "-v" || arg == "--version" )
+			{
+				Sys.print("This is ");
+				Sys.exit(0);
+			}
+			else if( arg == "--playback" )
+			{
+				var file = argv[++i];
+				
+				Sys.println(file);
+				connectType = "aarec";
+				connect = file;
+			}
+			else if( arg == "-livereload" )
+			{
+				Sys.println(arg);
+			}
+			else
+			{
+				Sys.println("Invalid argument \""+arg+"\". See <cmd> --help");
+				Sys.exit(1);
+			}
+			
+			Sys.println(i);
+			i++;
+		}
+#end
+		
 		this.userConfig = new UserConfig();
 		userConfig.load(this);
 		
@@ -165,6 +208,18 @@ class Main extends Sprite
 		keyDown = [];
 		
 		this.setState( stateMenu );
+		
+		if( connectType != null )
+		{
+			switch( connectType )
+			{
+				case "aarec":
+				{
+					setState( stateGame );
+					sendMessage( m_aarec( connect ) );
+				}
+			}
+		}
 	}
 	
 	public function sendSettings()
@@ -309,6 +364,7 @@ class Main extends Sprite
 #end
 	
 #if( target.threaded )
+	//! the main loop inside the game thread
 	function t_doGame()
 	{
 		var nextTime = Lib.getTimer() + 0.2;

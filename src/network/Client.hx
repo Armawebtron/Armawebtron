@@ -11,6 +11,7 @@ import network.Message;
 import network.objects.*;
 import network.core.Base;
 import network.NetMode;
+import network.AARECNet;
 
 import game.Object;
 import game.Game;
@@ -83,6 +84,11 @@ class Client extends NetBase
 			{
 				
 			}
+			
+			case aarec( playback ):
+			{
+				
+			}
 		}
 	}
 	
@@ -129,11 +135,12 @@ class Client extends NetBase
 		
 	#if(!js)
 		
-		for( x in 0...times )
+		/*for( x in 0...times )
 		{
 			socket.output.write( smsg );
 		}
 		socket.output.flush();
+		*/
 	#end
 	
 		//msgsOut[n.id] = 
@@ -148,8 +155,35 @@ class Client extends NetBase
 	public function recv()
 	{
 	#if(!js)
+		switch( connection )
+		{
+			case udp(h,p):
+			{
+				var len = try socket.input.readBytes( buf, 0, 16384 ) catch(e) 0;
+				return recv_buf(len);
+			}
+			
+			case ws(h,p,s):
+			{
+			}
+			
+			case aarec( playback ):
+			{
+				var len = playback.recv(this, 16384);
+				return recv_buf(len);
+			}
+		}
+		
+	#else
+	#end
+		
+		return false;
+	}
+	
+	private function recv_buf( len : Int )
+	{
 		//var len = socket.input.readBytes( buf, 0, 6 );
-		var len = try socket.input.readBytes( buf, 0, 16384 ) catch(e) 0;
+		
 		//trace(socket.input.readByte());
 		if( len > 0 )
 		{
@@ -192,8 +226,6 @@ class Client extends NetBase
 			
 			return true;
 		}
-	#else
-	#end
 		
 		return false;
 	}
