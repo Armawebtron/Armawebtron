@@ -24,6 +24,8 @@ enum TGameEvent
 	m_aarec( file : String );
 	m_leave;
 	
+	m_fastForward( ff : Float );
+	
 	// input
 	m_turn( id : UInt, dir : Int, key : UInt );
 	m_brake( id : UInt, braking : Bool );

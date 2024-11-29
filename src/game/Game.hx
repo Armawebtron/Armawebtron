@@ -260,6 +260,11 @@ class Game extends NetObject
 				netState = R_WAIT;
 			}
 			
+			case m_fastForward( ff ):
+			{
+				startTime -= ff;
+			}
+			
 			case m_pause:
 			{
 				paused = true;

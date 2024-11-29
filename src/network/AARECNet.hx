@@ -101,8 +101,9 @@ class AARECNet
 				if( maxlen <= i ) break;
 				s.buf.set((i++), x);
 			}
+			time = loaded[curr].time;
+			curr++;
 		}
-		curr++;
 		return i;
 	}
 }

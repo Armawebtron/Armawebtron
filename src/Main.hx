@@ -124,6 +124,7 @@ class Main extends Sprite
 		
 		var connectType : String = null;
 		var connect : String = null;
+		var fastForward : Float = 0;
 		
 #if( !js )
 		var argv = Sys.args();
@@ -147,6 +148,10 @@ class Main extends Sprite
 				Sys.println(file);
 				connectType = "aarec";
 				connect = file;
+			}
+			else if( arg == "--fastforward" )
+			{
+				fastForward = Std.parseFloat(argv[++i]);
 			}
 			else if( arg == "-livereload" )
 			{
@@ -219,6 +224,11 @@ class Main extends Sprite
 					sendMessage( m_aarec( connect ) );
 				}
 			}
+		}
+		
+		if( fastForward != 0 )
+		{
+			sendMessage( m_fastForward( fastForward ) );
 		}
 	}
 	
