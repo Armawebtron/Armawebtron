@@ -46,18 +46,22 @@ class AARECNet
 			{
 				case "T":
 				{
-					lastTime = Std.parseFloat(split[1]);
+					lastTime = Std.parseInt( split[1] ) + ( Std.parseInt( split[2] ) / 1e6 );
 				}
 				
 				case "READ":
 				{
 					if( split[1] != "-1" )
 					{
+						var line = file.readUntil("\n".charCodeAt(0));
+						var split = line.split(" ");
+						
 						var b = new AARECNetBuf();
 						for( i in 1...(split.length) )
 						{
 							b.data.push(Std.parseInt(split[i])%255);
 						}
+						b.time = lastTime;
 						loaded.push(b);
 					}
 				}

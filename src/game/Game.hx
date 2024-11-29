@@ -140,7 +140,7 @@ class Game extends NetObject
 		
 		Sensors._game = this;
 		
-		startTime = Date.now().getTime();
+		startTime = Sys.time();
 	}
 	
 	public function consoleMessage( str : String )
@@ -489,7 +489,7 @@ class Game extends NetObject
 			{
 				case aarec( playback ):
 				{
-					playback.update( Date.now().getTime() - startTime );
+					playback.update( Sys.time() - startTime );
 				}
 				
 				default:
