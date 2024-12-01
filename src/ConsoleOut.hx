@@ -28,7 +28,7 @@ class ConsoleOut extends Sprite
 	{
 		var f = new TextField();
 		
-		f.text = msg;
+		f.text = (new EReg("0x([0-9A-Fa-f]{6}|RESETT)", "gm")).replace(msg,"");
 		f.defaultTextFormat = format;
 		
 		lines.push([f]);
