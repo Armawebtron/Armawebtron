@@ -604,16 +604,19 @@ class Cycle extends BaseObject
 		
 		game.cycles.push( this );
 		game.eToSend.push(newState());
-		
-		msg.getShort();
-		
-		var r : Float = msg.getFloat()*15;
-		var g : Float = msg.getFloat()*15;
-		var b : Float = msg.getFloat()*15;
 	}
 	
 	override public function readNetFromSvr( msg : Message )
 	{
+		if( init )
+		{
+			msg.getShort();
+			
+			var r : Float = msg.getFloat()*15;
+			var g : Float = msg.getFloat()*15;
+			var b : Float = msg.getFloat()*15;
+		}
+		
 		var gtime = msg.getFloat();
 		
 		this.xdir = msg.getFloat(); this.ydir = msg.getFloat();

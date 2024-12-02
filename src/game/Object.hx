@@ -14,11 +14,18 @@ class NetObject
 	public var netid : UInt;
 	public var ownerid : UInt;
 	
+	public var init : Bool;
+	
 	public function readNetInit( msg : Message, from : Int, game : Game ) : Void
 	{
+		// ugh
+		init = true;
+		
 		netid = msg.getShort();
 		ownerid = msg.getShort();
 		readNet(msg, from);
+		
+		init = false;
 	}
 	
 	public function readNet( msg : Message, from : Int )
