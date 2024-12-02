@@ -676,6 +676,11 @@ class CycleAccel
 	{
 		target = t;
 		
+		reset();
+	}
+	
+	public function reset()
+	{
 		accelBase = _accelBase;
 		rimMult = _rimMult;
 		selfMult = _selfMult;
