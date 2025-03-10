@@ -135,12 +135,21 @@ class Client extends NetBase
 		
 	#if(!js)
 		
-		/*for( x in 0...times )
+		switch( connection )
 		{
-			socket.output.write( smsg );
+			case udp( hostStr, port ):
+			{
+				
+				for( x in 0...times )
+				{
+					socket.output.write( smsg );
+				}
+				socket.output.flush();
+			}
+			
+			default:
 		}
-		socket.output.flush();
-		*/
+		
 	#end
 	
 		//msgsOut[n.id] = 
@@ -398,6 +407,7 @@ class Client extends NetBase
 						
 						if( obj == null )
 						{
+							break;
 							// this shouldn't be needed
 							obj = new BaseObject();
 						}
