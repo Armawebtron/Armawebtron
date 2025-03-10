@@ -611,6 +611,7 @@ class Cycle extends BaseObject
 		if( init )
 		{
 			msg.getShort();
+			msg.getShort();
 			
 			var r : Float = msg.getFloat()*15;
 			var g : Float = msg.getFloat()*15;
@@ -627,11 +628,31 @@ class Cycle extends BaseObject
 		var alive = msg.getBool();
 		this.totalDist = msg.getFloat();
 		var lastWallId = msg.getShort();
-		this.turnCount = msg.getShort();
+		var turnCount = msg.getShort();
 		
 		this.braking = msg.getBool();
 		
 		this.lastTurnX = msg.getFloat(); this.lastTurnY = msg.getFloat();
+		
+		if( turnCount > this.turnCount )
+		{
+			var bakX = x, bakY = y;
+			
+			lastX = x = lastTurnX; lastY = y = lastTurnY;
+			lastdirX = xdir; lastdirY = ydir;
+			
+			mkNewWall();
+			
+			x = bakX; y = bakY;
+			
+			
+			var mult = ( 1 - rubberMinAdj );
+			minDist.f = Math.max(0,Math.min(dist.f*mult,rubberMinDist));
+			
+			lastTurnTime = gtime;
+			
+			this.turnCount = turnCount;
+		}
 		
 		this.rubber = ( msg.getShort() / 65535.0 ) * this.rubberMax;
 		

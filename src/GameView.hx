@@ -332,6 +332,7 @@ class GameView extends Sprite
 					var cycle = cycles[id];
 					
 					//trace(e);
+					if( null == cycle ) continue; // can't figure out why this is needed right now...
 					
 					var newDir = ( Math.atan2(-ydir, xdir) * MathConsts.RADIANS_TO_DEGREES ) + 90;
 					

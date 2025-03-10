@@ -590,6 +590,17 @@ class Game extends NetObject
 				var dist : Float = 0;
 				//for( i in 1..size )
 				
+				if( netCli != null )
+				{
+					ws = [
+						[0, 0],
+						[0, 500],
+						[500, 500],
+						[500, 0],
+						[0, 0],
+					];
+				}
+				
 				var i : Int = 0;
 				while( ++i < ws.length )
 				{
