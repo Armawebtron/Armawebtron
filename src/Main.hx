@@ -149,6 +149,13 @@ class Main extends Sprite
 				connectType = "aarec";
 				connect = file;
 			}
+			else if( arg == "--connect" )
+			{
+				var file = argv[++i];
+				
+				connectType = "udp";
+				connect = file;
+			}
 			else if( arg == "--fastforward" )
 			{
 				fastForward = Std.parseFloat(argv[++i]);
@@ -222,6 +229,12 @@ class Main extends Sprite
 				{
 					setState( stateGame );
 					sendMessage( m_aarec( connect ) );
+				}
+				case "udp":
+				{
+					setState( stateGame );
+					var s = connect.split(":");
+					sendMessage( m_connect( s[0], Std.parseInt(s[1]) ) );
 				}
 			}
 		}
