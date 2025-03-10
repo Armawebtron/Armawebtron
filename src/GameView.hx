@@ -457,6 +457,7 @@ class GameView extends Sprite
 	}
 	
 	public var doBlur : Bool;
+	public var dontDoBlur : Bool;
 	private var blurLevel : Float;
 	
 	public function initScene()
@@ -691,7 +692,7 @@ class GameView extends Sprite
 		
 		
 		// blur effect
-		if( doBlur && blurLevel < 24 )
+		if( !dontDoBlur && doBlur && blurLevel < 24 )
 		{
 			blurLevel += timestep*50;
 			

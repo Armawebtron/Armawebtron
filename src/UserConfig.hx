@@ -25,6 +25,8 @@ class PlayerConfig
 	public var glanceFwd : Array<UInt>;
 	public var glanceBack : Array<UInt>;
 	
+	public var chat : Array<UInt>;
+	
 	public var specMode : Bool;
 	
 	public var cam : Camera;
@@ -50,6 +52,8 @@ class PlayerConfig
 		glanceRight = [];
 		
 		jump = [];
+		
+		chat = [];
 		
 		cam = new CustomCamera();
 		
@@ -313,6 +317,16 @@ class UserConfig
 					trace(haxe.Json.parse(k));
 					for( b in i ) { p.glanceFwd.push( b ); }
 				}
+				
+				var e = xmlGet(d, "other");
+				var k = e.get("chat");
+				if( k != null )
+				{
+					p.chat.splice(0, p.chat.length);
+					var i : Array<Int> = haxe.Json.parse(k);
+					trace(haxe.Json.parse(k));
+					for( b in i ) { p.chat.push( b ); }
+				}
 			}
 		}
 	}
@@ -341,6 +355,9 @@ class UserConfig
 		e.set("right", haxe.Json.stringify(p.glanceRight));
 		e.set("forward", haxe.Json.stringify(p.glanceFwd));
 		e.set("back", haxe.Json.stringify(p.glanceBack));
+		
+		var e = xmlGet(k, "other");
+		e.set("chat", haxe.Json.stringify(p.chat));
 	}
 	
 	public function save( main : Main )

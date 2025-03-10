@@ -283,6 +283,7 @@ class Main extends Sprite
 					{
 						if( game.doBlur )
 						{
+							game.dontDoBlur = false;
 							game.doBlur = false;
 							sendMessage( m_unpause );
 						}
@@ -635,6 +636,18 @@ class Main extends Sprite
 				else if( userConfig.players[0].glanceRight.indexOf(e.keyCode) != -1 )
 				{
 					userConfig.players[0].cam.glanceRight = true;
+				}
+				else if( userConfig.players[0].chat.indexOf(e.keyCode) != -1 )
+				{
+					game.doBlur = true;
+					game.dontDoBlur = true; // lol
+					keepGame = true;
+					setState( stateMenu );
+					menu.lastMenus.push( blankMenu );
+					menu.nextMenu = chatInput;
+					menu.changeMenu( menu.nextMenu );
+					menu.lastMenus.push( menu.nextMenu );
+					sendMessage( m_pause );
 				}
 				
 				//;

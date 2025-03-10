@@ -1,15 +1,12 @@
 
 import openfl.Lib;
-import openfl.events.Event;
-import openfl.events.MouseEvent;
+import openfl.events.*;
 
 import openfl.display.Sprite;
 
 import openfl.Assets;
 
-import openfl.text.TextField;
-import openfl.text.TextFormat;
-import openfl.text.TextFormatAlign;
+import openfl.text.*;
 
 import openfl.display.SimpleButton;
 import openfl.display.Shape;
@@ -33,6 +30,7 @@ enum Menus
 	configMenu;
 	inGameMenu;
 	netMenu;
+	chatInput;
 	blankMenu;
 }
 
@@ -125,6 +123,52 @@ class MenuItem extends SimpleButton
 	}
 }
 
+// borrowed from https://books.openfl.org/openfl-developers-guide/using-the-textfield-class/capturing-text-input.html
+// I'll eventually extend this to support color codes
+class ChatInput extends Sprite
+{
+	private var myTextBox:TextField = new TextField();
+	private var myOutputBox:TextField = new TextField();
+	private var myText:String = "";
+
+	public function new()
+	{
+		super();
+		captureText();
+	}
+
+	function captureText():Void
+	{
+		myTextBox.type = TextFieldType.INPUT;
+		myTextBox.background = true;
+		addChild(myTextBox);
+		myTextBox.text = myText;
+		myTextBox.addEventListener(TextEvent.TEXT_INPUT, textInputCapture);
+	}
+	
+	public function resize(x,y)
+	{
+		myTextBox.height = y;
+		myTextBox.width = x;
+	}
+
+	function textInputCapture(event:TextEvent):Void
+	{
+		var str:String = myTextBox.text;
+		createOutputBox(str);
+	}
+
+	function createOutputBox(str:String):Void
+	{
+		/*
+		myOutputBox.background = true;
+		myOutputBox.x = 200;
+		addChild(myOutputBox);
+		myOutputBox.text = str;
+		*/
+	}
+}
+
 class CfgCommon extends ScrollContainer
 {
 	static public var m : Main;
@@ -153,6 +197,9 @@ class CfgKB extends CfgCommon
 		super();
 		
 		this.layout = new FormLayout();
+		
+		addChild(new Label("Chat:"));
+		addChild(new KeyBindControl(user().players[0].chat));
 		
 		addChild(new Label("Turn Left:"));
 		addChild(new KeyBindControl(user().players[0].turnLeft));
@@ -577,6 +624,7 @@ class Menu extends Sprite
 	private var haxeuiInit : Bool;
 	private var cfgMenu : ConfigMenu;
 	private var svrMenu : ServerBrowser;
+	private var chatInp : ChatInput;
 	
 	public var startY : UInt;
 	
@@ -602,6 +650,11 @@ class Menu extends Sprite
 			case netMenu:
 			{
 				removeChild(svrMenu);
+			}
+			
+			case chatInput:
+			{
+				removeChild(chatInp);
 			}
 			
 			default:
@@ -723,6 +776,23 @@ class Menu extends Sprite
 				{
 					svrMenu.activate();
 				}
+			}
+			
+			case chatInput:
+			{
+				title.text = "";
+				
+				if( chatInp == null )
+				{
+					chatInp = new ChatInput();
+				}
+				
+				chatInp.x = 64;
+				chatInp.y = stage.stageHeight-96;
+				chatInp.resize(stage.stageWidth-128,22);
+				stage.focus = chatInp;
+				
+				addChild(chatInp);
 			}
 			
 			case blankMenu:
