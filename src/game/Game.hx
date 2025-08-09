@@ -712,7 +712,7 @@ class Game extends NetObject
 					if( lastCountDown != countDown )
 					{
 						trace( countDown );
-						events.push( t_cen( 0, Std.string( countDown ), 1, 1 ) );
+						events.push( t_cen2( 0, Std.string( countDown ), 0, 1, 1 ) );
 						
 						lastCountDown = countDown;
 					}
@@ -722,7 +722,7 @@ class Game extends NetObject
 					if( lastCountDown != 0 )
 					{
 						trace( 0 );
-						events.push( t_cen( 0, "0", 1, 1 ) );
+						events.push( t_cen2( 0, "Go!", 1, 1, 1 ) );
 						
 						lastCountDown = 0;
 					}

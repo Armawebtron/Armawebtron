@@ -233,6 +233,11 @@ class GameView extends Sprite
 	var cenSpd : Float;
 	var cenSpr : TextField;
 	
+	var startMsg : String; var startMsgTime : Float;
+	var startSpd : Float;
+	var startSpr : TextField;
+	var startMde : UInt;
+	
 	var con : Array<ConsoleOut>;
 	
 	var fpsDisp : away3d.debug.AwayFPS;
@@ -275,6 +280,19 @@ class GameView extends Sprite
 						cenSpr.y = stage.stageHeight*0.7 - 10 + ( ( Math.min( 5, timeout ) / 5 ) * 25);
 						centerMsgTime = timeout;
 						cenSpd = speed;
+					}
+				}
+				case t_cen2(recv, msg, mode, timeout, speed):
+				{
+					if( recv == 0 )
+					{
+						startSpr.alpha = 1;
+						startSpr.text = msg;
+						startSpr.y = stage.stageHeight*0.5 + ( ( Math.min( 5, timeout ) / 5 ) * 25);
+						startSpr.scaleX = startSpr.scaleY = 2;
+						startMsgTime = timeout;
+						startSpd = speed;
+						startMde = mode;
 					}
 				}
 				
@@ -537,6 +555,18 @@ class GameView extends Sprite
 		
 		centerMsgTime = 0; cenSpd = 0;
 		
+		startSpr = new TextField();
+		addChild(startSpr);
+		
+		startSpr.width = 800;
+		startSpr.y = 240;
+		startSpr.defaultTextFormat = titleFormat;
+		//startSpr.selectable = false;
+		
+		startSpr.alpha = 0;
+		
+		
+		
 		doBlur = false;
 		blurLevel = 0;
 		
@@ -689,6 +719,63 @@ class GameView extends Sprite
 			}
 			
 			cenSpr.y += timestep * 20;
+		}
+		
+		
+		startMsgTime -= timestep;
+		if( startSpr.alpha > 0 )
+		{
+			if( startSpr.scaleY > 0.2 )
+			{
+				startSpr.scaleX = ( startSpr.scaleY -= timestep * 2 );
+			}
+			else
+			{
+				startSpr.scaleX = startSpr.scaleY = 0.2;
+			}
+			
+			switch( startMde )
+			{
+				case 0:
+				{
+					startSpr.x = ((startSpr.width-(startSpr.width*startSpr.scaleY))/2)/startSpr.scaleY;
+					startSpr.y = ((stage.stageHeight*0.5)-25)+(((startSpr.height-(startSpr.height*startSpr.scaleY))/4)/startSpr.scaleY);
+				}
+				
+				case 1: 
+				{
+					startSpr.x = ((startSpr.width-(startSpr.width*startSpr.scaleY))/2)/startSpr.scaleY;
+					startSpr.y = (stage.stageHeight*0.5)/startSpr.scaleY;
+				}
+				
+				case 2:
+				{
+					startSpr.x = ((startSpr.width-(startSpr.width*startSpr.scaleY))/2)+100;
+				}
+				
+				case 3:
+				{
+					startSpr.x = (((startSpr.width-(startSpr.width*startSpr.scaleY))/2)/startSpr.scaleY/startSpr.scaleY)-100;
+				}
+				
+				case 4:
+				{
+					startSpr.x = ((startSpr.width-(startSpr.width*startSpr.scaleY))/2)/startSpr.scaleY;
+					startSpr.y = (stage.stageHeight*0.5)-(startSpr.height*startSpr.scaleY);
+				}
+			}
+			//trace(startSpr.x);
+			
+			if( ( startMsgTime - startSpd ) < 0 )
+			{
+				startSpr.alpha -= timestep * startSpd;
+				
+				if( startSpr.alpha <= 0 )
+				{
+					startSpr.alpha = 0;
+					startSpr.text = "";
+				}
+			}
 		}
 		
 		

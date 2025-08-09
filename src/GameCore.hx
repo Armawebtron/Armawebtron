@@ -51,6 +51,7 @@ enum TGameEvent
 	
 	t_con( recv : UInt, msg : String );
 	t_cen( recv : UInt, msg : String, timeout : Float, speed : Float );
+	t_cen2( recv : UInt, msg : String, mode : UInt, timeout : Float, speed : Float );
 	
 	t_player(
 		id: UInt,
