@@ -176,10 +176,11 @@ class UserConfig
 			var x = Xml.parse(f);
 		#end
 			
+			var u = xmlGet(x, "UserConfig");
 			
-			var g = xmlGet(x, "GlobalConfig");
-			var pConf = xmlGet(x, "PlayerConfig");
-			var t = xmlGet(x, "GameConfig");
+			var g = xmlGet(u, "GlobalConfig");
+			var pConf = xmlGet(u, "PlayerConfig");
+			var t = xmlGet(u, "GameConfig");
 			
 			{
 				var e = xmlGet(g, "Screen");
@@ -398,9 +399,11 @@ class UserConfig
 		f.open(prefsFile, FileMode.WRITE);
 		#end
 		
-		var g = xmlGet(x, "GlobalConfig");
-		var pConf = xmlGet(x, "PlayerConfig");
-		var t = xmlGet(x, "GameConfig");
+		var u = xmlGet(x, "UserConfig");
+		
+		var g = xmlGet(u, "GlobalConfig");
+		var pConf = xmlGet(u, "PlayerConfig");
+		var t = xmlGet(u, "GameConfig");
 		
 		{
 			var e = xmlGet(g, "Screen");
