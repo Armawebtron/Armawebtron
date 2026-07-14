@@ -90,6 +90,20 @@ class TMath
 		var t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / d;
 		return ( t >= 0 && t <= 1 );
 	}
+	public static function lineIntersectRange(
+		p0_x:Float, p0_y:Float,
+		s1_x:Float, s1_y:Float,
+		p2_x:Float, p2_y:Float,
+		p3_x:Float, p3_y:Float
+	):Bool
+	{
+		var s2_x = p3_x - p2_x, s2_y = p3_y - p2_y;
+		var d = ( s1_x * s2_y - s2_x * s1_y );
+		var s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / d;
+		if( s < 0 || s > 1 ) return false;
+		var t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / d;
+		return ( t >= 0 && t <= 1 );
+	}
 
 	public static function pointDistance(
 		x1:Float, y1:Float,

@@ -128,9 +128,9 @@ class Sensors
 				}
 			}
 			
-			if( TMath.lineIntersect(
+			if( TMath.lineIntersectRange(
 				c.x, c.y,
-				( c.x + c.xdir * range ), ( c.y + c.ydir * range ),
+				c.xdir * range, c.ydir * range,
 				wall.x1, wall.y1,
 				wall.x2, wall.y2
 			) )
@@ -151,9 +151,9 @@ class Sensors
 					this.f = ff;
 			}
 			
-			if( TMath.lineIntersect(
+			if( TMath.lineIntersectRange(
 				c.x, c.y,
-				( c.x + lxdir * range ), ( c.y + lydir * range ),
+				lxdir * range, lydir * range,
 				wall.x1, wall.y1,
 				wall.x2, wall.y2
 			) )
@@ -172,9 +172,9 @@ class Sensors
 				}
 			}
 			
-			if( TMath.lineIntersect(
+			if( TMath.lineIntersectRange(
 				c.x, c.y,
-				( c.x - lxdir * range ), ( c.y - lydir * range ),
+				lxdir * range, lydir * range,
 				wall.x1, wall.y1,
 				wall.x2, wall.y2
 			) )
