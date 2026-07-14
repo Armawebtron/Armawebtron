@@ -71,18 +71,103 @@ class Player extends THREE.Object3D
 	{
 		return removeColors(this.name);
 	}
+	_wallClear()
+	{
+		this.walls.children[0].geometry.vertices.splice(0);
+		this.walls.children[0].geometry.faces.splice(0);
+		this.walls.children[1].geometry.vertices.splice(0);
+		this.walls.children[1].geometry.faces.splice(0);
+		for(var i=this.walls.children.length-1;i>=2;--i)
+		{
+			this.walls.remove(this.walls.children[i]);
+		}
+	}
+	_wallAdd(x1,y1,x2,y2,upd=true)
+	{
+		var geo = this.walls.children[0].geometry;
+		var geo2 = this.walls.children[this.walls.children.length-1].geometry;
+		
+		var i = geo.vertices.length;
+		geo.vertices.push(new THREE.Vector3(x1,y1,0));
+		geo.vertices.push(new THREE.Vector3(x1,y1,1));
+		geo.vertices.push(new THREE.Vector3(x2,y2,0));
+		geo.vertices.push(new THREE.Vector3(x2,y2,1));
+		geo.faces.push(new THREE.Face3(i+2,i+3,i+1),new THREE.Face3(i+1,i,i+2));
+		
+		if( x1 == 0 && y1 == 0 && x2 == 0 && y2 == 0 )
+		{
+			geo2 = new THREE.Geometry();
+			var line = new THREE.Line(geo2,this.walls.children[1].material);
+			line.scale.z = 0.75;
+			this.walls.add(line);
+		}
+		else
+		{
+			geo2.vertices.push(geo.vertices[i+1],geo.vertices[i+3]);
+		}
+		
+		if( upd )
+		{
+			geo.computeBoundingSphere();
+			geo.computeFaceNormals();
+			geo.computeVertexNormals();
+			this._wallRUpd();
+		}
+	}
+	_wallRUpd()
+	{
+		this.walls.children[0].geometry.elementsNeedUpdate = true;
+		
+		this.walls.children[1].geometry.dispose();
+		this.walls.children[1].geometry = this.walls.children[1].geometry.clone();
+	}
+	_wallUpd(i2,x1,y1,x2,y2)
+	{
+		var geo = this.walls.children[0].geometry;
+		var set1 = ( typeof(x1) !== "undefined" && typeof(y1) !== "undefined" );
+		
+		var i = (i2|0)*4;
+		if( set1 )
+		{
+			geo.vertices[i].x = x1; geo.vertices[i].y = y1;
+			geo.vertices[i+1].x = x1; geo.vertices[i+1].y = y1;
+		}
+		geo.vertices[i+2].x = x2; geo.vertices[i+2].y = y2;
+		geo.vertices[i+3].x = x2; geo.vertices[i+3].y = y2;
+		
+		geo.verticesNeedUpdate = true;
+		geo.computeBoundingSphere();
+		geo.computeFaceNormals();
+		geo.computeVertexNormals();
+		
+		var geo2 = this.walls.children[1].geometry;
+		i = (i2|0)*2;
+		var j = 1;
+		while( i >= geo2.vertices.length )
+		{
+			i -= geo2.vertices.length+2;
+			geo2 = this.walls.children[++j].geometry;
+			if( j+1 == this.walls.children.length ) break;
+		}
+		if( i >= 0 )
+		{
+			if( set1 )
+			{
+				geo2.vertices[i].x = x1; geo2.vertices[i].y = y1;
+			}
+			geo2.vertices[i+1].x = x2; geo2.vertices[i+1].y = y2;
+			geo2.verticesNeedUpdate = true;
+			geo2.computeBoundingSphere();
+		}
+	}
 	newWallSegment() //should be called on turns
 	{
 		var adj = 0.7, wmap = this.walls.map, dirmult = this.dir.front;
-		var s=wmap[wmap.length-1];s[0]=this.position.x;s[1]=this.position.y;s[2]=this.position.z;
+		wmap[wmap.length-1] = [this.position.x,this.position.y,this.position.z];
 		wmap[wmap.length] = [this.position.x,this.position.y,this.position.z]; 
-		var n = wmap[wmap.length-1];
-		n.gtime = this.gameTime; n.dist = this.dist; n.turns = this.turns+1;
 		this.resetCurrWallSegment(false,1);
-		var wall = newWall(this.tailColor,this.position.x,this.position.y,this.position.z);
 		var adjx = (dirmult[0]*adj), adjy = (dirmult[1]*adj);
-		wall.scale.x -= adjx/wall.size; wall.scale.y -= adjy/wall.size;
-		this.walls.add(wall);
+		this._wallAdd(this.position.x,this.position.y,this.position.x+0.001,this.position.y+0.001);
 	}
 	/*recalcCurrWallLength(tocurrpos=false)
 	{
@@ -94,40 +179,19 @@ class Player extends THREE.Object3D
 	}*/
 	resetCurrWallSegment(tocurrpos=false,offset=0,breakWallLength=false) //! Redoes the current 3D wall segment to the actual wall segment.
 	{
-		if(this.walls.children.length == 0) return;
 		var wmap = this.walls.map;
-		var oldwall = this.walls.children[this.walls.children.length-1];
-		
-		if(breakWallLength)
-		{
-			var sizex = oldwall.scale.x*oldwall.size,sizey = oldwall.scale.y*oldwall.size;
-			this.walls.netLength -= Math.sqrt((sizex*sizex)+(sizey*sizey));
-		}
-		
+		var wall = wmap.length-3;
 		if(typeof(wmap[wmap.length-3]) == "undefined")
 		{
-			//console.warn("Wall was undefined when trying to calculate wall size");
-			//console.log();
 			return;
 		}
 		if(tocurrpos)
 		{
 			wmap[wmap.length-2] = [this.position.x,this.position.y,this.position.z];
 		}
-		var a = 2+offset, b=1+offset;
-		oldwall.position.set(wmap[wmap.length-a][0],wmap[wmap.length-a][1],wmap[wmap.length-3][2]||0);
-		oldwall.scale.x = (wmap[wmap.length-b][0]-wmap[wmap.length-a][0])/oldwall.size||1;
-		oldwall.scale.y = (wmap[wmap.length-b][1]-wmap[wmap.length-a][1])/oldwall.size||1;
+		this._wallUpd(wall,wmap[wall][0],wmap[wall][1],wmap[wall+1][0],wmap[wall+1][1]);
 		
-		if(breakWallLength)
-		{
-			var sizex = oldwall.scale.x*oldwall.size,sizey = oldwall.scale.y*oldwall.size;
-			this.walls.netLength += Math.sqrt((sizex*sizex)+(sizey*sizey));
-		}
-		else
-		{
-			this.calcWallLength();
-		}
+		this.calcWallLength();
 	}
 	calcWallLength(cycle) //! sets the actual wall length
 	{
@@ -145,29 +209,17 @@ class Player extends THREE.Object3D
 	}
 	resetWall(full=true) //! Completely redoes the 3D wall according to the actual wall
 	{
-		if(full === true)
+		this._wallClear();
+		var wmap = this.walls.map;
+		for(var x=1,len=wmap.length-1;x<=len;x++)
 		{
-			this.walls.remove.apply(this.walls, this.walls.children.slice(0));
-		}
-		var wmap = this.walls.map, wallmod;
-		for(var x=1,len=wmap.length;x<len;x++)
-		{
-			if(full === true || !this.walls.children[x-1])
+			if( x!=len && wmap[x-1][2] <= -1 )
 			{
-				this.walls.add(wallmod = newWall(this.tailColor,wmap[x-1][0],wmap[x-1][1],wmap[x-1][2]));
+				this._wallAdd(0,0,0,0,false);
+				var geo = this.walls.children[1].geometry.vertices;
 			}
 			else
-			{
-				wallmod = this.walls.children[x-1];
-				wallmod.position.set(wmap[x-1][0],wmap[x-1][1],wmap[x-1][2]||0);
-				wallmod.scale.set(1,1,0.75);
-			}
-			wallmod.scale.x += ((wmap[x][0]-wmap[x-1][0]))/wallmod.size;
-			wallmod.scale.y += ((wmap[x][1]-wmap[x-1][1]))/wallmod.size;
-		}
-		if(full !== true)
-		{
-			this.walls.remove.apply(this.walls, this.walls.children.slice(x));
+				this._wallAdd(wmap[x-1][0],wmap[x-1][1],wmap[x][0],wmap[x][1],x==len);
 		}
 		
 		this.calcWallLength();
@@ -282,6 +334,7 @@ class Player extends THREE.Object3D
 		{
 			this.walls = createWall(this,cfg.x,cfg.y,cfg.z);
 			engine.scene.add(this.walls);
+			this._wallUpd(0,this.position.x,this.position.y,this.position.x,this.position.y);
 		}
 		
 		if( this.audio ) this.audio.play();
@@ -631,13 +684,11 @@ class Player extends THREE.Object3D
 			//if(typeof(this.walls.children) != "undefined")
 			if(this.haswall && this.walls.children.length > 0 && this.walls.map.length > 0)
 			{
-				var wallmod = this.walls.children[this.walls.children.length-1];
 				var wallmap = this.walls.map[this.walls.map.length-1];
 			
 				wallmap[0]+=(newx); wallmap[1]+=(newy);
 				
-				wallmod.scale.x += newx/wallmod.size;
-				wallmod.scale.y += newy/wallmod.size;
+				this._wallUpd(this.walls.map.length-2,void(0),void(0),wallmap[0]-dir[0]*0.7,wallmap[1]-dir[1]*0.7);
 				
 				this.walls.netLength += dist;
 				this.dist += dist;
@@ -655,24 +706,28 @@ class Player extends THREE.Object3D
 					var xdir = (map[1][0]-map[0][0]), ydir = (map[1][1]-map[0][1]);
 					var len = Math.sqrt((xdir*xdir)+(ydir*ydir));
 					if(len > 1) { xdir /= len; ydir /= len; }
+					if( lendiff < len )
+					{
+						var len2 = Math.sqrt((xdir*xdir)+(ydir*ydir));
+						if( round(len2,2) == 1 && lendiff < len )
+						{
+							xdir *= lendiff; ydir *= lendiff;
+						}
+					}
 					
 					
 					if(isNaN(xdir)) xdir = SMALL_NUM; if(isNaN(ydir)) ydir = SMALL_NUM; 
 					//console.log(lendiff,xdir,ydir);
 					if(xdir == 0 && ydir == 0 && this.walls.map.length > 2)
 					{
-						//this.walls.children.shift();
-						this.walls.remove(this.walls.children[0]);
 						this.walls.map.shift();
+						this.resetWall();
 					}
 					else if(this.walls.children[0] && this.walls.map[0])
 					{
-						this.walls.children[0].scale.x -= xdir/wallmod.size;
-						this.walls.children[0].position.x += xdir;
-						this.walls.children[0].scale.y -= ydir/wallmod.size;
-						this.walls.children[0].position.y += ydir;
 						this.walls.map[0][0] += xdir;
 						this.walls.map[0][1] += ydir;
+						this._wallUpd(0,this.walls.map[0][0],this.walls.map[0][1],this.walls.map[1][0],this.walls.map[1][1]);
 						this.walls.netLength -= Math.sqrt((xdir*xdir)+(ydir*ydir));
 					} else { break; }
 					

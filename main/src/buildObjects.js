@@ -605,78 +605,37 @@ var createLightcycle = function(cfg) //DEPRECATED
 
 /*—––––––––––––wall–constructor—–––––––––––*/	
 
-window.newWall = function(tailColor,x,y,z=0)
-{
-	var xy = 0.001;
-	
-	//var wallTextureProportion;
-	var textureBlending = true;
-	if(!engine.dedicated)
-	{
-		/*var texture = engine.textures.cycle_wall;
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.repeat.set(xy,1);*/
-		/*if (texture.image)
-		{
-			wallTextureProportion = (texture.image.width / texture.image.height) * xy; // *4 is actual size
-		}//*/
-
-		var wallMaterial = new THREE.MeshLambertMaterial({
-			side: THREE.DoubleSide,
-			color: tailColor,
-			//map: texture,
-			//blending: textureBlending ? THREE.AdditiveBlending : THREE.NormalBlending,
-			transparent: settings.ALPHA_BLEND, opacity: 0.6
-		});
-	}
-	
-	//var wallGeometry = new THREE.PlaneBufferGeometry( 1, 4 );
-	
-	/*var m = new THREE.Matrix4();
-		m.makeRotationX(pi(0.5));
-		m.makeTranslation( 0.5, 2, 0 );
-		wallGeometry.applyMatrix( m );*/
-	
-	var geo = new THREE.Geometry();
-	geo.vertices.push(new THREE.Vector3(0,0,0));
-	geo.vertices.push(new THREE.Vector3(xy,xy,0));
-	geo.vertices.push(new THREE.Vector3(xy,xy,1));
-	geo.vertices.push(new THREE.Vector3(0,0,1));
-	geo.vertices.push(new THREE.Vector3(0,0,0));
-	geo.vertices.push(new THREE.Vector3(xy,xy,0));
-	
-	geo.faces = [new THREE.Face3(0,1,2),new THREE.Face3(1,2,3),new THREE.Face3(2,3,4),new THREE.Face3(3,4,5)];
-	
-	geo.computeFaceNormals();
-    geo.computeVertexNormals();
-	
-	var wall1 = new THREE.Mesh(geo,wallMaterial);
-
-	// hacky solution to make wall visible from straight on
-	var geo = new THREE.Geometry();
-	geo.vertices.push(new THREE.Vector3(0,0,1));
-	geo.vertices.push(new THREE.Vector3(xy,xy,1));
-	var wall2 = new THREE.Line(geo,wallMaterial);
-	
-	var wall = new THREE.Group();
-	wall.add(wall1); wall.add(wall2);
-	
-	wall.position.set(x,y,z);
-	wall.size = xy;
-	wall.scale.set(1,1,0.75);
-	
-	return wall;
-}
-
 createWall = function(cycle,x,y)
 {
-
 	var group = new THREE.Group();
-
-	var wall = newWall(cycle.tailColor,x,y);
-
+	
+	var wallMaterial = new THREE.MeshLambertMaterial({
+		side: THREE.DoubleSide,
+		color: cycle.tailColor,
+		//map: texture,
+		//blending: textureBlending ? THREE.AdditiveBlending : THREE.NormalBlending,
+		transparent: settings.ALPHA_BLEND, opacity: 0.7
+	});
+	
+	var geo = new THREE.Geometry();
+	geo.vertices.push(new THREE.Vector3(0,0,0));
+	geo.vertices.push(new THREE.Vector3(0,0,1));
+	geo.vertices.push(new THREE.Vector3(0.001,0.001,0));
+	geo.vertices.push(new THREE.Vector3(0.001,0.001,1));
+	
+	geo.faces = [new THREE.Face3(2,3,1),new THREE.Face3(1,0,2)];
+	
+	var wall = new THREE.Mesh(geo,wallMaterial);
+	wall.scale.z = 0.75;
+	
+	var geo = new THREE.Geometry();
+	geo.vertices.push(new THREE.Vector3(0,0,1));
+	geo.vertices.push(new THREE.Vector3(0.001,0.001,1));
+	var line = new THREE.Line(geo,wallMaterial);
+	line.scale.z = 0.75;
+	
 	group.add(wall); // === .children[0]
-	//group.add(line); // === .children[1]
+	group.add(line); // === .children[1]
 	
 	group.netLength = 0;
 	group.map = [[x,y],[x,y]];
@@ -685,18 +644,6 @@ createWall = function(cycle,x,y)
 
 	return group;
 };
-
-/*–––––––––––––––––––––––––––––––––––––––––*/
-
-class cycleWall
-{
-	constructor()
-	{
-		this.geo = new THREE.Geometry();
-		this.geo.vertices.push(new THREE.Vector3(0,0,0));
-		this.geo.faces = [new THREE.Face3(0,1,2)];
-	}
-}
 
 /*–––––––––––––––––––––––––––––––––––––––––*/
 
